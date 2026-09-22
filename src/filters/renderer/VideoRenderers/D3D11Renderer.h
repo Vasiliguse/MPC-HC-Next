@@ -49,6 +49,8 @@ private:
     HRESULT UpdateOutputInfo();
     HRESULT ConfigureSwapChainColorSpace();
     bool IsTearingSupported() const;
+    bool IsHdrOutputRequested() const;
+    DXGI_FORMAT GetSwapChainFormat() const;
     void ReleaseDevice();
 
     HWND m_hWnd = nullptr;
@@ -64,4 +66,5 @@ private:
     OutputInfo m_output = {};
     bool m_allowTearing = false;
     bool m_deviceLost = false;
+    DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
 };
