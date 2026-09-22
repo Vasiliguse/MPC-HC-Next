@@ -17,11 +17,10 @@
 namespace {
 constexpr UINT kSwapChainBufferCount = 3;
 
-bool IsHdrColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace)
+bool IsHdr10ColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace)
 {
     return colorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
-        || colorSpace == DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020
-        || colorSpace == DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
+        || colorSpace == DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020;
 }
 }
 
@@ -183,7 +182,8 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
     DXGI_SWAP_CHAIN_DESC1 desc = {};
     desc.Width = 0;
     desc.Height = 0;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    m_swapChainFormat = GetSwapChainFormat();
+    desc.Format = m_swapChainFormat;
     desc.Stereo = FALSE;
     desc.SampleDesc.Count = 1;
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
@@ -245,8 +245,11 @@ HRESULT CD3D11Renderer::UpdateOutputInfo()
 
     m_output.valid = true;
     m_output.colorSpace = m_output.desc.ColorSpace;
-    m_output.hdrSupported = IsHdrColorSpace(m_output.desc.ColorSpace)
-        || m_output.desc.BitsPerColor > 8;
+    // BitsPerColor alone is not sufficient: many SDR outputs expose a
+    // 10-bit panel. HDR10 capability is represented by the active DXGI
+    // output color space, while scRGB is handled separately in a later
+    // presentation path.
+    m_output.hdrSupported = IsHdr10ColorSpace(m_output.desc.ColorSpace);
 
     return S_OK;
 }
@@ -276,6 +279,20 @@ HRESULT CD3D11Renderer::ConfigureSwapChainColorSpace()
     return swapChain3->SetColorSpace1(colorSpace);
 }
 
+bool CD3D11Renderer::IsHdrOutputRequested() const
+{
+    return m_settings.bEnableHDR
+        && m_settings.iOutputColorMode == VIDEO_OUTPUT_COLOR_HDR10
+        && m_output.hdrSupported;
+}
+
+DXGI_FORMAT CD3D11Renderer::GetSwapChainFormat() const
+{
+    return IsHdrOutputRequested()
+        ? DXGI_FORMAT_R10G10B10A2_UNORM
+        : DXGI_FORMAT_B8G8R8A8_UNORM;
+}
+
 HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
 {
     if (!m_swapChain) {
@@ -292,7 +309,7 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
         kSwapChainBufferCount,
         width,
         height,
-        DXGI_FORMAT_B8G8R8A8_UNORM,
+        m_swapChainFormat,
         m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
@@ -350,4 +367,5 @@ void CD3D11Renderer::ReleaseDevice()
     m_output = {};
     m_allowTearing = false;
     m_deviceLost = false;
+    m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
 }
