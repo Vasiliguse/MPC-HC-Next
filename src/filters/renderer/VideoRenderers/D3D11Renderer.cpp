@@ -65,6 +65,22 @@ HRESULT CD3D11Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         return hr;
     }
 
+    const DXGI_FORMAT desiredFormat = GetSwapChainFormat();
+    if (desiredFormat != m_swapChainFormat) {
+        RECT clientRect = {};
+        ::GetClientRect(m_hWnd, &clientRect);
+        const UINT width = std::max<LONG>(1, clientRect.right - clientRect.left);
+        const UINT height = std::max<LONG>(1, clientRect.bottom - clientRect.top);
+        hr = m_swapChain->ResizeBuffers(
+            kSwapChainBufferCount, width, height, desiredFormat,
+            m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+        if (FAILED(hr)) {
+            ReleaseDevice();
+            return hr;
+        }
+        m_swapChainFormat = desiredFormat;
+    }
+
     hr = ConfigureSwapChainColorSpace();
     if (FAILED(hr)) {
         ReleaseDevice();
