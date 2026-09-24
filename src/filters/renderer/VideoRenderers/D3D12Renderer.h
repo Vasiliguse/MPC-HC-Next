@@ -57,6 +57,7 @@ private:
     UINT64 m_fenceValue = 0;
     UINT m_rtvDescriptorSize = 0;
     UINT m_frameIndex = 0;
+    std::vector<UINT64> m_frameFenceValues;
     CComPtr<IDXGIOutput6> m_output6;
     OutputInfo m_output = {};
     bool m_tearingSupported = false;
