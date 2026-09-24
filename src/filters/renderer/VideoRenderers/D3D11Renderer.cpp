@@ -362,7 +362,18 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
     if (SUCCEEDED(hr)) {
         hr = UpdateOutputInfo();
         if (SUCCEEDED(hr)) {
-            hr = ConfigureSwapChainColorSpace();
+            const DXGI_FORMAT desiredFormat = GetSwapChainFormat();
+            if (desiredFormat != m_swapChainFormat) {
+                hr = m_swapChain->ResizeBuffers(
+                    kSwapChainBufferCount, width, height, desiredFormat,
+                    m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+                if (SUCCEEDED(hr)) {
+                    m_swapChainFormat = desiredFormat;
+                }
+            }
+            if (SUCCEEDED(hr)) {
+                hr = ConfigureSwapChainColorSpace();
+            }
         }
     }
 
