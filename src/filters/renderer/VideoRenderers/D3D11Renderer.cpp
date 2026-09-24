@@ -333,7 +333,7 @@ HRESULT CD3D11Renderer::SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata
         return swapChain4->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_NONE, 0, nullptr);
     }
     return swapChain4->SetHDRMetaData(
-        DXGI_HDR_METADATA_TYPE_HDR10, sizeof(DXGI_HDR_METADATA_HDR10), metadata);
+        DXGI_HDR_METADATA_TYPE_HDR10, sizeof(DXGI_HDR_METADATA_HDR10), const_cast<DXGI_HDR_METADATA_HDR10*>(metadata));
 }
 
 HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
