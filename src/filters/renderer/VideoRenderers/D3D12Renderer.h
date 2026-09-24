@@ -17,6 +17,7 @@ public:
     HRESULT Initialize(HWND hWnd, const ExtraRendererSettings& settings);
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval = 1);
+    HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT Reset();
 
     bool IsInitialized() const { return m_swapChain != nullptr && m_device != nullptr; }
