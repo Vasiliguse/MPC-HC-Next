@@ -81,6 +81,12 @@ HRESULT CD3D11Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         m_swapChainFormat = desiredFormat;
     }
 
+    hr = CreateBackBufferViews();
+    if (FAILED(hr)) {
+        ReleaseDevice();
+        return hr;
+    }
+
     hr = ConfigureSwapChainColorSpace();
     if (FAILED(hr)) {
         ReleaseDevice();
@@ -224,6 +230,11 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
     // legacy Alt+Enter handling into the application's window manager.
     m_factory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
 
+    hr = m_device->QueryInterface(IID_PPV_ARGS(&m_videoDevice));
+    if (FAILED(hr)) return hr;
+    hr = m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext));
+    if (FAILED(hr)) return hr;
+
     return S_OK;
 }
 
@@ -336,6 +347,125 @@ HRESULT CD3D11Renderer::SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata
         DXGI_HDR_METADATA_TYPE_HDR10, sizeof(DXGI_HDR_METADATA_HDR10), const_cast<DXGI_HDR_METADATA_HDR10*>(metadata));
 }
 
+HRESULT CD3D11Renderer::CreateBackBufferViews()
+{
+    if (!m_swapChain || !m_device) return E_UNEXPECTED;
+    m_backBufferRTV.Release();
+
+    CComPtr<ID3D11Texture2D> backBuffer;
+    HRESULT hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+    if (FAILED(hr)) return hr;
+
+    hr = m_device->CreateRenderTargetView(backBuffer, nullptr, &m_backBufferRTV);
+    if (FAILED(hr)) return hr;
+    return S_OK;
+}
+
+void CD3D11Renderer::ReleaseFrameResources()
+{
+    m_videoProcessor.Release();
+    m_videoProcessorEnumerator.Release();
+    m_backBufferRTV.Release();
+    m_videoWidth = 0;
+    m_videoHeight = 0;
+}
+
+HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT width, UINT height)
+{
+    if (!m_videoDevice) return E_UNEXPECTED;
+    if (m_videoProcessor && m_videoProcessorEnumerator && m_videoWidth == width && m_videoHeight == height) return S_OK;
+
+    m_videoProcessor.Release();
+    m_videoProcessorEnumerator.Release();
+
+    D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc = {};
+    desc.InputFrameFormat = format;
+    desc.InputWidth = width;
+    desc.InputHeight = height;
+    desc.OutputWidth = width;
+    desc.OutputHeight = height;
+    desc.Usage = D3D11_VIDEO_USAGE_PLAYBACK_NORMAL;
+
+    HRESULT hr = m_videoDevice->CreateVideoProcessorEnumerator(&desc, &m_videoProcessorEnumerator);
+    if (FAILED(hr)) return hr;
+
+    UINT support = 0;
+    hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(m_swapChainFormat, &support);
+    if (FAILED(hr) || !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+
+    D3D11_VIDEO_PROCESSOR_CAPS caps = {};
+    D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS rateCaps = {};
+    UINT rateCapsCount = 1;
+    hr = m_videoProcessorEnumerator->GetVideoProcessorCaps(&caps);
+    if (FAILED(hr)) return hr;
+    hr = m_videoProcessorEnumerator->GetVideoProcessorRateConversionCaps(0, &rateCaps);
+    if (FAILED(hr)) return hr;
+    UNREFERENCED_PARAMETER(rateCapsCount);
+
+    hr = m_videoDevice->CreateVideoProcessor(m_videoProcessorEnumerator, 0, &m_videoProcessor);
+    if (FAILED(hr)) return hr;
+
+    m_videoWidth = width;
+    m_videoHeight = height;
+    return S_OK;
+}
+
+bool CD3D11Renderer::IsAdapterCompatible(ID3D11Device* device) const
+{
+    if (!device || !m_adapter) return false;
+    CComPtr<IDXGIDevice> dxgiDevice;
+    CComPtr<IDXGIAdapter> adapter;
+    if (FAILED(device->QueryInterface(IID_PPV_ARGS(&dxgiDevice))) || FAILED(dxgiDevice->GetAdapter(&adapter))) return false;
+    DXGI_ADAPTER_DESC desc = {};
+    DXGI_ADAPTER_DESC selected = {};
+    if (FAILED(adapter->GetDesc(&desc)) || FAILED(m_adapter->GetDesc(&selected))) return false;
+    return desc.AdapterLuid == selected.AdapterLuid;
+}
+
+HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
+{
+    if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
+    if (!IsAdapterCompatible(m_device)) return E_UNEXPECTED;
+
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    texture->GetDesc(&textureDesc);
+    if (!textureDesc.Width || !textureDesc.Height) return E_INVALIDARG;
+
+    D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
+    HRESULT hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height);
+    if (FAILED(hr)) return hr;
+
+    CComPtr<ID3D11VideoProcessorInputView> inputView;
+    D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC inputDesc = {};
+    inputDesc.FourCC = 0;
+    inputDesc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
+    inputDesc.Texture2D.MipSlice = 0;
+    inputDesc.Texture2D.ArraySlice = arraySlice;
+    hr = m_videoDevice->CreateVideoProcessorInputView(texture, m_videoProcessorEnumerator, &inputDesc, &inputView);
+    if (FAILED(hr)) return hr;
+
+    CComPtr<ID3D11Texture2D> backBuffer;
+    hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+    if (FAILED(hr)) return hr;
+
+    CComPtr<ID3D11VideoProcessorOutputView> outputView;
+    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputDesc = {};
+    outputDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
+    outputDesc.Texture2D.MipSlice = 0;
+    hr = m_videoDevice->CreateVideoProcessorOutputView(backBuffer, m_videoProcessorEnumerator, &outputDesc, &outputView);
+    if (FAILED(hr)) return hr;
+
+    D3D11_VIDEO_PROCESSOR_STREAM stream = {};
+    stream.Enable = TRUE;
+    stream.OutputIndex = 0;
+    stream.InputFrameOrField = 0;
+    stream.PastFrames = 0;
+    stream.FutureFrames = 0;
+    stream.pInputSurface = inputView;
+
+    return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
+}
+
 HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
 {
     if (!m_swapChain) {
@@ -347,6 +477,7 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
     }
 
     m_context->OMSetRenderTargets(0, nullptr, nullptr);
+    ReleaseFrameResources();
 
     HRESULT hr = m_swapChain->ResizeBuffers(
         kSwapChainBufferCount,
@@ -370,6 +501,9 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
                 if (SUCCEEDED(hr)) {
                     m_swapChainFormat = desiredFormat;
                 }
+            }
+            if (SUCCEEDED(hr)) {
+                hr = CreateBackBufferViews();
             }
             if (SUCCEEDED(hr)) {
                 hr = ConfigureSwapChainColorSpace();
@@ -411,6 +545,9 @@ HRESULT CD3D11Renderer::Reset()
 
 void CD3D11Renderer::ReleaseDevice()
 {
+    ReleaseFrameResources();
+    m_videoContext.Release();
+    m_videoDevice.Release();
     m_outputObject.Release();
     m_swapChain.Release();
     m_context.Release();
