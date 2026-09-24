@@ -188,7 +188,6 @@ HRESULT CD3D12Renderer::ConfigureSwapChainColorSpace() {
 
     UINT support = 0;
     HRESULT hr = swapChain3->CheckColorSpaceSupport(colorSpace, &support);
-    hr = swapChain3->CheckColorSpaceSupport(colorSpace, &support);
     if (FAILED(hr) || !(support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT)) {
         return DXGI_ERROR_UNSUPPORTED;
     }
