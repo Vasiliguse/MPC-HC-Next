@@ -417,6 +417,7 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     }
 
     auto& allocator = m_commandAllocators[m_frameIndex];
+    HRESULT hr = S_OK;
     if (m_frameFenceValues[m_frameIndex] != 0 &&
         m_fence->GetCompletedValue() < m_frameFenceValues[m_frameIndex]) {
         hr = m_fence->SetEventOnCompletion(m_frameFenceValues[m_frameIndex], m_fenceEvent);
@@ -428,7 +429,7 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
         }
     }
 
-    HRESULT hr = allocator->Reset();
+    hr = allocator->Reset();
     if (FAILED(hr)) {
         return hr;
     }
