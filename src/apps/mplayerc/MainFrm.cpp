@@ -2,14 +2,14 @@
  * (C) 2003-2006 Gabest
  * (C) 2006-2026 see Authors.txt
  *
- * This file is part of MPC-BE.
+ * This file is part of MPC-HC Next.
  *
- * MPC-BE is free software; you can redistribute it and/or modify
+ * MPC-HC Next is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * MPC-BE is distributed in the hope that it will be useful,
+ * MPC-HC Next is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -137,7 +137,7 @@ public:
 };
 
 
-static LPCWSTR s_strPlayerTitle = "MPC-BE "
+static LPCWSTR s_strPlayerTitle = L"MPC-HC Next "
 #ifdef _WIN64
 	L"x64 "
 #endif
