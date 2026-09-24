@@ -186,12 +186,8 @@ HRESULT CD3D12Renderer::ConfigureSwapChainColorSpace() {
         colorSpace = DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
     }
 
-    HRESULT hr = swapChain3->CheckColorSpaceSupport(colorSpace, nullptr);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
     UINT support = 0;
+    HRESULT hr = swapChain3->CheckColorSpaceSupport(colorSpace, &support);
     hr = swapChain3->CheckColorSpaceSupport(colorSpace, &support);
     if (FAILED(hr) || !(support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT)) {
         return DXGI_ERROR_UNSUPPORTED;
@@ -215,6 +211,20 @@ bool CD3D12Renderer::IsHdrOutputRequested() const {
     return m_settings.bEnableHDR &&
         m_settings.iOutputColorMode == VIDEO_OUTPUT_COLOR_HDR10 &&
         m_output.valid && m_output.hdrSupported;
+}
+
+HRESULT CD3D12Renderer::SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata) {
+    if (!m_swapChain) {
+        return E_UNEXPECTED;
+    }
+    if (!IsHdrOutputRequested()) {
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+    if (!metadata) {
+        return m_swapChain->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_NONE, 0, nullptr);
+    }
+    return m_swapChain->SetHDRMetaData(
+        DXGI_HDR_METADATA_TYPE_HDR10, sizeof(DXGI_HDR_METADATA_HDR10), metadata);
 }
 
 HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
