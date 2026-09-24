@@ -54,6 +54,7 @@ private:
     HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT width, UINT height);
     HRESULT CreateBackBufferViews();
     void ReleaseFrameResources();
+    HRESULT DrainPendingFrames(bool waitForAll);
     HRESULT SelectAdapter();
     HRESULT UpdateOutputInfo();
     HRESULT ConfigureSwapChainColorSpace();
@@ -83,4 +84,10 @@ private:
     bool m_allowTearing = false;
     bool m_deviceLost = false;
     DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+    struct PendingFrame {
+        CComPtr<IMediaSample> sample;
+        CComPtr<ID3D11Query> query;
+    };
+    std::deque<PendingFrame> m_pendingFrames;
 };
