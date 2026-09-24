@@ -446,22 +446,12 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
 
         // MediaSideDataHDR is stored in G-B-R order, while DXGI HDR10
         // metadata expects R-G-B primary order.
-        for (int i = 0; i < 3; ++i) {
-            const int src = 2 - i;
-            dxgi.RedPrimary[0] = dxgi.RedPrimary[0];
-            dxgi.GreenPrimary[0] = dxgi.GreenPrimary[0];
-            dxgi.BluePrimary[0] = dxgi.BluePrimary[0];
-            if (i == 0) {
-                dxgi.RedPrimary[0] = toChromaticity(hdr->display_primaries_x[src]);
-                dxgi.RedPrimary[1] = toChromaticity(hdr->display_primaries_y[src]);
-            } else if (i == 1) {
-                dxgi.GreenPrimary[0] = toChromaticity(hdr->display_primaries_x[src]);
-                dxgi.GreenPrimary[1] = toChromaticity(hdr->display_primaries_y[src]);
-            } else {
-                dxgi.BluePrimary[0] = toChromaticity(hdr->display_primaries_x[src]);
-                dxgi.BluePrimary[1] = toChromaticity(hdr->display_primaries_y[src]);
-            }
-        }
+        dxgi.RedPrimary[0] = toChromaticity(hdr->display_primaries_x[2]);
+        dxgi.RedPrimary[1] = toChromaticity(hdr->display_primaries_y[2]);
+        dxgi.GreenPrimary[0] = toChromaticity(hdr->display_primaries_x[0]);
+        dxgi.GreenPrimary[1] = toChromaticity(hdr->display_primaries_y[0]);
+        dxgi.BluePrimary[0] = toChromaticity(hdr->display_primaries_x[1]);
+        dxgi.BluePrimary[1] = toChromaticity(hdr->display_primaries_y[1]);
 
         dxgi.WhitePoint[0] = toChromaticity(hdr->white_point_x);
         dxgi.WhitePoint[1] = toChromaticity(hdr->white_point_y);
