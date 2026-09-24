@@ -444,11 +444,12 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     if (!textureDesc.Width || !textureDesc.Height) return E_INVALIDARG;
 
     D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
-    UINT inputSupport = 0;
-    HRESULT hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(textureDesc.Format, &inputSupport);
-    if (FAILED(hr) || !(inputSupport & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+    HRESULT hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height);
+    if (FAILED(hr)) return hr;
 
-    hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height);
+    UINT inputSupport = 0;
+    hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(textureDesc.Format, &inputSupport);
+    if (FAILED(hr) || !(inputSupport & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
     if (FAILED(hr)) return hr;
 
     CComPtr<ID3D11VideoProcessorInputView> inputView;
