@@ -33,6 +33,7 @@ public:
     HRESULT Initialize(HWND hWnd, const ExtraRendererSettings& settings);
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval, UINT presentFlags);
+    HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT Reset();
 
@@ -42,10 +43,14 @@ public:
 
     ID3D11Device* GetDevice() const { return m_device; }
     ID3D11DeviceContext* GetContext() const { return m_context; }
+    bool IsAdapterCompatible(ID3D11Device* device) const;
     IDXGISwapChain1* GetSwapChain() const { return m_swapChain; }
 
 private:
     HRESULT CreateDeviceAndSwapChain();
+    HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT width, UINT height);
+    HRESULT CreateBackBufferViews();
+    void ReleaseFrameResources();
     HRESULT SelectAdapter();
     HRESULT UpdateOutputInfo();
     HRESULT ConfigureSwapChainColorSpace();
@@ -62,6 +67,13 @@ private:
     CComPtr<ID3D11Device> m_device;
     CComPtr<ID3D11DeviceContext> m_context;
     CComPtr<IDXGISwapChain1> m_swapChain;
+    CComPtr<ID3D11VideoDevice> m_videoDevice;
+    CComPtr<ID3D11VideoContext> m_videoContext;
+    CComPtr<ID3D11VideoProcessor> m_videoProcessor;
+    CComPtr<ID3D11VideoProcessorEnumerator> m_videoProcessorEnumerator;
+    CComPtr<ID3D11RenderTargetView> m_backBufferRTV;
+    UINT m_videoWidth = 0;
+    UINT m_videoHeight = 0;
     CComPtr<IDXGIOutput6> m_outputObject;
 
     OutputInfo m_output = {};
