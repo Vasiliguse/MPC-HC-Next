@@ -403,6 +403,86 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
     return ConfigureSwapChainColorSpace();
 }
 
+HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState)
+{
+    if (!source || !m_swapChain || !m_device || !m_commandQueue ||
+        m_commandAllocators.empty() || !m_commandList || !m_rtvHeap) {
+        return E_UNEXPECTED;
+    }
+
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+    if (m_frameIndex >= m_commandAllocators.size()) {
+        return E_UNEXPECTED;
+    }
+
+    auto& allocator = m_commandAllocators[m_frameIndex];
+    HRESULT hr = allocator->Reset();
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = m_commandList->Reset(allocator, nullptr);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    CComPtr<ID3D12Resource> backBuffer;
+    hr = m_swapChain->GetBuffer(m_frameIndex, IID_PPV_ARGS(&backBuffer));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    const D3D12_RESOURCE_DESC sourceDesc = source->GetDesc();
+    const D3D12_RESOURCE_DESC targetDesc = backBuffer->GetDesc();
+    if (sourceDesc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D ||
+        targetDesc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D ||
+        sourceDesc.Format != targetDesc.Format ||
+        sourceDesc.Width != targetDesc.Width ||
+        sourceDesc.Height != targetDesc.Height) {
+        m_commandList->Close();
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
+    D3D12_RESOURCE_BARRIER barriers[2] = {};
+    barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barriers[0].Transition.pResource = source;
+    barriers[0].Transition.StateBefore = sourceState;
+    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+    barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+    barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barriers[1].Transition.pResource = backBuffer;
+    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+    barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+    m_commandList->ResourceBarrier(2, barriers);
+    m_commandList->CopyResource(backBuffer, source);
+
+    D3D12_RESOURCE_BARRIER presentBarrier = {};
+    presentBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    presentBarrier.Transition.pResource = backBuffer;
+    presentBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    presentBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    presentBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    m_commandList->ResourceBarrier(1, &presentBarrier);
+
+    hr = m_commandList->Close();
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    ID3D12CommandList* lists[] = { m_commandList };
+    m_commandQueue->ExecuteCommandLists(1, lists);
+
+    hr = Present(0);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return SignalAndWait();
+}
+
 HRESULT CD3D12Renderer::Present(UINT syncInterval) {
     if (!m_swapChain) {
         return E_UNEXPECTED;
@@ -428,6 +508,19 @@ HRESULT CD3D12Renderer::Reset() {
 }
 
 void CD3D12Renderer::ReleaseDevice() {
+    if (m_commandQueue && m_fence && m_fenceEvent) {
+        SignalAndWait();
+    }
+
+    m_commandList.Release();
+    m_commandAllocators.clear();
+    m_rtvHeap.Release();
+    m_fence.Release();
+    if (m_fenceEvent) {
+        CloseHandle(m_fenceEvent);
+        m_fenceEvent = nullptr;
+    }
+
     m_swapChain.Release();
     m_commandQueue.Release();
     m_device.Release();
