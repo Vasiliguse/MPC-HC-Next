@@ -5042,7 +5042,7 @@ static COLORREF ColorBrightness(const int lSkale, const COLORREF color)
 void CPlayerPlaylistBar::SetColor()
 {
 	if (AfxGetAppSettings().bUseDarkTheme) {
-		m_crBkBar = ThemeRGB(45, 50, 55);           // background tab bar
+		m_crBkBar = ThemeRGB(7, 17, 30);           // background tab bar
 
 		m_crBN = m_crBkBar;                         // backgroung normal
 		m_crBNL = ColorBrightness(+15, m_crBN);     // backgroung normal lighten (for light edge)
@@ -5064,20 +5064,20 @@ void CPlayerPlaylistBar::SetColor()
 		m_crTH = ColorBrightness(+80, m_crTN);      // text normal lighten
 		m_crTS = ThemeRGB(0xFF, 0xFF, 0xFF);        // text selected
 
-		m_crBackground = ThemeRGB(10, 15, 20);      // background
+		m_crBackground = ThemeRGB(6, 15, 27);      // background
 		m_crDragImage = m_crBackground;             // drag'n'drop image
 		m_crActiveItem = m_crTS;                    // active item
-		m_crSelectedItem = ThemeRGB(165, 170, 175); // selected item
-		m_crNormalItem = ThemeRGB(135, 140, 145);   // normal item
+		m_crSelectedItem = ThemeRGB(65, 225, 255); // selected item
+		m_crNormalItem = ThemeRGB(160, 182, 201);   // normal item
 
-		m_crAvtiveItem3dRectTopLeft = ThemeRGB(80, 85, 90);
-		m_crAvtiveItem3dRectBottomRight = ThemeRGB(30, 35, 40);
+		m_crAvtiveItem3dRectTopLeft = ThemeRGB(44, 86, 112);
+		m_crAvtiveItem3dRectBottomRight = ThemeRGB(10, 27, 44);
 
 		// gradients
 		int R, G, B;
-		ThemeRGB(60, 65, 70, R, G, B);
+		ThemeRGB(24, 55, 78, R, G, B);
 		tvSelected[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-		ThemeRGB(50, 55, 60, R, G, B);
+		ThemeRGB(15, 37, 57, R, G, B);
 		tvSelected[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 
 		ThemeRGB(10, 15, 20, R, G, B);
