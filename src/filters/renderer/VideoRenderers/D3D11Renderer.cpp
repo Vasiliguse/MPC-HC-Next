@@ -416,10 +416,13 @@ bool CD3D11Renderer::IsAdapterCompatible(ID3D11Device* device) const
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
 {
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
+    CComPtr<ID3D11Device> textureDevice;
     CComPtr<IDXGIDevice> textureDxgiDevice;
     CComPtr<IDXGIAdapter> textureAdapter;
-    texture->GetDevice(&textureDxgiDevice);
-    if (!textureDxgiDevice || FAILED(textureDxgiDevice->GetAdapter(&textureAdapter))) {
+    texture->GetDevice(&textureDevice);
+    if (!textureDevice ||
+        FAILED(textureDevice->QueryInterface(IID_PPV_ARGS(&textureDxgiDevice))) ||
+        FAILED(textureDxgiDevice->GetAdapter(&textureAdapter))) {
         return E_INVALIDARG;
     }
     DXGI_ADAPTER_DESC textureAdapterDesc = {};
@@ -477,13 +480,11 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     RECT sourceRect = { 0, 0, static_cast<LONG>(textureDesc.Width), static_cast<LONG>(textureDesc.Height) };
     RECT destRect = { 0, 0, static_cast<LONG>(outputDesc2D.Width), static_cast<LONG>(outputDesc2D.Height) };
 
-    hr = m_videoContext->VideoProcessorSetStreamSourceRect(
+    m_videoContext->VideoProcessorSetStreamSourceRect(
         m_videoProcessor, 0, TRUE, &sourceRect);
-    if (FAILED(hr)) return hr;
 
-    hr = m_videoContext->VideoProcessorSetOutputTargetRect(
+    m_videoContext->VideoProcessorSetOutputTargetRect(
         m_videoProcessor, TRUE, &destRect);
-    if (FAILED(hr)) return hr;
 
     return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
 }
