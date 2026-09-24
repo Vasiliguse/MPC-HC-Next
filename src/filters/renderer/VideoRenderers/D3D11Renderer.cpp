@@ -413,6 +413,27 @@ bool CD3D11Renderer::IsAdapterCompatible(ID3D11Device* device) const
     return desc.AdapterLuid.HighPart == selected.AdapterLuid.HighPart && desc.AdapterLuid.LowPart == selected.AdapterLuid.LowPart;
 }
 
+HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
+{
+    if (!sample) {
+        return E_POINTER;
+    }
+
+    CComQIPtr<IMediaSampleD3D11> d3d11Sample(sample);
+    if (!d3d11Sample) {
+        return E_NOINTERFACE;
+    }
+
+    CComPtr<ID3D11Texture2D> texture;
+    UINT arraySlice = 0;
+    HRESULT hr = d3d11Sample->GetD3D11Texture(0, &texture, &arraySlice);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return PresentD3D11Texture(texture, arraySlice);
+}
+
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
 {
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
