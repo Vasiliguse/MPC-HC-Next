@@ -1,61 +1,45 @@
-<svg width="1920" height="120" xmlns="http://www.w3.org/2000/svg">
-
+<svg width="1920" height="120" viewBox="0 0 1920 120" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <linearGradient id="button" x1="0%" y1="0%" x2="0%" y2="100%">
-    <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
-    <stop offset="45%" style="stop-color:#B4B4B4;stop-opacity:1"/>
-    <stop offset="55%" style="stop-color:#B4B4B4;stop-opacity:1"/>
-    <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1"/>
-  </linearGradient>
-  <linearGradient id="button-rotated" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
-    <stop offset="45%" style="stop-color:#B4B4B4;stop-opacity:1"/>
-    <stop offset="55%" style="stop-color:#B4B4B4;stop-opacity:1"/>
-    <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1"/>
-  </linearGradient>
-  <linearGradient id="silence" x1="0%" y1="20%" x2="0%" y2="80%">
-    <stop offset="0%" style="stop-color:#E88282;stop-opacity:1"/>
-    <stop offset="100%" style="stop-color:#C85A5A;stop-opacity:1"/>
-  </linearGradient>
+ <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2DE2C5"/><stop offset="1" stop-color="#3B8DFF"/></linearGradient>
+ <linearGradient id="soft" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F4FAFF"/><stop offset="1" stop-color="#A9C4DD"/></linearGradient>
 </defs>
-
-<path fill="none" stroke="#C0C0C0" stroke-width="5" d="M7.5,22.5 a15,15 0 0,1 15,-15 h75 a15,15 0 0,1 15,15 v75 a15,15 0 0,1 -15,15 h-75 a15,15 0 0,1 -15,-15 z"/>
-<path fill="none" stroke="#C0C0C0" stroke-width="5" d="M127.5,22.5 a15,15 0 0,1 15,-15 h75 a15,15 0 0,1 15,15 v75 a15,15 0 0,1 -15,15 h-75 a15,15 0 0,1 -15,-15 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M42.5,32.5 l47.5,27.5 l-47.5,27.5 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M157.5,35 h15 v50 h-15 z m30,0 h15 v50 h-15 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M277.5,42.5 a5,5 0 0,1 5,-5 h35 a5,5 0 0,1 5,5 v35 a5,5 0 0,1 -5,5 h-35 a5,5 0 0,1 -5,-5 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M530,85 h-12.5 v-50 h12.5 v20 l30,-20 h5 v50 h-5 l-30,-20 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M670,85 h12.5,0 v-50 h-12.5 v20 l-30,-20 h-5 v50 h5 l30,-20 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M755,35 h15 v50 h-15 z m60,25 l-30,-25 h-5 v50 h5 z"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M875,65 h50 v-5 l-25,-25 l-25,25 z m0,5 h50 v15 h-50 z"/>
-
-<path fill="none" stroke="#C0C0C0" stroke-width="5" d="M1107.5,75 v-27.5 a5,5 0 0,1 5,-5 h10 v32.5 m-15,-17.5 h15
- m10,-17.5 v27.5 a5,5 0 0,0 5,5 h5 a5,5 0 0,0 5,-5 v-27.5
- m10,2.5 h10 a5,5 0 0,1 5,5 v20 a5,5 0 0,1 -5,5 h-10 z"/>
-
-<path fill="none" stroke="#C0C0C0" stroke-width="5" d="M1227.5,65 v2.5 a5,5 0 0,0 5,5 h5 a5,5 0 0,0 5,-5 v-5 a5,5 0 0,0 -5,-5 h-5 a5,5 0 0,1 -5,-5 v-5 a5,5 0 0,1 5,-5 h5 a5,5 0 0,1 5,5 v2.5
- m10,-10 v27.5 a5,5 0 0,0 5,5 h5 a5,5 0 0,0 5,-5 v-27.5
- m10,17.5 h10 a5,5 0 0,0 5,-5 v-5 a5,5 0 0,0 -5,-5 h-10 v30 h10 a5,5 0 0,0 5,-5 v-5 a5,5 0 0,0 -5,-5"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M1505,25 v70 l-22.5,-22.5 h-12.5 a5,5 0 0,1 -5,-5 v-15 a5,5 0 0,1 5,-5 h12.5 z"/>
-<path fill="white" d="M1510.029,44.23 a27.5,27.5 0 0,1 0,31.54 a2.5,2.5 0 0,0 4.096,2.868 a32.5,32.5 0 0,0 0,-37.276 a2.5,2.5 0 0,0 -4.096,2.868
- m12.288,-8.602 a42.5,42.5 0 0,1 0,48.744 a2.5,2.5 0 0,0 4.097,2.867 a47.5,47.5 0 0,0 0,-54.478 a2.5,2.5 0 0,0 -4.097,2.867"/>
-
-<path fill="url(#button)" stroke="black" stroke-width="1.25" d="M1625,25 v70 l-22.5,-22.5 h-12.5 a5,5 0 0,1 -5,-5 v-15 a5,5 0 0,1 5,-5 h12.5 z"/>
-<path fill="url(#silence)" d="M1642.5,60 l-7.5,-7.5 a5.3033,5.3033 0 0,1 7.5,-7.5 l7.5,7.5 l7.5,-7.5 a5.3033,5.3033 0 0,1 7.5,7.5 l-7.5,7.5 l7.5,7.5 a5.3033,5.3033 0 0,1 -7.5,7.5 l-7.5,-7.5 l-7.5,7.5 a5.3033,5.3033 0 0,1 -7.5,-7.5 z"/>
-
-<path fill="url(#button)" stroke="black" d="M1760,25 v70 l-22.5,-22.5 h-12.5 a5,5 0 0,1 -5,-5 v-15 a5,5 0 0,1 5,-5 h12.5 z"/>
-
-<path fill="none" stroke="#C0C0C0" stroke-width="5" d="M1807.5,37.5 a15,15 0 0,1 15,-15 h75 a15,15 0 0,1 15,15 v40 a15,15 0 0,1 -15,15 h-75 a15,15 0 0,1 -15,-15 z"/>
-<path fill="none" stroke="#C0C0C0" stroke-width="5" d="M1842.5,50 v-2.5 a5,5 0 0,0 -5,-5 h-5 a5,5 0 0,0 -5,5 v20 a5,5 0 0,0 5,5 h5 a5,5 0 0,0 5,-5 v-10 h-7.5
- m17.5,17.5 v-32.5 h10 a5,5 0 0,1 5,5 v5 a5,5 0 0,1 -5,5 h-10
- m25,-17.5 v27.5 a5,5 0 0,0 5,5 h5 a5,5 0 0,0 5,-5 v-27.5"/>
-
+<g fill="none" stroke="url(#soft)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+ <!-- 0 play -->
+ <path fill="url(#accent)" stroke="none" d="M43 28L94 60L43 92Z"/>
+ <!-- 1 pause -->
+ <path d="M42 32V88M78 32V88"/>
+ <!-- 2 stop -->
+ <rect x="34" y="34" width="52" height="52" rx="10"/>
+ <!-- 3 previous -->
+ <path d="M82 30L48 60L82 90M43 30V90"/>
+ <!-- 4 next -->
+ <path d="M38 30L72 60L38 90M77 30V90"/>
+ <!-- 5 step/back -->
+ <path d="M35 60H87M35 60L55 40M35 60L55 80"/>
+ <!-- 6 step/forward -->
+ <path d="M33 60H85M85 60L65 40M85 60L65 80"/>
+ <!-- 7 repeat -->
+ <path d="M35 48H79L70 39M85 72H41L50 81"/>
+ <!-- 8 shuffle -->
+ <path d="M35 42H48L82 78H91M35 78H48L58 68M72 52L82 42H91M91 42L82 33M91 42L82 51"/>
+ <!-- 9 audio -->
+ <path d="M32 52H45L62 38V82L45 68H32Z"/>
+ <path d="M72 48C80 55 80 65 72 72M80 40C94 52 94 68 80 80"/>
+ <!-- 10 subtitles -->
+ <rect x="29" y="34" width="62" height="52" rx="10"/>
+ <path d="M41 54H79M41 67H67"/>
+ <!-- 11 settings -->
+ <circle cx="60" cy="60" r="12"/>
+ <path d="M60 30V40M60 80V90M30 60H40M80 60H90M39 39L46 46M74 74L81 81M81 39L74 46M46 74L39 81"/>
+ <!-- 12 volume -->
+ <path d="M28 52H41L58 38V82L41 68H28Z"/>
+ <path d="M70 45C82 53 82 67 70 75"/>
+ <!-- 13 mute -->
+ <path d="M28 52H41L58 38V82L41 68H28Z"/>
+ <path d="M68 48L88 72M88 48L68 72"/>
+ <!-- 14 fullscreen -->
+ <path d="M32 48V32H48M72 32H88V48M88 72V88H72M48 88H32V72"/>
+ <!-- 15 info -->
+ <circle cx="60" cy="60" r="28"/><path d="M60 55V75M60 44V44"/>
+</g>
 </svg>
