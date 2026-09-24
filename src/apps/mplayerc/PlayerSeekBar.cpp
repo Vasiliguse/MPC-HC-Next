@@ -811,42 +811,42 @@ void CPlayerSeekBar::SetColor()
 		if (m_pMainFrame->m_BackGroundGradient.Size()) {
 			ThemeRGB(s.nThemeRed, s.nThemeGreen, s.nThemeBlue, m_crBackground.R, m_crBackground.G, m_crBackground.B);
 		} else {
-			ThemeRGB(0, 5, 10, R, G, B);
+			ThemeRGB(6, 15, 27, R, G, B);
 			tvBackground[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-			ThemeRGB(15, 20, 25, R, G, B);
+			ThemeRGB(10, 27, 44, R, G, B);
 			tvBackground[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 		}
 
 		m_penPlayed1.DeleteObject();
-		m_penPlayed1.CreatePen(PS_SOLID, 0, ThemeRGB(30, 35, 40));
+		m_penPlayed1.CreatePen(PS_SOLID, 0, ThemeRGB(18, 40, 58));
 
 		m_penPlayed2.DeleteObject();
-		m_penPlayed2.CreatePen(PS_SOLID, 0, ThemeRGB(80, 85, 90));
+		m_penPlayed2.CreatePen(PS_SOLID, 0, ThemeRGB(32, 72, 92));
 
 		m_penChapters.DeleteObject();
-		m_penChapters.CreatePen(PS_SOLID, 0, ThemeRGB(255, 255, 255));
+		m_penChapters.CreatePen(PS_SOLID, 0, ThemeRGB(65, 225, 255));
 
 		m_penRepeatAB.DeleteObject();
 		m_penRepeatAB.CreatePen(PS_SOLID, 0, ThemeRGB(242, 13, 13));
 
-		ThemeRGB(45, 55, 60, R, G, B);
+		ThemeRGB(10, 35, 52, R, G, B);
 		tvBufferingProgress[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-		ThemeRGB(65, 70, 75, R, G, B);
+		ThemeRGB(24, 68, 88, R, G, B);
 		tvBufferingProgress[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 
-		ThemeRGB(0, 5, 10, R, G, B);
+		ThemeRGB(6, 15, 27, R, G, B);
 		tvBackgroundEnabledLeft[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-		ThemeRGB(105, 110, 115, R, G, B);
+		ThemeRGB(20, 48, 67, R, G, B);
 		tvBackgroundEnabledLeft[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 
-		ThemeRGB(0, 5, 10, R, G, B);
+		ThemeRGB(6, 15, 27, R, G, B);
 		tvBackgroundEnabledRight[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-		ThemeRGB(205, 210, 215, R, G, B);
+		ThemeRGB(65, 225, 255, R, G, B);
 		tvBackgroundEnabledRight[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 
-		m_crText = ThemeRGB(135, 140, 145);
-		m_crHighlightedText = ThemeRGB(205, 210, 215);
-		m_crTimeText = ThemeRGB(200, 205, 210);
+		m_crText = ThemeRGB(155, 178, 198);
+		m_crHighlightedText = ThemeRGB(235, 247, 255);
+		m_crTimeText = ThemeRGB(210, 231, 244);
 	}
 }
 
