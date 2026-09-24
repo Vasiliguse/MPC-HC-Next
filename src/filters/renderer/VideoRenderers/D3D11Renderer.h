@@ -37,6 +37,7 @@ public:
     HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
     HRESULT PresentMediaSample(IMediaSample* sample);
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
+    HRESULT SetHDR10MetadataFromSample(IMediaSample* sample);
     HRESULT Reset();
 
     bool IsInitialized() const { return m_swapChain != nullptr; }
