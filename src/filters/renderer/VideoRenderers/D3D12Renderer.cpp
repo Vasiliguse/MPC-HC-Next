@@ -73,6 +73,11 @@ HRESULT CD3D12Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         m_swapChainFormat = desiredFormat;
     }
 
+    hr = CreateRenderTargetViews();
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     return ConfigureSwapChainColorSpace();
 }
 
@@ -355,12 +360,20 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
     const UINT flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
         (m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
-    HRESULT hr = m_swapChain->ResizeBuffers(kBufferCount, width, height, m_swapChainFormat, flags);
-    if (IsDeviceLostHr(hr)) {
+    HRESULT hr = WaitForGpu();
+    if (FAILED(hr)) {
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
+        return hr;
+    }
+
+    HRESULT hr2 = m_swapChain->ResizeBuffers(kBufferCount, width, height, m_swapChainFormat, flags);
+    if (IsDeviceLostHr(hr2)) {
         m_deviceLost = true;
     }
-    if (FAILED(hr)) {
-        return hr;
+    if (FAILED(hr2)) {
+        return hr2;
     }
 
     hr = UpdateOutputInfo();
