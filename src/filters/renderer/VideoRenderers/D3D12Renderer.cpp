@@ -59,7 +59,7 @@ HRESULT CD3D12Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         : DXGI_FORMAT_B8G8R8A8_UNORM;
 
     if (desiredFormat != m_swapChainFormat) {
-        m_swapChain->ResizeBuffers(kBufferCount, 0, desiredFormat,
+        m_swapChain->ResizeBuffers(kBufferCount, 0, desiredFormat, DXGI_FORMAT_R10G10B10A2_UNORM,
             DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
             (m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0));
         m_swapChainFormat = desiredFormat;
@@ -208,7 +208,7 @@ bool CD3D12Renderer::IsTearingSupported() const {
 
     BOOL allowTearing = FALSE;
     return SUCCEEDED(factory5->CheckFeatureSupport(
-        DXGI_FEATURE_PRESENT_ALLOW_TEARING, sizeof(allowTearing), &allowTearing)) && allowTearing;
+        DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing))) && allowTearing;
 }
 
 bool CD3D12Renderer::IsHdrOutputRequested() const {
