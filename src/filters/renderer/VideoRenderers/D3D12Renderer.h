@@ -17,6 +17,7 @@ public:
     HRESULT Initialize(HWND hWnd, const ExtraRendererSettings& settings);
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval = 1);
+    HRESULT PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState = D3D12_RESOURCE_STATE_COPY_SOURCE);
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT Reset();
 
@@ -33,6 +34,10 @@ private:
     HRESULT SelectAdapter();
     HRESULT UpdateOutputInfo();
     HRESULT ConfigureSwapChainColorSpace();
+    HRESULT CreateFrameResources();
+    HRESULT CreateRenderTargetViews();
+    HRESULT WaitForGpu();
+    HRESULT SignalAndWait();
     bool IsTearingSupported() const;
     bool IsHdrOutputRequested() const;
     void ReleaseDevice();
@@ -44,6 +49,14 @@ private:
     CComPtr<ID3D12Device> m_device;
     CComPtr<ID3D12CommandQueue> m_commandQueue;
     CComPtr<IDXGISwapChain4> m_swapChain;
+    CComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    std::vector<CComPtr<ID3D12CommandAllocator>> m_commandAllocators;
+    CComPtr<ID3D12GraphicsCommandList> m_commandList;
+    CComPtr<ID3D12Fence> m_fence;
+    HANDLE m_fenceEvent = nullptr;
+    UINT64 m_fenceValue = 0;
+    UINT m_rtvDescriptorSize = 0;
+    UINT m_frameIndex = 0;
     CComPtr<IDXGIOutput6> m_output6;
     OutputInfo m_output = {};
     bool m_tearingSupported = false;
