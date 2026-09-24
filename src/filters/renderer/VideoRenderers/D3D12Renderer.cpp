@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "D3D12Renderer.h"
 
+#include <algorithm>
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -43,6 +45,12 @@ HRESULT CD3D12Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
     }
 
     hr = CreateDeviceAndSwapChain();
+    if (FAILED(hr)) {
+        ReleaseDevice();
+        return hr;
+    }
+
+    hr = CreateFrameResources();
     if (FAILED(hr)) {
         ReleaseDevice();
         return hr;
@@ -149,6 +157,119 @@ HRESULT CD3D12Renderer::CreateDeviceAndSwapChain() {
     m_swapChain = swapChain;
     m_swapChainFormat = desc.Format;
     return m_factory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
+}
+
+HRESULT CD3D12Renderer::CreateRenderTargetViews()
+{
+    if (!m_device || !m_swapChain) {
+        return E_UNEXPECTED;
+    }
+
+    m_rtvHeap.Release();
+
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+    heapDesc.NumDescriptors = kBufferCount;
+    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+
+    HRESULT hr = m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_rtvHeap));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    D3D12_CPU_DESCRIPTOR_HANDLE handle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
+    for (UINT i = 0; i < kBufferCount; ++i) {
+        CComPtr<ID3D12Resource> buffer;
+        hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&buffer));
+        if (FAILED(hr)) {
+            return hr;
+        }
+        m_device->CreateRenderTargetView(buffer, nullptr, handle);
+        handle.ptr += m_rtvDescriptorSize;
+    }
+
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+    return S_OK;
+}
+
+HRESULT CD3D12Renderer::CreateFrameResources()
+{
+    if (!m_device || !m_commandQueue || !m_swapChain) {
+        return E_UNEXPECTED;
+    }
+
+    m_commandAllocators.clear();
+    m_commandList.Release();
+    m_fence.Release();
+    if (m_fenceEvent) {
+        CloseHandle(m_fenceEvent);
+        m_fenceEvent = nullptr;
+    }
+
+    m_commandAllocators.resize(kBufferCount);
+    for (auto& allocator : m_commandAllocators) {
+        HRESULT hr = m_device->CreateCommandAllocator(
+            D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+        if (FAILED(hr)) {
+            return hr;
+        }
+    }
+
+    HRESULT hr = m_device->CreateCommandList(
+        0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[0], nullptr,
+        IID_PPV_ARGS(&m_commandList));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = m_commandList->Close();
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (!m_fenceEvent) {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    m_fenceValue = 0;
+    return CreateRenderTargetViews();
+}
+
+HRESULT CD3D12Renderer::SignalAndWait()
+{
+    if (!m_commandQueue || !m_fence || !m_fenceEvent) {
+        return E_UNEXPECTED;
+    }
+
+    const UINT64 value = ++m_fenceValue;
+    HRESULT hr = m_commandQueue->Signal(m_fence, value);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (m_fence->GetCompletedValue() < value) {
+        hr = m_fence->SetEventOnCompletion(value, m_fenceEvent);
+        if (FAILED(hr)) {
+            return hr;
+        }
+        if (WaitForSingleObject(m_fenceEvent, INFINITE) != WAIT_OBJECT_0) {
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT CD3D12Renderer::WaitForGpu()
+{
+    return SignalAndWait();
 }
 
 HRESULT CD3D12Renderer::UpdateOutputInfo() {
