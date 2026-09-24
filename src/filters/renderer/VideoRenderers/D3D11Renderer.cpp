@@ -366,6 +366,9 @@ HRESULT CD3D11Renderer::CreateBackBufferViews()
 
 void CD3D11Renderer::ReleaseFrameResources()
 {
+    DrainPendingFrames(true);
+    m_pendingFrames.clear();
+
     m_videoProcessor.Release();
     m_videoProcessorEnumerator.Release();
     m_backBufferRTV.Release();
@@ -414,6 +417,40 @@ bool CD3D11Renderer::IsAdapterCompatible(ID3D11Device* device) const
     DXGI_ADAPTER_DESC selected = {};
     if (FAILED(adapter->GetDesc(&desc)) || FAILED(m_adapter->GetDesc(&selected))) return false;
     return desc.AdapterLuid.HighPart == selected.AdapterLuid.HighPart && desc.AdapterLuid.LowPart == selected.AdapterLuid.LowPart;
+}
+
+HRESULT CD3D11Renderer::DrainPendingFrames(bool waitForAll)
+{
+    if (!m_context) {
+        m_pendingFrames.clear();
+        return S_OK;
+    }
+
+    if (waitForAll && !m_pendingFrames.empty()) {
+        m_context->Flush();
+    }
+
+    while (!m_pendingFrames.empty()) {
+        PendingFrame& frame = m_pendingFrames.front();
+        BOOL complete = FALSE;
+        HRESULT hr = m_context->GetData(
+            frame.query, &complete, sizeof(complete), D3D11_ASYNC_GETDATA_DONOTFLUSH);
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        if (!complete) {
+            if (!waitForAll) {
+                break;
+            }
+            Sleep(0);
+            continue;
+        }
+
+        m_pendingFrames.pop_front();
+    }
+
+    return S_OK;
 }
 
 HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
@@ -486,14 +523,34 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
         return E_POINTER;
     }
 
+    HRESULT hr = DrainPendingFrames(false);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (m_pendingFrames.size() >= 3) {
+        hr = DrainPendingFrames(true);
+        if (FAILED(hr)) {
+            return hr;
+        }
+    }
+
     CComQIPtr<IMediaSampleD3D11> d3d11Sample(sample);
     if (!d3d11Sample) {
         return E_NOINTERFACE;
     }
 
+    D3D11_QUERY_DESC queryDesc = {};
+    queryDesc.Query = D3D11_QUERY_EVENT;
+    CComPtr<ID3D11Query> completionQuery;
+    hr = m_device->CreateQuery(&queryDesc, &completionQuery);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     CComPtr<ID3D11Texture2D> texture;
     UINT arraySlice = 0;
-    HRESULT hr = d3d11Sample->GetD3D11Texture(0, &texture, &arraySlice);
+    hr = d3d11Sample->GetD3D11Texture(0, &texture, &arraySlice);
     if (FAILED(hr)) {
         return hr;
     }
@@ -508,7 +565,17 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
         return hr;
     }
 
-    return Present(0, 0);
+    hr = Present(0, 0);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    m_context->End(completionQuery);
+    PendingFrame pending;
+    pending.sample = sample;
+    pending.query = completionQuery;
+    m_pendingFrames.push_back(std::move(pending));
+    return S_OK;
 }
 
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
