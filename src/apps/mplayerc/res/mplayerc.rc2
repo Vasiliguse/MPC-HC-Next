@@ -12,6 +12,10 @@
 #include "resource.h"
 #include "Version.h"
 
+// MPC-HC Next branding: the visual identity is intentionally kept separate from playback code.
+#define MPC_NEXT_PRODUCT_NAME_A "MPC-HC Next"
+#define MPC_NEXT_PRODUCT_NAME_W L"MPC-HC Next"
+
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -176,20 +180,20 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "Based on the original MPC v6.4.9.0 © Gabest & MPC-HC"
+            VALUE "Comments", "Based on the original MPC v6.4.9.0 Â© Gabest & MPC-HC"
             VALUE "CompanyName", MPC_COMP_NAME_STR
             VALUE "FileVersion", MPC_VERSION_FULL_STR
             VALUE "LegalCopyright", MPC_COPYRIGHT_STR
 #ifdef _WIN64
-            VALUE "FileDescription", "MPC-BE x64"
-            VALUE "InternalName", "mpc-be64"
-            VALUE "OriginalFilename", "mpc-be64.exe"
-            VALUE "ProductName", "MPC-BE x64"
+            VALUE "FileDescription", MPC_NEXT_PRODUCT_NAME_A " x64"
+            VALUE "InternalName", "mpc-hc-next64"
+            VALUE "OriginalFilename", "mpc-hc-next64.exe"
+            VALUE "ProductName", MPC_NEXT_PRODUCT_NAME_A " x64"
 #else
-            VALUE "FileDescription", "MPC-BE"
-            VALUE "InternalName", "mpc-be"
-            VALUE "OriginalFilename", "mpc-be.exe"
-            VALUE "ProductName", "MPC-BE"
+            VALUE "FileDescription", MPC_NEXT_PRODUCT_NAME_A
+            VALUE "InternalName", "mpc-hc-next"
+            VALUE "OriginalFilename", "mpc-hc-next.exe"
+            VALUE "ProductName", MPC_NEXT_PRODUCT_NAME_A
 #endif
             VALUE "ProductVersion", MPC_VERSION_STR
         END
