@@ -471,6 +471,20 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     stream.FutureFrames = 0;
     stream.pInputSurface = inputView;
 
+    D3D11_TEXTURE2D_DESC outputDesc2D = {};
+    backBuffer->GetDesc(&outputDesc2D);
+
+    RECT sourceRect = { 0, 0, static_cast<LONG>(textureDesc.Width), static_cast<LONG>(textureDesc.Height) };
+    RECT destRect = { 0, 0, static_cast<LONG>(outputDesc2D.Width), static_cast<LONG>(outputDesc2D.Height) };
+
+    hr = m_videoContext->VideoProcessorSetStreamSourceRect(
+        m_videoProcessor, 0, TRUE, &sourceRect);
+    if (FAILED(hr)) return hr;
+
+    hr = m_videoContext->VideoProcessorSetOutputTargetRect(
+        m_videoProcessor, TRUE, &destRect);
+    if (FAILED(hr)) return hr;
+
     return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
 }
 
