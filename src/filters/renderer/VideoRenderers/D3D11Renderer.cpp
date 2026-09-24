@@ -393,15 +393,6 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
     hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(m_swapChainFormat, &support);
     if (FAILED(hr) || !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
 
-    D3D11_VIDEO_PROCESSOR_CAPS caps = {};
-    D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS rateCaps = {};
-    UINT rateCapsCount = 1;
-    hr = m_videoProcessorEnumerator->GetVideoProcessorCaps(&caps);
-    if (FAILED(hr)) return hr;
-    hr = m_videoProcessorEnumerator->GetVideoProcessorRateConversionCaps(0, &rateCaps);
-    if (FAILED(hr)) return hr;
-    UNREFERENCED_PARAMETER(rateCapsCount);
-
     hr = m_videoDevice->CreateVideoProcessor(m_videoProcessorEnumerator, 0, &m_videoProcessor);
     if (FAILED(hr)) return hr;
 
