@@ -248,6 +248,20 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
         return hr;
     }
 
+    const DXGI_FORMAT desiredFormat = IsHdrOutputRequested()
+        ? DXGI_FORMAT_R10G10B10A2_UNORM
+        : DXGI_FORMAT_B8G8R8A8_UNORM;
+    if (desiredFormat != m_swapChainFormat) {
+        hr = m_swapChain->ResizeBuffers(kBufferCount, width, height, desiredFormat, flags);
+        if (FAILED(hr)) {
+            if (IsDeviceLostHr(hr)) {
+                m_deviceLost = true;
+            }
+            return hr;
+        }
+        m_swapChainFormat = desiredFormat;
+    }
+
     return ConfigureSwapChainColorSpace();
 }
 
