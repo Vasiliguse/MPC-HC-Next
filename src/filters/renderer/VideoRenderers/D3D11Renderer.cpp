@@ -8,6 +8,9 @@
 
 #include "stdafx.h"
 #include "D3D11Renderer.h"
+#include <algorithm>
+#include <cmath>
+#include <IMediaSideData.h>
 
 #include <VersionHelpers.h>
 
@@ -413,6 +416,80 @@ bool CD3D11Renderer::IsAdapterCompatible(ID3D11Device* device) const
     return desc.AdapterLuid.HighPart == selected.AdapterLuid.HighPart && desc.AdapterLuid.LowPart == selected.AdapterLuid.LowPart;
 }
 
+HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
+{
+    if (!sample) {
+        return E_POINTER;
+    }
+
+    CComQIPtr<IMediaSideData> sideData(sample);
+    if (!sideData) {
+        return SetHDR10Metadata(nullptr);
+    }
+
+    const BYTE* data = nullptr;
+    size_t size = 0;
+    DXGI_HDR_METADATA_HDR10 dxgi = {};
+
+    bool hasMastering = false;
+    if (SUCCEEDED(sideData->GetSideData(IID_MediaSideDataHDR, &data, &size)) &&
+        data && size >= sizeof(MediaSideDataHDR)) {
+        const auto* hdr = reinterpret_cast<const MediaSideDataHDR*>(data);
+
+        const auto toChromaticity = [](double value) -> UINT16 {
+            if (!std::isfinite(value)) {
+                return 0;
+            }
+            const double scaled = std::clamp(value * 50000.0, 0.0, 50000.0);
+            return static_cast<UINT16>(std::llround(scaled));
+        };
+
+        // MediaSideDataHDR is stored in G-B-R order, while DXGI HDR10
+        // metadata expects R-G-B primary order.
+        for (int i = 0; i < 3; ++i) {
+            const int src = 2 - i;
+            dxgi.RedPrimary[0] = dxgi.RedPrimary[0];
+            dxgi.GreenPrimary[0] = dxgi.GreenPrimary[0];
+            dxgi.BluePrimary[0] = dxgi.BluePrimary[0];
+            if (i == 0) {
+                dxgi.RedPrimary[0] = toChromaticity(hdr->display_primaries_x[src]);
+                dxgi.RedPrimary[1] = toChromaticity(hdr->display_primaries_y[src]);
+            } else if (i == 1) {
+                dxgi.GreenPrimary[0] = toChromaticity(hdr->display_primaries_x[src]);
+                dxgi.GreenPrimary[1] = toChromaticity(hdr->display_primaries_y[src]);
+            } else {
+                dxgi.BluePrimary[0] = toChromaticity(hdr->display_primaries_x[src]);
+                dxgi.BluePrimary[1] = toChromaticity(hdr->display_primaries_y[src]);
+            }
+        }
+
+        dxgi.WhitePoint[0] = toChromaticity(hdr->white_point_x);
+        dxgi.WhitePoint[1] = toChromaticity(hdr->white_point_y);
+
+        const auto toLuminance = [](double value) -> UINT {
+            if (!std::isfinite(value) || value <= 0.0) {
+                return 0;
+            }
+            const double scaled = std::clamp(value * 10000.0, 0.0, 4294967295.0);
+            return static_cast<UINT>(std::llround(scaled));
+        };
+
+        dxgi.MaxMasteringLuminance = toLuminance(hdr->max_display_mastering_luminance);
+        dxgi.MinMasteringLuminance = toLuminance(hdr->min_display_mastering_luminance);
+        hasMastering = true;
+    }
+
+    if (SUCCEEDED(sideData->GetSideData(IID_MediaSideDataHDRContentLightLevel, &data, &size)) &&
+        data && size >= sizeof(MediaSideDataHDRContentLightLevel)) {
+        const auto* cll = reinterpret_cast<const MediaSideDataHDRContentLightLevel*>(data);
+        dxgi.MaxContentLightLevel = static_cast<UINT16>(std::min(cll->MaxCLL, 65535u));
+        dxgi.MaxFrameAverageLightLevel = static_cast<UINT16>(std::min(cll->MaxFALL, 65535u));
+        hasMastering = true;
+    }
+
+    return hasMastering ? SetHDR10Metadata(&dxgi) : SetHDR10Metadata(nullptr);
+}
+
 HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
 {
     if (!sample) {
@@ -431,7 +508,17 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
         return hr;
     }
 
-    return PresentD3D11Texture(texture, arraySlice);
+    hr = SetHDR10MetadataFromSample(sample);
+    if (FAILED(hr) && hr != DXGI_ERROR_UNSUPPORTED) {
+        return hr;
+    }
+
+    hr = PresentD3D11Texture(texture, arraySlice);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return Present(0, 0);
 }
 
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
