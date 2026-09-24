@@ -443,7 +443,7 @@ HRESULT CD3D11Renderer::DrainPendingFrames(bool waitForAll)
             if (!waitForAll) {
                 break;
             }
-            Sleep(0);
+            Sleep(1);
             continue;
         }
 
