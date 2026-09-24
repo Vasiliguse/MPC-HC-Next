@@ -492,14 +492,14 @@ void CPlayerToolBar::SetColor()
 		if (m_pMainFrame->m_BackGroundGradient.Size()) {
 			ThemeRGB(s.nThemeRed, s.nThemeGreen, s.nThemeBlue, m_crBackground.R, m_crBackground.G, m_crBackground.B);
 		} else {
-			ThemeRGB(50, 55, 60, R, G, B);
+			ThemeRGB(8, 18, 31, R, G, B);
 			tvBackground[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-			ThemeRGB(20, 25, 30, R, G, B);
+			ThemeRGB(5, 12, 22, R, G, B);
 			tvBackground[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 		}
 
 		m_penFrHot.DeleteObject();
-		m_penFrHot.CreatePen(PS_SOLID, 0, 0x00E9E9E9);
+		m_penFrHot.CreatePen(PS_SOLID, 0, 0x00D8F7FF);
 	}
 }
 
