@@ -407,7 +407,8 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
 HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState)
 {
     if (!source || !m_swapChain || !m_device || !m_commandQueue ||
-        m_commandAllocators.empty() || !m_commandList || !m_rtvHeap) {
+        m_commandAllocators.empty() || !m_commandList || !m_rtvHeap ||
+        !m_fence || !m_fenceEvent || m_frameFenceValues.size() != m_commandAllocators.size()) {
         return E_UNEXPECTED;
     }
 
