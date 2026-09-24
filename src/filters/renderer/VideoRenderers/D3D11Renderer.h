@@ -10,6 +10,7 @@
 
 #include "stdafx.h"
 #include "IAllocatorPresenter.h"
+#include "IMediaSampleD3D11.h"
 
 #include <d3d11.h>
 #include <dxgi1_6.h>
@@ -34,6 +35,7 @@ public:
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval, UINT presentFlags);
     HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
+    HRESULT PresentMediaSample(IMediaSample* sample);
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT Reset();
 
