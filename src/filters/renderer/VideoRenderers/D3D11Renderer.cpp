@@ -427,8 +427,8 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
     CComPtr<IDXGIDevice> textureDxgiDevice;
     CComPtr<IDXGIAdapter> textureAdapter;
-    if (FAILED(texture->GetDevice(IID_PPV_ARGS(&textureDxgiDevice))) ||
-        FAILED(textureDxgiDevice->GetAdapter(&textureAdapter))) {
+    texture->GetDevice(&textureDxgiDevice);
+    if (!textureDxgiDevice || FAILED(textureDxgiDevice->GetAdapter(&textureAdapter))) {
         return E_INVALIDARG;
     }
     DXGI_ADAPTER_DESC textureAdapterDesc = {};
