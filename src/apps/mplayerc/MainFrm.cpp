@@ -20727,7 +20727,7 @@ COLORREF CMainFrame::ColorBrightness(int lSkale, COLORREF color)
 
 void CMainFrame::SetColorMenu()
 {
-	m_colMenuBk = ThemeRGB(45, 50, 55);
+	m_colMenuBk = ThemeRGB(7, 17, 30);
 
 	const COLORREF crBkBar = m_colMenuBk;						// background system menu bar
 	const COLORREF crBN    = ColorBrightness(-25, m_colMenuBk);	// backgroung normal
@@ -20800,7 +20800,7 @@ void CMainFrame::SetColorTitle(const bool bSystemOnly/* = false*/)
 		const auto& s = AfxGetAppSettings();
 		if (s.bUseDarkTheme && s.bDarkTitle) {
 			if (!bSystemOnly) {
-				m_colTitleBk = ThemeRGB(45, 50, 55);
+				m_colTitleBk = ThemeRGB(7, 17, 30);
 				DwmSetWindowAttribute(m_hWnd, 35 /*DWMWA_CAPTION_COLOR*/, &m_colTitleBk, sizeof(m_colTitleBk));
 			}
 		} else {
