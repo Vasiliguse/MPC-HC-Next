@@ -59,7 +59,7 @@ HRESULT CD3D12Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         : DXGI_FORMAT_B8G8R8A8_UNORM;
 
     if (desiredFormat != m_swapChainFormat) {
-        m_swapChain->ResizeBuffers(kBufferCount, 0, desiredFormat, DXGI_FORMAT_R10G10B10A2_UNORM,
+        m_swapChain->ResizeBuffers(kBufferCount, 0, 0, desiredFormat,
             DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
             (m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0));
         m_swapChainFormat = desiredFormat;
