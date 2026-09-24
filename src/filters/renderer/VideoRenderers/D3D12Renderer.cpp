@@ -395,6 +395,11 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
         m_swapChainFormat = desiredFormat;
     }
 
+    hr = CreateRenderTargetViews();
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     return ConfigureSwapChainColorSpace();
 }
 
