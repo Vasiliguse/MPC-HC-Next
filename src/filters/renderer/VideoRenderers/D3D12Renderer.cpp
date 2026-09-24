@@ -213,6 +213,7 @@ HRESULT CD3D12Renderer::CreateFrameResources()
     }
 
     m_commandAllocators.resize(kBufferCount);
+    m_frameFenceValues.assign(kBufferCount, 0);
     for (auto& allocator : m_commandAllocators) {
         HRESULT hr = m_device->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
@@ -416,6 +417,17 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     }
 
     auto& allocator = m_commandAllocators[m_frameIndex];
+    if (m_frameFenceValues[m_frameIndex] != 0 &&
+        m_fence->GetCompletedValue() < m_frameFenceValues[m_frameIndex]) {
+        hr = m_fence->SetEventOnCompletion(m_frameFenceValues[m_frameIndex], m_fenceEvent);
+        if (FAILED(hr)) {
+            return hr;
+        }
+        if (WaitForSingleObject(m_fenceEvent, INFINITE) != WAIT_OBJECT_0) {
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+    }
+
     HRESULT hr = allocator->Reset();
     if (FAILED(hr)) {
         return hr;
@@ -443,7 +455,7 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
         return DXGI_ERROR_UNSUPPORTED;
     }
 
-    D3D12_RESOURCE_BARRIER barriers[2] = {};
+    D3D12_RESOURCE_BARRIER barriers[3] = {};
     barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barriers[0].Transition.pResource = source;
     barriers[0].Transition.StateBefore = sourceState;
@@ -458,6 +470,19 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
 
     m_commandList->ResourceBarrier(2, barriers);
     m_commandList->CopyResource(backBuffer, source);
+
+    UINT barrierCount = 2;
+    if (sourceState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+        barriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barriers[2].Transition.pResource = source;
+        barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        barriers[2].Transition.StateAfter = sourceState;
+        barriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        barrierCount = 3;
+    }
+    if (barrierCount == 3) {
+        m_commandList->ResourceBarrier(1, &barriers[2]);
+    }
 
     D3D12_RESOURCE_BARRIER presentBarrier = {};
     presentBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -480,7 +505,13 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
         return hr;
     }
 
-    return SignalAndWait();
+    const UINT64 fenceValue = ++m_fenceValue;
+    hr = m_commandQueue->Signal(m_fence, fenceValue);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    m_frameFenceValues[m_frameIndex] = fenceValue;
+    return S_OK;
 }
 
 HRESULT CD3D12Renderer::Present(UINT syncInterval) {
@@ -514,6 +545,7 @@ void CD3D12Renderer::ReleaseDevice() {
 
     m_commandList.Release();
     m_commandAllocators.clear();
+    m_frameFenceValues.clear();
     m_rtvHeap.Release();
     m_fence.Release();
     if (m_fenceEvent) {
