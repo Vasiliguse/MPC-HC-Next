@@ -775,8 +775,8 @@ void CAppSettings::ResetSettings()
 	fChapterMarker = false;
 	fFlybar = true;
 	fFlybarOnTop = false;
-	iPlsFontPercent = 100;
-	iToolbarSize = 24;
+	iPlsFontPercent = 105;
+	iToolbarSize = 32;
 
 	// Save analog capture settings
 	iDefaultCaptureDevice = 0;
