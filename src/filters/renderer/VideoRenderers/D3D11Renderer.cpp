@@ -292,6 +292,12 @@ HRESULT CD3D11Renderer::ConfigureSwapChainColorSpace()
         return hr;
     }
 
+    UINT support = 0;
+    hr = swapChain3->CheckColorSpaceSupport(colorSpace, &support);
+    if (FAILED(hr) || !(support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT)) {
+        return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+    }
+
     return swapChain3->SetColorSpace1(colorSpace);
 }
 
@@ -307,6 +313,27 @@ DXGI_FORMAT CD3D11Renderer::GetSwapChainFormat() const
     return IsHdrOutputRequested()
         ? DXGI_FORMAT_R10G10B10A2_UNORM
         : DXGI_FORMAT_B8G8R8A8_UNORM;
+}
+
+HRESULT CD3D11Renderer::SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata)
+{
+    if (!m_swapChain) {
+        return E_UNEXPECTED;
+    }
+    if (!IsHdrOutputRequested()) {
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
+    CComPtr<IDXGISwapChain4> swapChain4;
+    HRESULT hr = m_swapChain->QueryInterface(IID_PPV_ARGS(&swapChain4));
+    if (FAILED(hr)) {
+        return hr;
+    }
+    if (!metadata) {
+        return swapChain4->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_NONE, 0, nullptr);
+    }
+    return swapChain4->SetHDRMetaData(
+        DXGI_HDR_METADATA_TYPE_HDR10, sizeof(DXGI_HDR_METADATA_HDR10), metadata);
 }
 
 HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
