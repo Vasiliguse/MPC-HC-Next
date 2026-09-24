@@ -419,20 +419,36 @@ bool CD3D11Renderer::IsAdapterCompatible(ID3D11Device* device) const
     DXGI_ADAPTER_DESC desc = {};
     DXGI_ADAPTER_DESC selected = {};
     if (FAILED(adapter->GetDesc(&desc)) || FAILED(m_adapter->GetDesc(&selected))) return false;
-    return desc.AdapterLuid == selected.AdapterLuid;
+    return desc.AdapterLuid.HighPart == selected.AdapterLuid.HighPart && desc.AdapterLuid.LowPart == selected.AdapterLuid.LowPart;
 }
 
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
 {
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
-    if (!IsAdapterCompatible(m_device)) return E_UNEXPECTED;
+    CComPtr<IDXGIDevice> textureDxgiDevice;
+    CComPtr<IDXGIAdapter> textureAdapter;
+    if (FAILED(texture->GetDevice(IID_PPV_ARGS(&textureDxgiDevice))) ||
+        FAILED(textureDxgiDevice->GetAdapter(&textureAdapter))) {
+        return E_INVALIDARG;
+    }
+    DXGI_ADAPTER_DESC textureAdapterDesc = {};
+    DXGI_ADAPTER_DESC rendererAdapterDesc = {};
+    if (FAILED(textureAdapter->GetDesc(&textureAdapterDesc)) || FAILED(m_adapter->GetDesc(&rendererAdapterDesc)) ||
+        textureAdapterDesc.AdapterLuid.HighPart != rendererAdapterDesc.AdapterLuid.HighPart ||
+        textureAdapterDesc.AdapterLuid.LowPart != rendererAdapterDesc.AdapterLuid.LowPart) {
+        return DXGI_ERROR_DEVICE_REMOVED;
+    }
 
     D3D11_TEXTURE2D_DESC textureDesc = {};
     texture->GetDesc(&textureDesc);
     if (!textureDesc.Width || !textureDesc.Height) return E_INVALIDARG;
 
     D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
-    HRESULT hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height);
+    UINT inputSupport = 0;
+    HRESULT hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(textureDesc.Format, &inputSupport);
+    if (FAILED(hr) || !(inputSupport & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+
+    hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height);
     if (FAILED(hr)) return hr;
 
     CComPtr<ID3D11VideoProcessorInputView> inputView;
