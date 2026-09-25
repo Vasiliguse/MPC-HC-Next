@@ -3048,7 +3048,8 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 			pDC->SelectObject(oldPen);
 			pDC->SelectObject(oldBrush);
 			CBrush accent(ThemeRGB(62, 220, 255));
-			CRect accentRect(card.left, card.top + 6, card.left + 3, card.bottom - 6);\n\t\t\tpDC->FillRect(accentRect, &accent);
+			CRect accentRect(card.left, card.top + 6, card.left + 3, card.bottom - 6);
+			pDC->FillRect(accentRect, &accent);
 		}
 		else {
 			FillRect(pDC->m_hDC, rcItem, CBrush(0x00F1DACC));
