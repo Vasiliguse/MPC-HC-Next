@@ -25,6 +25,7 @@
 #include "DXRAllocatorPresenter.h"
 #include "madVRAllocatorPresenter.h"
 #include "MPCVRAllocatorPresenter.h"
+#include "D3D11AllocatorPresenter.h"
 #include "EVRAllocatorPresenter.h"
 #include "SyncRenderer.h"
 
