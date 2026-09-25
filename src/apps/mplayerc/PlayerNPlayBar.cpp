@@ -44,8 +44,8 @@ BOOL CPlayerNPlayBar::Create(CWnd* pParentWnd, UINT defDockBarID)
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    m_szMinVert = CSize(188, 320);
-    m_szVert = CSize(220, 520);
+    m_szMinVert = CSize(220, 360);
+    m_szVert = CSize(248, 620);
     m_szMinFloat = m_szMinVert;
     m_szFloat = m_szVert;
 
@@ -84,30 +84,35 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     const int cx = r.CenterPoint().x;
     const int cy = r.CenterPoint().y;
 
+    dc.SetBkMode(TRANSPARENT);
     switch (icon) {
-        case 0:
-            dc.MoveTo(cx, cy - 6); dc.LineTo(cx, cy + 5);
-            dc.LineTo(cx - 5, cy); dc.LineTo(cx, cy - 6);
-            dc.LineTo(cx + 5, cy);
+        case 0: { // Home
+            CPoint roof[3] = {{cx - 8, cy - 1}, {cx, cy - 8}, {cx + 8, cy - 1}};
+            dc.Polyline(roof, 3);
+            dc.MoveTo(cx - 6, cy - 2); dc.LineTo(cx - 6, cy + 7); dc.LineTo(cx + 6, cy + 7); dc.LineTo(cx + 6, cy - 2);
+            dc.MoveTo(cx - 1, cy + 7); dc.LineTo(cx - 1, cy + 1); dc.LineTo(cx + 2, cy + 1); dc.LineTo(cx + 2, cy + 7);
             break;
-        case 1:
-            dc.Rectangle(cx - 7, cy - 7, cx + 7, cy - 5);
-            dc.Rectangle(cx - 7, cy - 2, cx + 7, cy);
-            dc.Rectangle(cx - 7, cy + 3, cx + 7, cy + 5);
+        }
+        case 1: // Playlist
+            dc.MoveTo(cx - 8, cy - 6); dc.LineTo(cx + 8, cy - 6);
+            dc.MoveTo(cx - 8, cy); dc.LineTo(cx + 8, cy);
+            dc.MoveTo(cx - 8, cy + 6); dc.LineTo(cx + 4, cy + 6);
             break;
-        case 2:
-            dc.Rectangle(cx - 7, cy - 6, cx + 7, cy + 6);
-            dc.MoveTo(cx - 3, cy - 2); dc.LineTo(cx + 4, cy); dc.LineTo(cx - 3, cy + 3);
+        case 2: // Video
+            dc.RoundRect(cx - 8, cy - 7, cx + 8, cy + 7, 3, 3);
+            dc.MoveTo(cx - 2, cy - 4); dc.LineTo(cx + 4, cy); dc.LineTo(cx - 2, cy + 4);
             break;
-        case 3:
-            dc.Ellipse(cx - 7, cy - 7, cx + 7, cy + 7);
-            dc.MoveTo(cx - 2, cy - 2); dc.LineTo(cx + 4, cy - 5);
-            dc.MoveTo(cx - 2, cy - 2); dc.LineTo(cx + 2, cy + 4);
+        case 3: // Audio
+            dc.MoveTo(cx - 7, cy - 3); dc.LineTo(cx - 2, cy - 3); dc.LineTo(cx + 3, cy - 8); dc.LineTo(cx + 3, cy + 8); dc.LineTo(cx - 2, cy + 3); dc.LineTo(cx - 7, cy + 3); dc.Close();
+            dc.Arc(cx - 2, cy - 7, cx + 11, cy + 7, cx + 5, cy + 5, cx + 5, cy - 5);
             break;
-        default:
-            dc.MoveTo(cx - 7, cy - 1); dc.LineTo(cx - 2, cy - 6); dc.LineTo(cx + 3, cy - 1);
-            dc.LineTo(cx + 7, cy - 5);
-            dc.MoveTo(cx - 7, cy + 3); dc.LineTo(cx - 2, cy + 7); dc.LineTo(cx + 3, cy + 2);
+        default: // Favorites
+            POINT heart[6] = {
+                {cx, cy + 8}, {cx - 8, cy - 1}, {cx - 6, cy - 7},
+                {cx, cy - 4}, {cx + 6, cy - 7}, {cx + 8, cy - 1}
+            };
+            dc.Polyline(heart, 6);
+            dc.LineTo(cx, cy + 8);
             break;
     }
 
