@@ -34,12 +34,12 @@
 #define SLIDER_CHAP_WIDTH    4
 
 #define OSD_COLOR_TRANSPARENT RGB(  0,   0,   0)
-#define OSD_COLOR_BACKGROUND  RGB( 32,  40,  48)
-#define OSD_COLOR_BORDER      RGB( 48,  56,  62)
-#define OSD_COLOR_TEXT        RGB(224, 224, 224)
-#define OSD_COLOR_BAR         RGB( 64,  72,  80)
-#define OSD_COLOR_BAR2        RGB(  0, 123, 167)
-#define OSD_COLOR_CURSOR      RGB(192, 200, 208)
+#define OSD_COLOR_BACKGROUND  RGB( 10,  20,  32)
+#define OSD_COLOR_BORDER      RGB( 34,  74,  96)
+#define OSD_COLOR_TEXT        RGB(232, 242, 248)
+#define OSD_COLOR_BAR         RGB( 45,  66,  82)
+#define OSD_COLOR_BAR2        RGB(  0, 196, 255)
+#define OSD_COLOR_CURSOR      RGB( 80, 210, 255)
 #define OSD_COLOR_DEBUGCLR    RGB(128, 136, 144)
 
 COSD::COSD(CMainFrame* pMainFrame)
@@ -441,7 +441,16 @@ void COSD::DrawMessage()
 		//m_MemDC.EndPath();
 		//m_MemDC.SelectClipPath(RGN_COPY);
 
+		// N Play: compact rounded OSD card with a cyan accent edge.
+		CRgn cardRgn;
+		cardRgn.CreateRoundRectRgn(rectMessages.left, rectMessages.top, rectMessages.right + 1, rectMessages.bottom + 1, 12, 12);
+		m_MemDC.SelectClipRgn(&cardRgn);
 		GradientFill(&m_MemDC, &rectMessages);
+		m_MemDC.SelectClipRgn(nullptr);
+
+		CRect accent = rectMessages;
+		accent.right = accent.left + 3;
+		m_MemDC.FillSolidRect(&accent, OSD_COLOR_BAR2);
 
 		UINT uFormat = DT_LEFT|DT_VCENTER|DT_NOPREFIX;
 
