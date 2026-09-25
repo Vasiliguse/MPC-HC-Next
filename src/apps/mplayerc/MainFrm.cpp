@@ -137,7 +137,7 @@ public:
 };
 
 
-static LPCWSTR s_strPlayerTitle = L"MPC-HC Next "
+static LPCWSTR s_strPlayerTitle = L"N Play "
 #ifdef _WIN64
 	L"x64 "
 #endif
