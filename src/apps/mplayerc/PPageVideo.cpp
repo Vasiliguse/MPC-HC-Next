@@ -180,7 +180,7 @@ BOOL CPPageVideo::OnInitDialog()
 			ASSERT(FALSE);
 			return;
 		}
-		CString sName = ResStr(nID);
+		CString sName = (iVR == VIDRNDT_D3D11) ? L"MPC D3D11 Renderer" : ResStr(nID);
 
 		HRESULT hr = IsRendererAvailable(iVR);
 		if (S_FALSE == hr) {
@@ -201,6 +201,7 @@ BOOL CPPageVideo::OnInitDialog()
 	addRenderer(VIDRNDT_MPCVR,       IDS_PPAGE_OUTPUT_MPCVR);
 	addRenderer(VIDRNDT_DXR,         IDS_PPAGE_OUTPUT_DXR);
 	addRenderer(VIDRNDT_MADVR,       IDS_PPAGE_OUTPUT_MADVR);
+	addRenderer(VIDRNDT_D3D11,        IDS_PPAGE_OUTPUT_MPCVR);
 	addRenderer(VIDRNDT_NULL_ANY,    IDS_PPAGE_OUTPUT_NULL_ANY);
 	addRenderer(VIDRNDT_NULL_UNCOMP, IDS_PPAGE_OUTPUT_NULL_UNCOMP);
 
