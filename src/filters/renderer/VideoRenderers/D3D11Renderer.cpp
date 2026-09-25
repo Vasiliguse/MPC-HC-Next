@@ -688,6 +688,12 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
                     m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
                 if (SUCCEEDED(hr)) {
                     m_swapChainFormat = desiredFormat;
+                    // The video processor enumerator is format-dependent.
+                    // Recreate it after an SDR/HDR swap-chain transition.
+                    m_videoProcessor.Release();
+                    m_videoProcessorEnumerator.Release();
+                    m_videoWidth = 0;
+                    m_videoHeight = 0;
                 }
             }
             if (SUCCEEDED(hr)) {
