@@ -3174,9 +3174,9 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 			hIcon = w > 24 ? m_icons_large[ext].get() : m_icons[ext].get();
 		}
 
-		DrawIconEx(pDC->m_hDC, rcItem.left + 2, rcItem.top + 2, hIcon, w, w, 0, nullptr, DI_NORMAL);
-
-		offset = rcItem.Height();
+		const int iconX = thumb.left + std::max(0, (thumb.Width() - w) / 2);
+		const int iconY = thumb.top + std::max(0, (thumb.Height() - w) / 2);
+		DrawIconEx(pDC->m_hDC, iconX, iconY, hIcon, w, w, 0, nullptr, DI_NORMAL);
 	}
 
 	rcText.left += (3 + offset);
