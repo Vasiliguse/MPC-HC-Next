@@ -33,6 +33,7 @@
 #include "PlayerPlaylistBar.h"
 #include "PlayerCaptureBar.h"
 #include "PlayerNavigationBar.h"
+#include "PlayerNPlayBar.h"
 #include "PlayerShaderEditorBar.h"
 #include "PPageSheet.h"
 #include "PPageFileInfoSheet.h"
@@ -800,6 +801,7 @@ private: // control bar embedded members
 	CPlayerSubresyncBar m_wndSubresyncBar;
 	CPlayerCaptureBar m_wndCaptureBar;
 	CPlayerNavigationBar m_wndNavigationBar;
+	CPlayerNPlayBar m_wndNPlayBar;
 	CPlayerShaderEditorBar m_wndShaderEditorBar;
 	std::vector<CSizingControlBar*> m_dockingbars;
 
