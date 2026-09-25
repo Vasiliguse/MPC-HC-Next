@@ -313,13 +313,7 @@ void CPlayerSeekBar::OnPaint()
 
 		GRADIENT_RECT gr = {0, 1};
 
-		if (m_pMainFrame->m_BackGroundGradient.Size()) {
-			m_pMainFrame->m_BackGroundGradient.Paint(&memdc, r, 0, s.nThemeBrightness, m_crBackground.R, m_crBackground.G, m_crBackground.B);
-		} else {
-			tvBackground[0].x = r.left; tvBackground[0].y = r.top;
-			tvBackground[1].x = r.right; tvBackground[1].y = r.bottom;
-			memdc.GradientFill(tvBackground, 2, &gr, 1, GRADIENT_FILL_RECT_V);
-		}
+		memdc.FillSolidRect(r, ThemeRGB(7, 16, 28));
 
 		memdc.SetBkMode(TRANSPARENT);
 
@@ -327,9 +321,10 @@ void CPlayerSeekBar::OnPaint()
 		const int nposx = GetThumbRect().right - 2;
 		const int nposy = r.top;
 
-		memdc.SelectObject(&m_penPlayed1);
-		memdc.MoveTo(rc.left, rc.top);
-		memdc.LineTo(rc.right, rc.top);
+		CPen trackPen(PS_SOLID, 2, ThemeRGB(30, 55, 76));
+		memdc.SelectObject(&trackPen);
+		memdc.MoveTo(rc.left, rc.CenterPoint().y);
+		memdc.LineTo(rc.right, rc.CenterPoint().y);
 
 		memdc.SelectObject(&m_penPlayed2);
 		memdc.MoveTo(rc.left - 1, rc.bottom - 1);
