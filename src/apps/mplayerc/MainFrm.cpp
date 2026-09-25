@@ -7148,7 +7148,7 @@ void CMainFrame::OnUpdateViewDisplayStats(CCmdUI* pCmdUI)
 		return;
 	}
 
-	if (m_clsidCAP == CLSID_MPCVRAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
+	if (m_clsidCAP == CLSID_MPCVRAllocatorPresenter) {
 		CComQIPtr<IExFilterConfig> pIExFilterConfig = m_pCAP.p;
 		if (pIExFilterConfig) {
 			bool statsEnable = 0;
@@ -7191,7 +7191,7 @@ void CMainFrame::OnViewDisplayStatsSC()
 
 		RepaintVideo();
 	}
-	else if (m_clsidCAP == CLSID_MPCVRAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
+	else if (m_clsidCAP == CLSID_MPCVRAllocatorPresenter) {
 		CComQIPtr<IExFilterConfig> pIExFilterConfig = m_pCAP.p;
 		if (pIExFilterConfig) {
 			bool statsEnable = 0;
@@ -11399,7 +11399,7 @@ void CMainFrame::AutoChangeMonitorMode()
 			if (rtAvgTimePerFrame > 0) {
 				dFPS = 10000000.0 / rtAvgTimePerFrame;
 
-				if (m_clsidCAP == CLSID_MPCVRAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
+				if (m_clsidCAP == CLSID_MPCVRAllocatorPresenter) {
 					if (CComQIPtr<IExFilterConfig> pIExFilterConfig = m_pCAP.p) {
 						bool bDoubleRate = false;
 						if (S_OK == pIExFilterConfig->Flt_GetBool("doubleRate", &bDoubleRate) && bDoubleRate) {
