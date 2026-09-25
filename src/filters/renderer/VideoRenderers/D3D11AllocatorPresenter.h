@@ -27,8 +27,10 @@ namespace DSObjects
 		HWND m_hWnd = nullptr;
 		ExtraRendererSettings m_settings = {};
 		CD3D11Renderer m_renderer;
-		UINT m_width = 0;
-		UINT m_height = 0;
+		UINT m_sourceWidth = 0;
+		UINT m_sourceHeight = 0;
+		UINT m_outputWidth = 0;
+		UINT m_outputHeight = 0;
 	};
 
 	class CD3D11AllocatorPresenter final : public CAllocatorPresenterImpl
