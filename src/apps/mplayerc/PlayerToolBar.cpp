@@ -186,8 +186,8 @@ void CPlayerToolBar::SwitchTheme()
 
 	if (s.bUseDarkTheme) {
 		COLORSCHEME cs = { sizeof(COLORSCHEME) };
-		cs.clrBtnHighlight = 0x0046413c;
-		cs.clrBtnShadow    = 0x0037322d;
+		cs.clrBtnHighlight = 0x00345B73;
+		cs.clrBtnShadow    = 0x00203344;
 
 		tb.SetColorScheme(&cs);
 		tb.SetIndent(5);
