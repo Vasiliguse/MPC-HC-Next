@@ -645,6 +645,7 @@ CMainFrame::CMainFrame() :
 	m_wndFlyBar(this),
 	m_wndPreView(this),
 	m_wndPlaylistBar(this),
+	m_wndNPlayBar(this),
 	m_wndCaptureBar(this),
 	m_wndSubresyncBar(this),
 	m_dMediaInfoFPS(0.0),
@@ -809,6 +810,11 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndNavigationBar.SetBarStyle(m_wndNavigationBar.GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
 	m_wndNavigationBar.EnableDocking(CBRS_ALIGN_LEFT|CBRS_ALIGN_RIGHT);
 	m_dockingbars.emplace_back(&m_wndNavigationBar);
+	m_wndNPlayBar.Create(this, AFX_IDW_DOCKBAR_LEFT);
+	m_wndNPlayBar.SetBarStyle(m_wndNPlayBar.GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
+	m_wndNPlayBar.EnableDocking(CBRS_ALIGN_LEFT|CBRS_ALIGN_RIGHT);
+	m_dockingbars.emplace_back(&m_wndNPlayBar);
+
 
 	m_wndShaderEditorBar.Create(this, AFX_IDW_DOCKBAR_TOP);
 	m_wndShaderEditorBar.SetBarStyle(m_wndShaderEditorBar.GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
@@ -825,6 +831,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetDesktopWindow()->GetWindowRect(&m_rcDesktop);
 
 	ShowControls(s.nCS);
+	// Keep the N Play navigation visible as the primary left-side surface.
+	ShowControlBarInternal(&m_wndNPlayBar, TRUE);
 
 	SetAlwaysOnTop(s.iOnTop);
 
