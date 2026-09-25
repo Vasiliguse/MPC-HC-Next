@@ -231,6 +231,99 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_MOUSELEAVE()
 END_MESSAGE_MAP()
 
+static void DrawNPlayHome(CDC* pDC, const CRect& rc, CMainFrame* pMainFrame)
+{
+	const bool dark = AfxGetAppSettings().bUseDarkTheme;
+	const COLORREF bg = dark ? RGB(7, 14, 25) : RGB(246, 249, 252);
+	const COLORREF panel = dark ? RGB(14, 27, 43) : RGB(255, 255, 255);
+	const COLORREF panel2 = dark ? RGB(18, 36, 55) : RGB(238, 244, 249);
+	const COLORREF text = dark ? RGB(235, 243, 250) : RGB(25, 38, 52);
+	const COLORREF muted = dark ? RGB(135, 154, 174) : RGB(100, 116, 132);
+	const COLORREF accent = RGB(0, 196, 255);
+
+	pDC->FillSolidRect(rc, bg);
+
+	const int sx = std::max(1, pMainFrame->ScaleX(1));
+	const int sy = std::max(1, pMainFrame->ScaleY(1));
+	const int margin = 28 * sx;
+	const int top = 26 * sy;
+
+	CFont title, subtitle, cardTitle, cardText;
+	CClientDC fontDc(pMainFrame);
+	const int dpiY = fontDc.GetDeviceCaps(LOGPIXELSY);
+	title.CreateFontW(-MulDiv(24, dpiY, 96), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+	subtitle.CreateFontW(-MulDiv(11, dpiY, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+	cardTitle.CreateFontW(-MulDiv(12, dpiY, 96), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+	cardText.CreateFontW(-MulDiv(10, dpiY, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+
+	CRect content = rc;
+	content.DeflateRect(margin, top, margin, 20 * sy);
+
+	CFont* oldFont = pDC->SelectObject(&title);
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(text);
+	pDC->DrawTextW(L"Welcome to N Play", CRect(content.left, content.top, content.right, content.top + 40 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	pDC->SelectObject(&subtitle);
+	pDC->SetTextColor(muted);
+	pDC->DrawTextW(L"Your media library", CRect(content.left, content.top + 38 * sy, content.right, content.top + 68 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+	const int gap = 16 * sx;
+	const int cardTop = content.top + 92 * sy;
+	const int cardH = std::min(178 * sy, std::max(120 * sy, content.Height() / 3));
+	const int cardW = std::min(420 * sx, content.Width() - gap);
+	CRect openCard(content.left, cardTop, content.left + cardW, cardTop + cardH);
+	CBrush cardBrush(panel);
+	CPen border(PS_SOLID, 1, dark ? RGB(35, 59, 78) : RGB(220, 228, 236));
+	CBrush* oldBrush = pDC->SelectObject(&cardBrush);
+	CPen* oldPen = pDC->SelectObject(&border);
+	pDC->RoundRect(openCard, CPoint(14 * sx, 14 * sy));
+	pDC->SelectObject(oldPen);
+	pDC->SelectObject(oldBrush);
+
+	CBrush accentBrush(accent);
+	pDC->FillRect(CRect(openCard.left, openCard.top, openCard.left + 5 * sx, openCard.bottom), &accentBrush);
+
+	const int iconCx = openCard.left + 46 * sx;
+	const int iconCy = openCard.top + 50 * sy;
+	CPen iconPen(PS_SOLID, 2 * sx, accent);
+	CBrush iconBrush(dark ? RGB(20, 54, 72) : RGB(226, 247, 255));
+	oldPen = pDC->SelectObject(&iconPen);
+	oldBrush = pDC->SelectObject(&iconBrush);
+	pDC->Ellipse(iconCx - 20 * sx, iconCy - 20 * sy, iconCx + 20 * sx, iconCy + 20 * sy);
+	pDC->SelectObject(oldBrush);
+	pDC->SelectObject(oldPen);
+	CPen playPen(PS_SOLID, 1, accent);
+	oldPen = pDC->SelectObject(&playPen);
+	POINT tri[3] = {{iconCx - 5 * sx, iconCy - 9 * sy}, {iconCx + 10 * sx, iconCy}, {iconCx - 5 * sx, iconCy + 9 * sy}};
+	pDC->Polygon(tri, 3);
+	pDC->SelectObject(oldPen);
+
+	pDC->SelectObject(&cardTitle);
+	pDC->SetTextColor(text);
+	pDC->DrawTextW(L"Open a media file", CRect(openCard.left + 82 * sx, openCard.top + 28 * sy, openCard.right - 18 * sx, openCard.top + 58 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	pDC->SelectObject(&cardText);
+	pDC->SetTextColor(muted);
+	pDC->DrawTextW(L"Start playback and build your playlist.", CRect(openCard.left + 82 * sx, openCard.top + 58 * sy, openCard.right - 18 * sx, openCard.top + 92 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	pDC->SetTextColor(accent);
+	pDC->DrawTextW(L"OPEN FILE", CRect(openCard.left + 82 * sx, openCard.top + 104 * sy, openCard.right - 18 * sx, openCard.top + 134 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+	const int infoTop = cardTop + cardH + gap;
+	const int infoW = std::max(220 * sx, (content.Width() - gap) / 2);
+	for (int i = 0; i < 2; ++i) {
+		CRect card(content.left + i * (infoW + gap), infoTop, content.left + i * (infoW + gap) + infoW, infoTop + 86 * sy);
+		CBrush b(panel2);
+		pDC->FillRect(card, &b);
+		pDC->SelectObject(&cardTitle);
+		pDC->SetTextColor(text);
+		pDC->DrawTextW(i == 0 ? L"Playlist" : L"Library", CRect(card.left + 16 * sx, card.top + 12 * sy, card.right - 12 * sx, card.top + 38 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+		pDC->SelectObject(&cardText);
+		pDC->SetTextColor(muted);
+		pDC->DrawTextW(i == 0 ? L"Add files to create a queue." : L"Your video and audio files will appear here.", CRect(card.left + 16 * sx, card.top + 40 * sy, card.right - 12 * sx, card.bottom - 10 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+
+	pDC->SelectObject(oldFont);
+}
+
 // CChildView message handlers
 
 void CChildView::OnPaint()
@@ -252,6 +345,13 @@ BOOL CChildView::OnEraseBkgnd(CDC* pDC)
 	COLORREF bkcolor = 0;
 	HRESULT hr = S_FALSE;
 	CComPtr<IWICBitmapSource> pBitmapSource;
+
+	// N Play home surface replaces the legacy MPC-BE logo when no media is loaded.
+	if (!m_pMainFrame->IsD3DFullScreenMode() &&
+			m_pMainFrame->m_eMediaLoadState != MLS_LOADED && !m_pMainFrame->m_bNextIsOpened && !m_pMainFrame->m_bAudioOnly) {
+		DrawNPlayHome(pDC, r, m_pMainFrame);
+		return TRUE;
+	}
 
 	if (m_pMainFrame->IsD3DFullScreenMode() ||
 			((m_pMainFrame->m_eMediaLoadState != MLS_LOADED || m_pMainFrame->m_bAudioOnly) && !m_pMainFrame->m_bNextIsOpened)) {
