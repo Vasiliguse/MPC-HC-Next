@@ -785,9 +785,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndSubresyncBar.SetHeight(200);
 	m_dockingbars.emplace_back(&m_wndSubresyncBar);
 
-	m_wndPlaylistBar.Create(this, AFX_IDW_DOCKBAR_RIGHT);
+	m_wndPlaylistBar.Create(this, AFX_IDW_DOCKBAR_LEFT);
 	m_wndPlaylistBar.SetBarStyle(m_wndPlaylistBar.GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
-	m_wndPlaylistBar.EnableDocking(CBRS_ALIGN_ANY);
+	m_wndPlaylistBar.EnableDocking(CBRS_ALIGN_LEFT|CBRS_ALIGN_RIGHT);
 	m_wndPlaylistBar.SetHeight(100);
 	m_dockingbars.emplace_back(&m_wndPlaylistBar);
 
@@ -832,8 +832,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetDesktopWindow()->GetWindowRect(&m_rcDesktop);
 
 	ShowControls(s.nCS);
-	// Keep the N Play navigation visible as the primary left-side surface.
+	// Keep the N Play navigation and playlist visible as the primary library layout.
 	ShowControlBarInternal(&m_wndNPlayBar, TRUE);
+	ShowControlBarInternal(&m_wndPlaylistBar, TRUE);
 
 	SetAlwaysOnTop(s.iOnTop);
 
