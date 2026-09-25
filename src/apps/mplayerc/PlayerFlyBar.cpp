@@ -330,7 +330,15 @@ void CFlyBar::DrawWnd()
 		bm.CreateCompatibleBitmap(&dc, x, rcBar.Height());
 		CBitmap* pOldBm = mdc.SelectObject(&bm);
 		mdc.SetBkMode(TRANSPARENT);
-		mdc.FillSolidRect(rcBar, RGB(0, 0, 0));
+		mdc.FillSolidRect(rcBar, ThemeRGB(7, 16, 28));
+		CRect frame(rcBar);
+		frame.DeflateRect(1, 1);
+		CPen framePen(PS_SOLID, 1, ThemeRGB(35, 104, 132));
+		CBrush* oldBrush = (CBrush*)mdc.SelectStockObject(NULL_BRUSH);
+		CPen* oldPen = mdc.SelectObject(&framePen);
+		mdc.RoundRect(frame, CPoint(8, 8));
+		mdc.SelectObject(oldPen);
+		mdc.SelectObject(oldBrush);
 
 		int nImage = (m_btIdx == 1) ? IMG_EXIT_A : IMG_EXIT;
 		DrawButton(&mdc, nImage, x, 1);
