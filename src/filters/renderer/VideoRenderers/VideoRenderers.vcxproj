@@ -54,6 +54,7 @@
     <ClCompile Include="CPUUsage.cpp" />
     <ClCompile Include="D3DHook.cpp" />
     <ClCompile Include="D3D11Renderer.cpp" />
+    <ClCompile Include="D3D11AllocatorPresenter.cpp" />
     <ClCompile Include="D3D12Renderer.cpp" />
     <ClCompile Include="D3DUtil\D3D9Font.cpp" />
     <ClCompile Include="Dither.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="CPUUsage.h" />
     <ClInclude Include="D3DHook.h" />
     <ClInclude Include="D3D11Renderer.h" />
+    <ClInclude Include="D3D11AllocatorPresenter.h" />
     <ClInclude Include="D3D12Renderer.h" />
     <ClInclude Include="D3DUtil\D3D9Font.h" />
     <ClInclude Include="D3DUtil\D3DCommon.h" />
