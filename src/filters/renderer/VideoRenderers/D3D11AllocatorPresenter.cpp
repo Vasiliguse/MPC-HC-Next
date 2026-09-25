@@ -67,7 +67,7 @@ namespace DSObjects
 			if (FAILED(hr)) {
 				return hr;
 			}
-			m_outputWidth = width;
+				m_outputWidth = width;
 			m_outputHeight = height;
 		}
 
@@ -126,6 +126,7 @@ namespace DSObjects
 		}
 		// The renderer resizes lazily on the next frame. Keeping this hook
 		// non-destructive avoids racing the DirectShow render thread.
+		return true;
 	}
 
 	STDMETHODIMP_(bool) CD3D11AllocatorPresenter::ResetDevice()
