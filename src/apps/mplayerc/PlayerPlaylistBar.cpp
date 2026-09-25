@@ -3038,11 +3038,18 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 
 	if (!!m_list.GetItemState(nItem, LVIS_SELECTED)) {
 		if (s.bUseDarkTheme) {
-			GRADIENT_RECT gr = { 0, 1 };
-			tvSelected[0].x = rcItem.left; tvSelected[0].y = rcItem.top;
-			tvSelected[1].x = rcItem.right; tvSelected[1].y = rcItem.bottom;
-			pDC->GradientFill(tvSelected, 2, &gr, 1, GRADIENT_FILL_RECT_V);
-			pDC->Draw3dRect(rcItem, m_crAvtiveItem3dRectTopLeft, m_crAvtiveItem3dRectBottomRight);
+			CRect card(rcItem);
+			card.DeflateRect(4, 2);
+			CBrush brush(ThemeRGB(18, 31, 47));
+			CPen pen(PS_SOLID, 1, ThemeRGB(45, 91, 120));
+			CBrush* oldBrush = pDC->SelectObject(&brush);
+			CPen* oldPen = pDC->SelectObject(&pen);
+			pDC->RoundRect(card, CPoint(8, 8));
+			pDC->SelectObject(oldPen);
+			pDC->SelectObject(oldBrush);
+			CBrush accent(ThemeRGB(62, 220, 255));
+			CRect accentRect(card.left, card.top + 6, card.left + 3, card.bottom - 6);
+			pDC->FillRect(accentRect, &accent);
 		}
 		else {
 			FillRect(pDC->m_hDC, rcItem, CBrush(0x00F1DACC));
@@ -3051,10 +3058,7 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 		}
 	} else {
 		if (s.bUseDarkTheme) {
-			GRADIENT_RECT gr = { 0, 1 };
-			tvNormal[0].x = rcItem.left; tvNormal[0].y = rcItem.top;
-			tvNormal[1].x = rcItem.right; tvNormal[1].y = rcItem.bottom;
-			pDC->GradientFill(tvNormal, 2, &gr, 1, GRADIENT_FILL_RECT_V);
+			pDC->FillSolidRect(rcItem, ThemeRGB(8, 17, 29));
 		}
 		else {
 			FillRect(pDC->m_hDC, rcItem, CBrush(m_crBackground));
@@ -3070,8 +3074,8 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 	COLORREF textcolor = bSelected ? 0xFF : 0;
 
 	if (s.bUseDarkTheme) {
-		textcolor = bSelected ? m_crActiveItem : (!!m_list.GetItemState(nItem, LVIS_SELECTED) ? m_crSelectedItem : m_crNormalItem);
-	}
+			textcolor = bSelected ? ThemeRGB(242, 252, 255) : (!!m_list.GetItemState(nItem, LVIS_SELECTED) ? ThemeRGB(115, 232, 255) : ThemeRGB(177, 193, 208));
+		}
 
 	if (pli.m_bInvalid) {
 		textcolor |= 0xA0A0A0;
@@ -3095,7 +3099,39 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 	fmt.Format(L"%%0%dd. %%s", (int)log10(0.1 + curPlayList.GetCount()) + 1);
 	file.Format(fmt, nItem + 1, m_list.GetItemText(nItem, COL_NAME));
 
-	int offset = 0;
+	// Lightweight thumbnail slot: keep playlist rows visually close to the N Play media cards
+	// without decoding video frames inside the owner-draw path.
+	const int thumbHeight = std::max(32, rcItem.Height() - 8);
+	const int thumbWidth = std::min(88, std::max(52, thumbHeight * 16 / 9));
+	CRect thumb(rcItem.left + 6, rcItem.top + 4, rcItem.left + 6 + thumbWidth, rcItem.bottom - 4);
+	CBrush thumbBrush(s.bUseDarkTheme ? ThemeRGB(12, 27, 42) : RGB(232, 237, 243));
+	CPen thumbPen(PS_SOLID, 1, s.bUseDarkTheme ? ThemeRGB(35, 83, 108) : RGB(205, 214, 224));
+	CBrush* oldThumbBrush = pDC->SelectObject(&thumbBrush);
+	CPen* oldThumbPen = pDC->SelectObject(&thumbPen);
+	pDC->RoundRect(thumb, CPoint(7, 7));
+	pDC->SelectObject(oldThumbPen);
+	pDC->SelectObject(oldThumbBrush);
+
+	CString ext = GetFileExt(pli.m_fi.GetPath()).MakeUpper();
+	CString badge = ext;
+	if (badge.IsEmpty()) {
+		badge = L"MEDIA";
+	}
+	if (badge.GetLength() > 7) {
+		badge = badge.Left(7);
+	}
+	CFont badgeFont;
+	badgeFont.CreateFontW(-m_pMainFrame->ScaleY(9), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+		DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+	CFont* oldBadgeFont = pDC->SelectObject(&badgeFont);
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(s.bUseDarkTheme ? ThemeRGB(91, 218, 255) : RGB(36, 113, 151));
+	pDC->DrawTextW(badge, CRect(thumb.left + 7, thumb.top + 6, thumb.right - 7, thumb.bottom - 6),
+		DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_END_ELLIPSIS);
+	pDC->SelectObject(oldBadgeFont);
+
+	int offset = thumb.Width() + 10;
 	if (GetCurTab().type == PL_EXPLORER) {
 		file = m_list.GetItemText(nItem, COL_NAME);
 		const int w = rcItem.Height() - 4;
@@ -3132,9 +3168,9 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 			hIcon = w > 24 ? m_icons_large[ext].get() : m_icons[ext].get();
 		}
 
-		DrawIconEx(pDC->m_hDC, rcItem.left + 2, rcItem.top + 2, hIcon, w, w, 0, nullptr, DI_NORMAL);
-
-		offset = rcItem.Height();
+		const int iconX = thumb.left + std::max(0, (thumb.Width() - w) / 2);
+		const int iconY = thumb.top + std::max(0, (thumb.Height() - w) / 2);
+		DrawIconEx(pDC->m_hDC, iconX, iconY, hIcon, w, w, 0, nullptr, DI_NORMAL);
 	}
 
 	rcText.left += (3 + offset);
