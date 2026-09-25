@@ -328,7 +328,7 @@ void CPlayerSeekBar::OnPaint()
 		memdc.LineTo(rc.right, rc.CenterPoint().y);
 
 		memdc.SelectObject(&m_penPlayed2);
-		const int playedRight = std::max(rc.left, nposx);
+		const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
 		CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
 		memdc.SelectObject(&playedPen);
 		memdc.RoundRect(rc.left, trackY - 1, playedRight, trackY + 2, 2, 2);
