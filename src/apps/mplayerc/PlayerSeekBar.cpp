@@ -225,7 +225,8 @@ CRect CPlayerSeekBar::GetThumbRect()
 	const int y = r.CenterPoint().y;
 
 	if (AfxGetAppSettings().bUseDarkTheme) {
-		r.SetRect(x, y - 2, x + 3, y + 3);
+		const int thumb = std::max(m_pMainFrame->ScaleY(8), m_scaleY7);
+		r.SetRect(x - thumb / 2, y - thumb / 2, x + (thumb + 1) / 2, y + (thumb + 1) / 2);
 	} else {
 		const int dx = m_scaleY7;
 		const int dy = m_scaleY5;
@@ -327,8 +328,10 @@ void CPlayerSeekBar::OnPaint()
 		memdc.LineTo(rc.right, rc.CenterPoint().y);
 
 		memdc.SelectObject(&m_penPlayed2);
-		memdc.MoveTo(rc.left - 1, rc.bottom - 1);
-		memdc.LineTo(rc.right + 2, rc.bottom - 1);
+		const int playedRight = std::max(rc.left, nposx);
+		CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
+		memdc.SelectObject(&playedPen);
+		memdc.RoundRect(rc.left, trackY - 1, playedRight, trackY + 2, 2, 2);
 
 		// buffer
 		m_rLock.SetRect(-1, -1, -1, -1);
