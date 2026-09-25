@@ -106,9 +106,7 @@ namespace DSObjects
 		}
 
 		m_rendererFilter.Attach(filter);
-		*ppRenderer = m_rendererFilter;
-		(*ppRenderer)->AddRef();
-		return S_OK;
+		return m_rendererFilter->QueryInterface(IID_PPV_ARGS(ppRenderer));
 	}
 
 	STDMETHODIMP_(CLSID) CD3D11AllocatorPresenter::GetAPCLSID()
