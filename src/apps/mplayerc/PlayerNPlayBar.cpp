@@ -103,7 +103,7 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
             dc.MoveTo(cx - 2, cy - 4); dc.LineTo(cx + 4, cy); dc.LineTo(cx - 2, cy + 4);
             break;
         case 3: // Audio
-            dc.MoveTo(cx - 7, cy - 3); dc.LineTo(cx - 2, cy - 3); dc.LineTo(cx + 3, cy - 8); dc.LineTo(cx + 3, cy + 8); dc.LineTo(cx - 2, cy + 3); dc.LineTo(cx - 7, cy + 3); dc.Close();
+            dc.MoveTo(cx - 7, cy - 3); dc.LineTo(cx - 2, cy - 3); dc.LineTo(cx + 3, cy - 8); dc.LineTo(cx + 3, cy + 8); dc.LineTo(cx - 2, cy + 3); dc.LineTo(cx - 7, cy + 3); dc.LineTo(cx - 7, cy - 3);
             dc.Arc(cx - 2, cy - 7, cx + 11, cy + 7, cx + 5, cy + 5, cx + 5, cy - 5);
             break;
         default: // Favorites
