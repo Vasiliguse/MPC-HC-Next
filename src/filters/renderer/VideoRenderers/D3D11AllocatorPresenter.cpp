@@ -67,7 +67,7 @@ namespace DSObjects
 			if (FAILED(hr)) {
 				return hr;
 			}
-				m_outputWidth = width;
+			m_outputWidth = width;
 			m_outputHeight = height;
 		}
 
