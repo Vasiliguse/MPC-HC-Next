@@ -574,7 +574,7 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				} else {
 					tvBackground[0].x = r.left; tvBackground[0].y = r.top;
 					tvBackground[1].x = r.right; tvBackground[1].y = r.bottom;
-					dc.GradientFill(tvBackground, 2, &gr, 1, GRADIENT_FILL_RECT_V);
+					dc.FillSolidRect(r, ThemeRGB(7, 16, 28));
 				}
 
 				dc.Detach();
@@ -682,7 +682,7 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				dc.Attach(pTBCD->nmcd.hdc);
 				CRect r;
 				GetClientRect(&r);
-				dc.FillSolidRect(r, GetSysColor(COLOR_BTNFACE));
+				dc.FillSolidRect(r, ThemeRGB(7, 16, 28));
 				dc.Detach();
 			}
 			lr |= CDRF_NOTIFYITEMDRAW;
