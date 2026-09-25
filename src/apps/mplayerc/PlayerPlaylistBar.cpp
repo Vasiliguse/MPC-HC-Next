@@ -829,6 +829,12 @@ BOOL CPlayerPlaylistBar::Create(CWnd* pParentWnd, UINT defDockBarID)
 
 	ScaleFontInternal();
 
+	// N Play uses a spacious library column with media-card sized rows.
+	m_szMinVert = CSize(m_pMainFrame->ScaleX(300), m_pMainFrame->ScaleY(320));
+	m_szVert = CSize(m_pMainFrame->ScaleX(380), m_pMainFrame->ScaleY(620));
+	m_szMinFloat = m_szMinVert;
+	m_szFloat = m_szVert;
+
 	if (AfxGetAppSettings().bUseDarkTheme) {
 		InitializeCoolSB(m_list.m_hWnd, ThemeRGB);
 		if (SysVersion::IsWin8orLater()) {
@@ -878,7 +884,7 @@ void CPlayerPlaylistBar::ScaleFontInternal()
 	m_list.SetColumnWidth(COL_TIME, m_nTimeColWidth);
 
 	m_fakeImageList.DeleteImageList();
-	m_fakeImageList.Create(1, std::abs(lf.lfHeight) + m_pMainFrame->ScaleY(4), ILC_COLOR4, 10, 10);
+	m_fakeImageList.Create(1, m_pMainFrame->ScaleY(58), ILC_COLOR4, 10, 10);
 	m_list.SetImageList(&m_fakeImageList, LVSIL_SMALL);
 
 	m_nSearchBarHeight = m_pMainFrame->ScaleY(MulDiv(20, AfxGetAppSettings().iPlsFontPercent, 100));
@@ -3099,7 +3105,39 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 	fmt.Format(L"%%0%dd. %%s", (int)log10(0.1 + curPlayList.GetCount()) + 1);
 	file.Format(fmt, nItem + 1, m_list.GetItemText(nItem, COL_NAME));
 
-	int offset = 0;
+	// Lightweight thumbnail slot: keep playlist rows visually close to the N Play media cards
+	// without decoding video frames inside the owner-draw path.
+	const int thumbHeight = std::max(32, rcItem.Height() - 8);
+	const int thumbWidth = std::min(88, std::max(52, thumbHeight * 16 / 9));
+	CRect thumb(rcItem.left + 6, rcItem.top + 4, rcItem.left + 6 + thumbWidth, rcItem.bottom - 4);
+	CBrush thumbBrush(s.bUseDarkTheme ? ThemeRGB(12, 27, 42) : RGB(232, 237, 243));
+	CPen thumbPen(PS_SOLID, 1, s.bUseDarkTheme ? ThemeRGB(35, 83, 108) : RGB(205, 214, 224));
+	CBrush* oldThumbBrush = pDC->SelectObject(&thumbBrush);
+	CPen* oldThumbPen = pDC->SelectObject(&thumbPen);
+	pDC->RoundRect(thumb, CPoint(7, 7));
+	pDC->SelectObject(oldThumbPen);
+	pDC->SelectObject(oldThumbBrush);
+
+	CString ext = GetFileExt(pli.m_fi.GetPath()).MakeUpper();
+	CString badge = ext;
+	if (badge.IsEmpty()) {
+		badge = L"MEDIA";
+	}
+	if (badge.GetLength() > 7) {
+		badge = badge.Left(7);
+	}
+	CFont badgeFont;
+	badgeFont.CreateFontW(-m_pMainFrame->ScaleY(9), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+		DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+	CFont* oldBadgeFont = pDC->SelectObject(&badgeFont);
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(s.bUseDarkTheme ? ThemeRGB(91, 218, 255) : RGB(36, 113, 151));
+	pDC->DrawTextW(badge, CRect(thumb.left + 7, thumb.top + 6, thumb.right - 7, thumb.bottom - 6),
+		DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_END_ELLIPSIS);
+	pDC->SelectObject(oldBadgeFont);
+
+	int offset = thumb.Width() + 10;
 	if (GetCurTab().type == PL_EXPLORER) {
 		file = m_list.GetItemText(nItem, COL_NAME);
 		const int w = rcItem.Height() - 4;
