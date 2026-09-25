@@ -13,7 +13,7 @@
 
 namespace DSObjects
 {
-	class CD3D11VideoRendererFilter final : public CBaseRenderer
+	class CD3D11VideoRendererFilter : public CBaseRenderer
 	{
 	public:
 		CD3D11VideoRendererFilter(HWND hWnd, const ExtraRendererSettings& settings, HRESULT* phr);
