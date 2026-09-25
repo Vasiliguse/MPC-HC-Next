@@ -214,7 +214,12 @@ BOOL CPlayerInfoBar::OnEraseBkgnd(CDC* pDC)
 		pDC->SelectObject(&penSaved);
 
 		r.DeflateRect(0, 1, 0, 0);
-		pDC->FillSolidRect(&r, ThemeRGB(5, 10, 15));
+		pDC->FillSolidRect(&r, ThemeRGB(7, 16, 28));
+		CPen accentPen(PS_SOLID, 1, ThemeRGB(35, 104, 132));
+		CPen* oldPen = pDC->SelectObject(&accentPen);
+		pDC->MoveTo(r.left, r.top);
+		pDC->LineTo(r.right, r.top);
+		pDC->SelectObject(oldPen);
 	} else {
 		pDC->Draw3dRect(&r, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
 
