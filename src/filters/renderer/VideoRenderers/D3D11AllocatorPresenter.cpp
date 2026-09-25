@@ -124,23 +124,15 @@ namespace DSObjects
 		if (!m_rendererFilter) {
 			return false;
 		}
-		RECT client = {};
-		if (!GetClientRect(m_hWnd, &client)) {
-			return false;
-		}
-		HRESULT hr = m_rendererFilter->GetState(0, nullptr);
-		UNREFERENCED_PARAMETER(hr);
-		// The renderer also resizes lazily on the next frame. This hook is
-		// deliberately non-destructive for window-management paths.
-		return true;
+		// The renderer resizes lazily on the next frame. Keeping this hook
+		// non-destructive avoids racing the DirectShow render thread.
 	}
 
 	STDMETHODIMP_(bool) CD3D11AllocatorPresenter::ResetDevice()
 	{
-		if (!m_rendererFilter) {
-			return false;
-		}
-		return true;
+		// Device recovery is performed by the renderer on the streaming thread,
+		// where the failed sample is still available for immediate retry.
+		return m_rendererFilter != nullptr;
 	}
 
 	STDMETHODIMP_(bool) CD3D11AllocatorPresenter::DisplayChange()
