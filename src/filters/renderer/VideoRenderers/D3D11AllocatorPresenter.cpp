@@ -35,12 +35,12 @@ namespace DSObjects
 
 		if (pmt->formattype == FORMAT_VideoInfo && pmt->cbFormat >= sizeof(VIDEOINFOHEADER)) {
 			const auto* vih = reinterpret_cast<const VIDEOINFOHEADER*>(pmt->Format());
-			m_width = std::abs(vih->bmiHeader.biWidth);
-			m_height = std::abs(vih->bmiHeader.biHeight);
+			m_sourceWidth = std::abs(vih->bmiHeader.biWidth);
+			m_sourceHeight = std::abs(vih->bmiHeader.biHeight);
 		} else if (pmt->formattype == FORMAT_VideoInfo2 && pmt->cbFormat >= sizeof(VIDEOINFOHEADER2)) {
 			const auto* vih = reinterpret_cast<const VIDEOINFOHEADER2*>(pmt->Format());
-			m_width = std::abs(vih->bmiHeader.biWidth);
-			m_height = std::abs(vih->bmiHeader.biHeight);
+			m_sourceWidth = std::abs(vih->bmiHeader.biWidth);
+			m_sourceHeight = std::abs(vih->bmiHeader.biHeight);
 		}
 
 		return S_OK;
@@ -59,7 +59,7 @@ namespace DSObjects
 
 		const UINT width = std::max<LONG>(1, client.right - client.left);
 		const UINT height = std::max<LONG>(1, client.bottom - client.top);
-		if (width != m_width || height != m_height) {
+		if (width != m_outputWidth || height != m_outputHeight) {
 			HRESULT hr = m_renderer.Resize(width, height);
 			if (FAILED(hr) && (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)) {
 				hr = m_renderer.Reset();
@@ -67,6 +67,8 @@ namespace DSObjects
 			if (FAILED(hr)) {
 				return hr;
 			}
+			m_outputWidth = width;
+			m_outputHeight = height;
 		}
 
 		HRESULT hr = m_renderer.PresentMediaSample(pMediaSample);
