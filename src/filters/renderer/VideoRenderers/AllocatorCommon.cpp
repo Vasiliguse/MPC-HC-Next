@@ -25,6 +25,7 @@
 #include "DXRAllocatorPresenter.h"
 #include "madVRAllocatorPresenter.h"
 #include "MPCVRAllocatorPresenter.h"
+#include "D3D11AllocatorPresenter.h"
 #include "EVRAllocatorPresenter.h"
 #include "SyncRenderer.h"
 
@@ -43,7 +44,11 @@ HRESULT CreateAllocatorPresenter(const CLSID& clsid, HWND hWnd, bool bFullscreen
 	CString Error;
 	LPCWSTR ap_name = nullptr;
 
-	if (clsid == CLSID_EVRAllocatorPresenter) {
+	if (clsid == CLSID_D3D11AllocatorPresenter) {
+		*ppAP = DNew DSObjects::CD3D11AllocatorPresenter(hWnd, hr, Error);
+		ap_name = L"D3D11 video renderer";
+	}
+	else if (clsid == CLSID_EVRAllocatorPresenter) {
 		*ppAP = DNew DSObjects::CEVRAllocatorPresenter(hWnd, bFullscreen, hr, Error);
 		ap_name = L"EVR Custom Presenter";
 	}

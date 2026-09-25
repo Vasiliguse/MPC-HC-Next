@@ -453,8 +453,15 @@ STDMETHODIMP CEVRAllocatorPresenter::OnClockRestart(MFTIME hnsSystemTime)
 
 STDMETHODIMP CEVRAllocatorPresenter::OnClockSetRate(MFTIME hnsSystemTime, float flRate)
 {
-	ASSERT(FALSE);
-	return E_NOTIMPL;
+	TRACE_EVR("EVR: OnClockSetRate hnsSystemTime = %I64d, flRate = %.3f\n", hnsSystemTime, flRate);
+
+	if (!std::isfinite(flRate) || flRate <= 0.0f) {
+		return MF_E_UNSUPPORTED_RATE;
+	}
+
+	m_ModeratedTimeLast  = -1;
+	m_ModeratedClockLast = -1;
+	return S_OK;
 }
 
 // IBaseFilter delegate
@@ -512,8 +519,12 @@ STDMETHODIMP CEVRAllocatorPresenter::get_DevSyncOffset(int *piDev)
 
 STDMETHODIMP CEVRAllocatorPresenter::GetSlowestRate(MFRATE_DIRECTION eDirection, BOOL fThin, float *pflRate)
 {
-	// TODO : not finished...
-	*pflRate = 0;
+	CheckPointer(pflRate, E_POINTER);
+	HRESULT hr = CheckShutdown();
+	if (FAILED(hr)) {
+		return hr;
+	}
+	*pflRate = (eDirection == MFRATE_REVERSE) ? -FLT_MAX : 0.0f;
 	return S_OK;
 }
 
@@ -548,8 +559,10 @@ STDMETHODIMP CEVRAllocatorPresenter::IsRateSupported(BOOL fThin, float flRate, f
 
 	HRESULT hr = S_OK;
 
-	CheckPointer(pflNearestSupportedRate, E_POINTER);
-	CHECK_HR(CheckShutdown());
+	HRESULT shutdownHr = CheckShutdown();
+	if (FAILED(shutdownHr)) {
+		return shutdownHr;
+	}
 
 	float fNearestRate = flRate; // Default.
 	// Find the maximum forward rate.
@@ -568,7 +581,9 @@ STDMETHODIMP CEVRAllocatorPresenter::IsRateSupported(BOOL fThin, float flRate, f
 	}
 
 	// Return the nearest supported rate if the caller requested it.
-	*pflNearestSupportedRate = fNearestRate;
+	if (pflNearestSupportedRate) {
+		*pflNearestSupportedRate = fNearestRate;
+	}
 
 	return hr;
 }

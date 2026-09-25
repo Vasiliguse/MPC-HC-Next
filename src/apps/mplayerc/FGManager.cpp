@@ -2927,6 +2927,9 @@ CFGManagerPlayer::CFGManagerPlayer(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, int
 			case VIDRNDT_MADVR:
 				CheckAddRenderer(CLSID_madVR, CLSID_madVRAllocatorPresenter, L"madVR Renderer");
 				break;
+			case VIDRNDT_D3D11:
+				m_transform.emplace_back(DNew CFGFilterVideoRenderer(m_hWnd, CLSID_D3D11AllocatorPresenter, L"MPC D3D11 Renderer", vrmerit));
+				break;
 			case VIDRNDT_NULL_ANY:
 				pFGF = DNew CFGFilterInternal<CNullVideoRenderer>(L"Null Video Renderer (Any)", MERIT64_ABOVE_DSHOW + 2);
 				pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_NULL);

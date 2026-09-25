@@ -7128,7 +7128,7 @@ void CMainFrame::OnRepeatForever()
 
 void CMainFrame::OnUpdateViewTearingTest(CCmdUI* pCmdUI)
 {
-	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter) {
+	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
 		pCmdUI->Enable(TRUE);
 		pCmdUI->SetCheck(GetRenderersSettings().ExtraSets.bTearingTest);
 
@@ -7151,7 +7151,7 @@ void CMainFrame::OnViewTearingTest()
 
 void CMainFrame::OnUpdateViewDisplayStats(CCmdUI* pCmdUI)
 {
-	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter) {
+	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
 		pCmdUI->Enable(TRUE);
 		pCmdUI->SetCheck(GetRenderersSettings().ExtraSets.iDisplayStats > 0);
 
@@ -7184,7 +7184,7 @@ void CMainFrame::OnViewResetStats()
 
 void CMainFrame::OnViewDisplayStatsSC()
 {
-	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter) {
+	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
 		CRenderersSettings& rs = GetRenderersSettings();
 		if (!rs.ExtraSets.iDisplayStats && m_pCAP) {
 			m_pCAP->ResetStats(); // to Reset statistics on first call ...
@@ -7284,7 +7284,7 @@ void CMainFrame::OnViewResetDefault()
 
 void CMainFrame::OnUpdateViewResetDefault(CCmdUI* pCmdUI)
 {
-	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter) {
+	if (m_clsidCAP == CLSID_EVRAllocatorPresenter || m_clsidCAP == CLSID_SyncAllocatorPresenter || m_clsidCAP == CLSID_D3D11AllocatorPresenter) {
 		pCmdUI->Enable(TRUE);
 
 		return;

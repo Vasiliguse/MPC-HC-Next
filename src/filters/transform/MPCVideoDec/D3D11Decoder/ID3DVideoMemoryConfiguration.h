@@ -3,6 +3,8 @@
 // -----------------------------------------------------------------
 #pragma once
 
+#include "IMediaSampleD3D11.h"
+
 // -----------------------------------------------------------------
 // Control D3D11 Hardware Decoding between decoder and renderer
 // -----------------------------------------------------------------
@@ -29,22 +31,3 @@ interface __declspec(uuid("2BB66002-46B7-4F13-9036-7053328742BE")) ID3D11Decoder
 };
 
 // -----------------------------------------------------------------
-// Media Sample to hold a D3D11 texture
-// -----------------------------------------------------------------
-// D3D11 textures used for decoding are typically array-textures,
-// a single ID3D11Texture2D object containing an array of textures
-// individually addressable by the ArraySlice index.
-//
-// The texture lifetime is bound to the media samples lifetime. The
-// media sample can only be released when the texture is no longer in
-// use, otherwise the texture will be re-used by the decoder.
-//
-// The texture is AddRef'ed when retrieved through this interface,
-// and should be Released when no longer needed.
-interface __declspec(uuid("BC8753F5-0AC8-4806-8E5F-A12B2AFE153E")) IMediaSampleD3D11 : public IUnknown
-{
-    // Get the D3D11 texture for the specified view.
-    // 2D images with only one view always use view 0. For 3D, view 0 specifies the base view, view 1 the extension
-    // view.
-    virtual HRESULT STDMETHODCALLTYPE GetD3D11Texture(int nView, ID3D11Texture2D **ppTexture, UINT *pArraySlice) = 0;
-};

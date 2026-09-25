@@ -87,6 +87,18 @@ enum ColorRenderingIntent {
 	COLOR_RENDERING_INTENT_ABSOLUTE_COLORIMETRIC,
 };
 
+enum VideoRendererBackend {
+	VIDEO_RENDERER_BACKEND_AUTO = 0,
+	VIDEO_RENDERER_BACKEND_D3D11,
+	VIDEO_RENDERER_BACKEND_D3D12,
+};
+
+enum VideoOutputColorMode {
+	VIDEO_OUTPUT_COLOR_AUTO = 0,
+	VIDEO_OUTPUT_COLOR_SDR,
+	VIDEO_OUTPUT_COLOR_HDR10,
+};
+
 enum {
 	SYNCHRONIZE_NEAREST = 0,
 	SYNCHRONIZE_VIDEO,
@@ -108,6 +120,15 @@ struct Stereo3DSettings {
 };
 
 struct ExtraRendererSettings {
+	// Presentation backend and output mode are API-neutral settings.  The
+	// legacy D3D9/EVR fields below remain for compatibility with existing
+	// presenters; new renderers should consume these fields instead of adding
+	// backend-specific switches to the common interface.
+	int       iRendererBackend = VIDEO_RENDERER_BACKEND_AUTO;
+	int       iOutputColorMode = VIDEO_OUTPUT_COLOR_AUTO;
+	bool      bEnableHDR       = true;
+	bool      bEnableToneMapping = true;
+
 	int       iPresentMode   = 0;
 	D3DFORMAT iSurfaceFormat = D3DFMT_X8R8G8B8;
 	bool      b10BitOutput   = false;

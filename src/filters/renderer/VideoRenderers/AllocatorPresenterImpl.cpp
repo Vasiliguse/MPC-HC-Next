@@ -44,6 +44,13 @@ CAllocatorPresenterImpl::~CAllocatorPresenterImpl()
 {
 }
 
+void CAllocatorPresenterImpl::SetExtraSettings(ExtraRendererSettings* pExtraSets)
+{
+	// Base implementation intentionally does not retain renderer-specific settings.
+	// Concrete presenters override this hook when they need to consume them.
+	UNREFERENCED_PARAMETER(pExtraSets);
+}
+
 STDMETHODIMP CAllocatorPresenterImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	return
