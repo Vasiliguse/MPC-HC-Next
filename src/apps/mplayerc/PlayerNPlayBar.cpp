@@ -63,7 +63,7 @@ void CPlayerNPlayBar::LayoutItems()
     CRect rc;
     GetClientRect(&rc);
 
-    const int top = 74;
+    const int top = 82;
     const int row = 40;
     const int gap = 6;
 
@@ -140,7 +140,7 @@ void CPlayerNPlayBar::OnPaint()
 
     dc.FillSolidRect(rc, bg);
 
-    CRect brand(14, 14, rc.Width() - 14, 58);
+    CRect brand(14, 14, rc.Width() - 14, 64);
     CBrush brandBrush(panel);
     dc.FillRect(brand, &brandBrush);
     CPen borderPen(PS_SOLID, 1, dark ? RGB(30, 54, 72) : RGB(221, 227, 235));
@@ -153,7 +153,16 @@ void CPlayerNPlayBar::OnPaint()
     CFont* oldFont = dc.SelectObject(&m_font);
     dc.SetBkMode(TRANSPARENT);
     dc.SetTextColor(text);
-    dc.DrawTextW(L"N PLAY", brand, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    CRect brandTitle = brand;
+    brandTitle.bottom -= 14;
+    dc.DrawTextW(L"N PLAY", brandTitle, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    CFont* oldSmall = dc.SelectObject(&m_smallFont);
+    dc.SetTextColor(accent);
+    CRect brandSub = brand;
+    brandSub.top = brandSub.bottom - 18;
+    dc.DrawTextW(L"MEDIA PLAYER", brandSub, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    dc.SelectObject(oldSmall);
     dc.SelectObject(oldFont);
 
     for (size_t i = 0; i < m_items.size(); ++i) {
@@ -180,15 +189,15 @@ void CPlayerNPlayBar::OnPaint()
 
     CFont* old = dc.SelectObject(&m_smallFont);
     dc.SetTextColor(muted);
-    CRect section(16, rc.Height() - 118, rc.Width() - 16, rc.Height() - 92);
+    CRect section(16, rc.Height() - 124, rc.Width() - 16, rc.Height() - 98);
     dc.DrawTextW(L"PLAYLISTS", section, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-    CRect listItem(12, rc.Height() - 88, rc.Width() - 12, rc.Height() - 48);
+    CRect listItem(12, rc.Height() - 94, rc.Width() - 12, rc.Height() - 54);
     dc.SetTextColor(text);
     dc.DrawTextW(L"Default Playlist", CRect(listItem.left + 10, listItem.top, listItem.right - 8, listItem.bottom),
                  DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-    CRect addItem(12, rc.Height() - 44, rc.Width() - 12, rc.Height() - 10);
+    CRect addItem(12, rc.Height() - 50, rc.Width() - 12, rc.Height() - 12);
     dc.SetTextColor(accent);
     dc.DrawTextW(L"+  New Playlist", addItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     dc.SelectObject(old);
