@@ -3038,11 +3038,17 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 
 	if (!!m_list.GetItemState(nItem, LVIS_SELECTED)) {
 		if (s.bUseDarkTheme) {
-			GRADIENT_RECT gr = { 0, 1 };
-			tvSelected[0].x = rcItem.left; tvSelected[0].y = rcItem.top;
-			tvSelected[1].x = rcItem.right; tvSelected[1].y = rcItem.bottom;
-			pDC->GradientFill(tvSelected, 2, &gr, 1, GRADIENT_FILL_RECT_V);
-			pDC->Draw3dRect(rcItem, m_crAvtiveItem3dRectTopLeft, m_crAvtiveItem3dRectBottomRight);
+			CRect card(rcItem);
+			card.DeflateRect(4, 2);
+			CBrush brush(ThemeRGB(18, 31, 47));
+			CPen pen(PS_SOLID, 1, ThemeRGB(45, 91, 120));
+			CBrush* oldBrush = pDC->SelectObject(&brush);
+			CPen* oldPen = pDC->SelectObject(&pen);
+			pDC->RoundRect(card, CPoint(8, 8));
+			pDC->SelectObject(oldPen);
+			pDC->SelectObject(oldBrush);
+			CBrush accent(ThemeRGB(62, 220, 255));
+			pDC->FillSolidRect(card.left, card.top + 6, 3, card.Height() - 12, accent);
 		}
 		else {
 			FillRect(pDC->m_hDC, rcItem, CBrush(0x00F1DACC));
@@ -3051,10 +3057,7 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 		}
 	} else {
 		if (s.bUseDarkTheme) {
-			GRADIENT_RECT gr = { 0, 1 };
-			tvNormal[0].x = rcItem.left; tvNormal[0].y = rcItem.top;
-			tvNormal[1].x = rcItem.right; tvNormal[1].y = rcItem.bottom;
-			pDC->GradientFill(tvNormal, 2, &gr, 1, GRADIENT_FILL_RECT_V);
+			pDC->FillSolidRect(rcItem, ThemeRGB(8, 17, 29));
 		}
 		else {
 			FillRect(pDC->m_hDC, rcItem, CBrush(m_crBackground));
@@ -3070,8 +3073,8 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 	COLORREF textcolor = bSelected ? 0xFF : 0;
 
 	if (s.bUseDarkTheme) {
-		textcolor = bSelected ? m_crActiveItem : (!!m_list.GetItemState(nItem, LVIS_SELECTED) ? m_crSelectedItem : m_crNormalItem);
-	}
+			textcolor = bSelected ? ThemeRGB(242, 252, 255) : (!!m_list.GetItemState(nItem, LVIS_SELECTED) ? ThemeRGB(115, 232, 255) : ThemeRGB(177, 193, 208));
+		}
 
 	if (pli.m_bInvalid) {
 		textcolor |= 0xA0A0A0;
@@ -4218,6 +4221,9 @@ void CPlayerPlaylistBar::TDrawBar()
 
 		// background Tab bar
 		mdc.FillSolidRect(rcTabBar, m_crBkBar);
+		if (AfxGetAppSettings().bUseDarkTheme) {
+			mdc.FillSolidRect(rcTabBar.left, rcTabBar.bottom - 2, rcTabBar.right, rcTabBar.bottom, ThemeRGB(24, 45, 65));
+		}
 
 		for (size_t i = 0; i < std::size(m_tab_buttons); i++) {
 			auto& button = m_tab_buttons[i];
@@ -4300,7 +4306,12 @@ void CPlayerPlaylistBar::TDrawSearchBar()
 		mdc.SetBkMode(TRANSPARENT);
 
 		//mdc.FillSolidRect(0, 0, rc.Width(), rc.Height(), m_crBND);
-		mdc.Draw3dRect(0, 0, rc.Width(), rc.Height(), m_crBNL, m_crBNL);
+		if (AfxGetAppSettings().bUseDarkTheme) {
+			mdc.FillSolidRect(rc, ThemeRGB(10, 21, 35));
+			mdc.Draw3dRect(0, 0, rc.Width(), rc.Height(), ThemeRGB(34, 61, 83), ThemeRGB(34, 61, 83));
+		} else {
+			mdc.Draw3dRect(0, 0, rc.Width(), rc.Height(), m_crBNL, m_crBNL);
+		}
 		dc.BitBlt(rc.left, rc.top, rc.Width(), rc.Height(), &mdc, 0, 0, SRCCOPY);
 
 		mdc.SelectObject(pOldBm);
