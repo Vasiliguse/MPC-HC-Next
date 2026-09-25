@@ -458,32 +458,35 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     }
 
     D3D12_RESOURCE_BARRIER barriers[3] = {};
-    barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barriers[0].Transition.pResource = source;
-    barriers[0].Transition.StateBefore = sourceState;
-    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
-    barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    UINT initialBarrierCount = 0;
 
-    barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barriers[1].Transition.pResource = backBuffer;
-    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-    barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    if (sourceState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+        barriers[initialBarrierCount].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barriers[initialBarrierCount].Transition.pResource = source;
+        barriers[initialBarrierCount].Transition.StateBefore = sourceState;
+        barriers[initialBarrierCount].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        barriers[initialBarrierCount].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        ++initialBarrierCount;
+    }
 
-    m_commandList->ResourceBarrier(2, barriers);
+    barriers[initialBarrierCount].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barriers[initialBarrierCount].Transition.pResource = backBuffer;
+    barriers[initialBarrierCount].Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barriers[initialBarrierCount].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+    barriers[initialBarrierCount].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    ++initialBarrierCount;
+
+    m_commandList->ResourceBarrier(initialBarrierCount, barriers);
     m_commandList->CopyResource(backBuffer, source);
 
-    UINT barrierCount = 2;
     if (sourceState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-        barriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barriers[2].Transition.pResource = source;
-        barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
-        barriers[2].Transition.StateAfter = sourceState;
-        barriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        barrierCount = 3;
-    }
-    if (barrierCount == 3) {
-        m_commandList->ResourceBarrier(1, &barriers[2]);
+        D3D12_RESOURCE_BARRIER sourceRestore = {};
+        sourceRestore.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        sourceRestore.Transition.pResource = source;
+        sourceRestore.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        sourceRestore.Transition.StateAfter = sourceState;
+        sourceRestore.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        m_commandList->ResourceBarrier(1, &sourceRestore);
     }
 
     D3D12_RESOURCE_BARRIER presentBarrier = {};
