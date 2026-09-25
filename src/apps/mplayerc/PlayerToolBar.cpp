@@ -682,7 +682,7 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				dc.Attach(pTBCD->nmcd.hdc);
 				CRect r;
 				GetClientRect(&r);
-				dc.FillSolidRect(r, ThemeRGB(7, 16, 28));
+				dc.FillSolidRect(r, GetSysColor(COLOR_BTNFACE));
 				dc.Detach();
 			}
 			lr |= CDRF_NOTIFYITEMDRAW;
