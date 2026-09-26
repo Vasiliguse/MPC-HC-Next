@@ -613,6 +613,7 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	ReleaseFrameResources();
 	m_backBufferRTV.Release();
 	m_swapChain.Release();
+	m_videoContext1.Release();
 	m_videoContext.Release();
 	m_videoDevice.Release();
 	m_context.Release();
@@ -630,6 +631,7 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	if (FAILED(hr)) {
 		return hr;
 	}
+	m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext1));
 
 	m_allowTearing = IsTearingSupported();
 	m_swapChainFormat = GetSwapChainFormat();
