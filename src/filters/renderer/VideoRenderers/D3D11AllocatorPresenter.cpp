@@ -207,6 +207,9 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 				m_pSubPicQueue.Release();
 				return FAILED(hr) ? hr : E_FAIL;
 			}
+			if (m_pSubPicProvider) {
+				m_pSubPicQueue->SetSubPicProvider(m_pSubPicProvider);
+			}
 		}
 		return S_OK;
 	}
@@ -214,7 +217,8 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 	HRESULT CD3D11AllocatorPresenter::RenderSubtitles()
 	{
 		if (!m_pSubPicAllocator || !m_pSubPicQueue) return S_FALSE;
-		return AlphaBltSubPic(m_windowRect, m_videoRect);
+		const HRESULT hr = AlphaBltSubPic(m_windowRect, m_videoRect);
+		return hr == E_FAIL ? S_FALSE : hr;
 	}
 
 	STDMETHODIMP_(void) CD3D11AllocatorPresenter::SetPosition(RECT w, RECT v)
