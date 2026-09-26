@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ ca.comp_mpciconlib=Llibreria d'icones
 ca.comp_mpcresources=Traduccions
 ca.comp_mpcbeshellext=Install the shell extension
 ca.comp_intel_msdk=H.264 MVC 3D Decoder
-ca.msg_DeleteSettings=Vols eliminar les preferències del MPC-BE?%n%nSi planeges instal.lar altre cop el MPC-BE no necessites eliminar-les.
+ca.msg_DeleteSettings=Vols eliminar les preferències del MPC-HC Next?%n%nSi planeges instal.lar altre cop el MPC-HC Next no necessites eliminar-les.
 ca.msg_NoD3DX9DLL_found=No està instal.lada la darrera versió de DirectX!%n%nSisplau instal.lar la darrera versió DirectX runtime June 2010 independentment del sistema operatiu.
-ca.msg_SetupIsRunningWarning=La instal.lació del MPC-BE ja se està executant!
-ca.msg_simd_sse2=Aquesta versió de MPC-BE requereix una CPU amb suport d'extensions SSE2.%n%nLa teva CPU no cumpleix aquestes característiques.
+ca.msg_SetupIsRunningWarning=La instal.lació del MPC-HC Next ja se està executant!
+ca.msg_simd_sse2=Aquesta versió de MPC-HC Next requereix una CPU amb suport d'extensions SSE2.%n%nLa teva CPU no cumpleix aquestes característiques.
 ca.tsk_AllUsers=Per tots els usuaris
 ca.tsk_CurrentUser=Només per l'usuari actual
 ca.tsk_Other=Altres tasques:
