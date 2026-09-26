@@ -401,6 +401,8 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_backBufferRTV.Release();
     m_videoWidth = 0;
     m_videoHeight = 0;
+    m_processorOutputWidth = 0;
+    m_processorOutputHeight = 0;
 }
 
 HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight)
