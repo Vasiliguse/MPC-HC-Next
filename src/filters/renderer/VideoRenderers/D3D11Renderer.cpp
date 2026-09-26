@@ -616,10 +616,15 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         hasContentLightLevel = true;
     }
 
-    const bool hasHdrMetadata = hasMastering || hasContentLightLevel;
-    const bool hdr10 = hasHdrMetadata && IsHdrOutputRequested();
+    const bool hdr10 = m_transferFunction == 15 && IsHdrOutputRequested();
     SetHDR10InputColorSpace(hdr10);
-    return hasHdrMetadata ? SetHDR10Metadata(&dxgi) : SetHDR10Metadata(nullptr);
+
+    // Metadata is optional for HDR10 signalling. The transfer function
+    // identifies PQ content; mastering/CLL side-data only supplies the
+    // optional HDR10 metadata block sent to the display.
+    return hasMastering || hasContentLightLevel
+        ? SetHDR10Metadata(&dxgi)
+        : SetHDR10Metadata(nullptr);
 }
 
 HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags)
