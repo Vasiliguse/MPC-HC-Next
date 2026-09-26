@@ -6,6 +6,7 @@
 #include "D3D11AllocatorPresenter.h"
 #include "SubPic/DX11SubPic.h"
 #include "SubPic/SubPicQueueImpl.h"
+#include <dxva2api.h>
 
 namespace DSObjects
 {
@@ -102,6 +103,8 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 			return hr;
 		}
 
+		UINT transferMatrix = 0;
+		UINT nominalRange = 0;
 		if (pmt->formattype == FORMAT_VideoInfo && pmt->cbFormat >= sizeof(VIDEOINFOHEADER)) {
 			const auto* vih = reinterpret_cast<const VIDEOINFOHEADER*>(pmt->Format());
 			m_sourceWidth = std::abs(vih->bmiHeader.biWidth);
@@ -110,8 +113,16 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 			const auto* vih = reinterpret_cast<const VIDEOINFOHEADER2*>(pmt->Format());
 			m_sourceWidth = std::abs(vih->bmiHeader.biWidth);
 			m_sourceHeight = std::abs(vih->bmiHeader.biHeight);
+
+			if (vih->dwControlFlags & AMCONTROL_COLORINFO_PRESENT) {
+				DXVA2_ExtendedFormat colorInfo = {};
+				colorInfo.value = vih->dwControlFlags;
+				transferMatrix = colorInfo.VideoTransferMatrix;
+				nominalRange = colorInfo.NominalRange;
+			}
 		}
 
+		m_renderer.SetInputColorInfo(transferMatrix, nominalRange, m_sourceHeight);
 		return S_OK;
 	}
 
