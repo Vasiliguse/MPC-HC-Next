@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ fr.comp_mpciconlib=Bibliothèque d'icône
 fr.comp_mpcresources=Traductions
 fr.comp_mpcbeshellext=Install the shell extension
 fr.comp_intel_msdk=H.264 MVC 3D Decoder
-fr.msg_DeleteSettings=Souhaitez-vous supprimer également les paramètres de MPC-BE?%n%nSi vous réinstallez MPC-BE, il est conseillé de ne pas les supprimer.
+fr.msg_DeleteSettings=Souhaitez-vous supprimer également les paramètres de MPC-HC Next?%n%nSi vous réinstallez MPC-HC Next, il est conseillé de ne pas les supprimer.
 fr.msg_NoD3DX9DLL_found=La dernière version des composants d'exécution DirectX n'est pas installée !%n%nCelle-ci est nécessaire quelque soit votre système d'exploitation, veuillez la télécharger et l'installer June 2010.
-fr.msg_SetupIsRunningWarning=L'installation de MPC-BE est déjà en cours d'exécution!
-fr.msg_simd_sse2=Cette version de MPC-BE nécessite un CPU avec support des instructions SSE2.%n%nVotre CPU n'a pas cette capacité.
+fr.msg_SetupIsRunningWarning=L'installation de MPC-HC Next est déjà en cours d'exécution!
+fr.msg_simd_sse2=Cette version de MPC-HC Next nécessite un CPU avec support des instructions SSE2.%n%nVotre CPU n'a pas cette capacité.
 fr.tsk_AllUsers=Pour tous les utilisateurs
 fr.tsk_CurrentUser=Pour l'utilisateur courant seulement
 fr.tsk_Other=Autres tâches:
