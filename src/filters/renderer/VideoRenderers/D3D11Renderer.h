@@ -14,6 +14,7 @@
 
 #include <d3d11.h>
 #include <dxgi1_6.h>
+#include <functional>
 
 class CD3D11Renderer
 {
@@ -37,7 +38,7 @@ public:
     HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
     HRESULT ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags);
     UINT GetD3D11AdapterIndex() const;
-    HRESULT PresentMediaSample(IMediaSample* sample);
+    HRESULT PresentMediaSample(IMediaSample* sample, const std::function<HRESULT()>& overlay = {});
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT SetHDR10MetadataFromSample(IMediaSample* sample);
     HRESULT Reset();
