@@ -868,7 +868,8 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     outputColorSpace.YCbCr_Matrix = 0;
     outputColorSpace.YCbCr_xvYCC = 0;
     outputColorSpace.Nominal_Range = D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
-    m_videoContext->VideoProcessorSetStreamColorSpace(m_videoProcessor, 0, &m_inputColorSpace);\n    m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
+    m_videoContext->VideoProcessorSetStreamColorSpace(m_videoProcessor, 0, &m_inputColorSpace);
+    m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
 
     return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
 }
