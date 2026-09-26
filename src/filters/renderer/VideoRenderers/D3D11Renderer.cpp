@@ -684,7 +684,7 @@ UINT CD3D11Renderer::GetD3D11AdapterIndex() const
 	return UINT_MAX;
 }
 
-HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
+HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::function<HRESULT()>& overlay)
 {
     if (!sample) {
         return E_POINTER;
@@ -730,6 +730,17 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
     hr = PresentD3D11Texture(texture, arraySlice);
     if (FAILED(hr)) {
         return hr;
+    }
+
+    if (overlay) {
+        if (!m_backBufferRTV) {
+            return E_UNEXPECTED;
+        }
+        m_context->OMSetRenderTargets(1, &m_backBufferRTV.p, nullptr);
+        hr = overlay();
+        if (FAILED(hr)) {
+            return hr;
+        }
     }
 
     hr = Present(0, 0);
