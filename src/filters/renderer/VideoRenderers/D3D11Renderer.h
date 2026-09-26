@@ -37,7 +37,7 @@ public:
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval, UINT presentFlags);
     HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
-    void SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT sourceHeight);
+    void SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT transferFunction, UINT sourceHeight);
     void SetHDR10InputColorSpace(bool enabled);
     HRESULT ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags);
     UINT GetD3D11AdapterIndex() const;
@@ -97,6 +97,7 @@ private:
     DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE m_inputColorSpace = {};
     bool m_hdr10Input = false;
+    UINT m_transferFunction = 0;
 
     struct PendingFrame {
         CComPtr<IMediaSample> sample;
