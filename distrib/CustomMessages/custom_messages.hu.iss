@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ hu.comp_mpciconlib=Ikon Gyűjtemény
 hu.comp_mpcresources=Fordítások
 hu.comp_mpcbeshellext=Telepítse a shell extension-t
 hu.comp_intel_msdk=H.264 MVC 3D Decoder
-hu.msg_DeleteSettings=Az MPC-BE beállításokat is törölni szeretné?%n%nHa azt tervezi, hogy újratelepíti az MPC-BE-t, akkor nem kell törölnie őket.
+hu.msg_DeleteSettings=Az MPC-HC Next beállításokat is törölni szeretné?%n%nHa azt tervezi, hogy újratelepíti az MPC-HC Next-t, akkor nem kell törölnie őket.
 hu.msg_NoD3DX9DLL_found=A legújabb DirectX nincs telepítve!%n%nKérjük töltse le és telepítse a legújabb DirectX runtime June 2010 verziót függetlenül az operációs rendszerétől.
-hu.msg_SetupIsRunningWarning=Az MPC-BE telepítő már fut!
-hu.msg_simd_sse2=Az MPC-BE jelen változatához SSE2 kiterjesztést támogató CPU-ra van szükség.%n%nAz ön CPU-ja nem rendelkezik ilyen képességgel.
+hu.msg_SetupIsRunningWarning=Az MPC-HC Next telepítő már fut!
+hu.msg_simd_sse2=Az MPC-HC Next jelen változatához SSE2 kiterjesztést támogató CPU-ra van szükség.%n%nAz ön CPU-ja nem rendelkezik ilyen képességgel.
 hu.tsk_AllUsers=Minden felhasználónak
 hu.tsk_CurrentUser=Csak a jelenlegi felhasználónak
 hu.tsk_Other=Egyéb feladatok:
