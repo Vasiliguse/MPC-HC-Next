@@ -75,7 +75,6 @@ namespace DSObjects
 
 	private:
 		HRESULT InitializeSubPicAllocator();
-		HRESULT RenderSubtitles();
 
 		ExtraRendererSettings m_extraSettings = {};
 		CComPtr<CD3D11VideoRendererFilter> m_rendererFilter;
