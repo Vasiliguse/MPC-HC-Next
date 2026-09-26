@@ -53,7 +53,7 @@ public:
 
 private:
     HRESULT CreateDeviceAndSwapChain();
-    HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT width, UINT height);
+    HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight);
     HRESULT CreateBackBufferViews();
     void ReleaseFrameResources();
     HRESULT DrainPendingFrames(bool waitForAll);
@@ -80,6 +80,8 @@ private:
     CComPtr<ID3D11RenderTargetView> m_backBufferRTV;
     UINT m_videoWidth = 0;
     UINT m_videoHeight = 0;
+    UINT m_processorOutputWidth = 0;
+    UINT m_processorOutputHeight = 0;
     CComPtr<IDXGIOutput6> m_outputObject;
 
     OutputInfo m_output = {};
