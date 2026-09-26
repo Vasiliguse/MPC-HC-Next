@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ ru.comp_mpciconlib=Библиотека значков
 ru.comp_mpcresources=Локализации
 ru.comp_mpcbeshellext=Установить расширение оболочки
 ru.comp_intel_msdk=Декодер H.264 MVC 3D
-ru.msg_DeleteSettings=Удалить также настроенные параметры MPC-BE?%n%nЕсли запланирована переустановка MPC-BE, эти параметры не нужно удалять.
+ru.msg_DeleteSettings=Удалить также настроенные параметры MPC-HC Next?%n%nЕсли запланирована переустановка MPC-HC Next, эти параметры не нужно удалять.
 ru.msg_NoD3DX9DLL_found=Не установлена последняя версия системы DirectX!%n%nЗагрузите и установите последнюю версию DirectX June 2010 независимо от версии установленной операционной системы.
-ru.msg_SetupIsRunningWarning=Программа установки MPC-BE уже запущена!
-ru.msg_simd_sse2=Для этой сборки MPC-BE требуется процессор с поддержкой SSE2-инструкций.%n%nВ данном процессоре они не поддерживаются.
+ru.msg_SetupIsRunningWarning=Программа установки MPC-HC Next уже запущена!
+ru.msg_simd_sse2=Для этой сборки MPC-HC Next требуется процессор с поддержкой SSE2-инструкций.%n%nВ данном процессоре они не поддерживаются.
 ru.tsk_AllUsers=Для всех пользователей данного компьютера
 ru.tsk_CurrentUser=Только для текущего пользователя
 ru.tsk_Other=Другие задачи:
