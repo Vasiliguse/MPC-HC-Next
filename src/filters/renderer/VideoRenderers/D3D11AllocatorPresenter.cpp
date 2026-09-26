@@ -60,6 +60,24 @@ UINT CD3D11VideoRendererFilter::GetD3D11AdapterIndex() const
 	return m_renderer.GetD3D11AdapterIndex();
 }
 
+CBasePin* CD3D11VideoRendererFilter::GetPin(int n)
+	{
+		if (n != 0) {
+			return nullptr;
+		}
+
+		CAutoLock lock(&m_ObjectCreationLock);
+		if (!m_pInputPin) {
+			HRESULT hr = S_OK;
+			m_pInputPin = DNew CD3D11RendererInputPin(this, &hr);
+			if (!m_pInputPin || FAILED(hr)) {
+				delete m_pInputPin;
+				m_pInputPin = nullptr;
+			}
+		}
+		return m_pInputPin;
+	}
+
 HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 	{
 		HRESULT hr = __super::SetMediaType(pmt);
@@ -182,22 +200,5 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 			m_extraSettings.iRendererBackend = VIDEO_RENDERER_BACKEND_D3D11;
 		}
 	}
-}	CBasePin* CD3D11VideoRendererFilter::GetPin(int n)
-	{
-		if (n != 0) {
-			return nullptr;
-		}
 
-		CAutoLock lock(&m_ObjectCreationLock);
-		if (!m_pInputPin) {
-			HRESULT hr = S_OK;
-			m_pInputPin = DNew CD3D11RendererInputPin(this, &hr);
-			if (!m_pInputPin || FAILED(hr)) {
-				delete m_pInputPin;
-				m_pInputPin = nullptr;
-			}
-		}
-		return m_pInputPin;
-	}
-
-
+}
