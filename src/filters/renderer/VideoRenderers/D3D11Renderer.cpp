@@ -20,6 +20,33 @@
 namespace {
 constexpr UINT kSwapChainBufferCount = 3;
 
+class ScopedDecoderMutex
+{
+public:
+    explicit ScopedDecoderMutex(HANDLE mutex) : m_mutex(mutex)
+    {
+        if (m_mutex) {
+            const DWORD wait = WaitForSingleObject(m_mutex, INFINITE);
+            m_locked = (wait == WAIT_OBJECT_0 || wait == WAIT_ABANDONED);
+        } else {
+            m_locked = true;
+        }
+    }
+
+    ~ScopedDecoderMutex()
+    {
+        if (m_mutex && m_locked) {
+            ReleaseMutex(m_mutex);
+        }
+    }
+
+    bool Locked() const { return m_locked; }
+
+private:
+    HANDLE m_mutex = nullptr;
+    bool m_locked = false;
+};
+
 bool IsHdr10ColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace)
 {
     return colorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
@@ -519,7 +546,6 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
 
 HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags)
 {
-	UNREFERENCED_PARAMETER(mutex);
 	UNREFERENCED_PARAMETER(flags);
 
 	if (!device || !context || !m_factory || !m_adapter) {
@@ -554,6 +580,7 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 
 	m_device = device;
 	m_context = context;
+	m_decoderMutex = mutex;
 
 	HRESULT hr = m_device->QueryInterface(IID_PPV_ARGS(&m_videoDevice));
 	if (FAILED(hr)) {
@@ -713,6 +740,11 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
 {
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
+
+    ScopedDecoderMutex decoderLock(m_decoderMutex);
+    if (!decoderLock.Locked()) {
+        return E_ACCESSDENIED;
+    }
     CComPtr<ID3D11Device> textureDevice;
     CComPtr<IDXGIDevice> textureDxgiDevice;
     CComPtr<IDXGIAdapter> textureAdapter;
@@ -784,12 +816,11 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
         m_videoProcessor, TRUE, &destRect);
 
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE outputColorSpace = {};
+    outputColorSpace.Usage = 0;
     outputColorSpace.RGB_Range = 0;
-    outputColorSpace.Nominal_Range = 0;
-    if (IsHdrOutputRequested()) {
-        outputColorSpace.YCbCr_Matrix = 1;
-        outputColorSpace.Nominal_Range = 2;
-    }
+    outputColorSpace.YCbCr_Matrix = 0;
+    outputColorSpace.YCbCr_xvYCC = 0;
+    outputColorSpace.Nominal_Range = D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
     m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
 
     return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
@@ -894,4 +925,5 @@ void CD3D11Renderer::ReleaseDevice()
     m_allowTearing = false;
     m_deviceLost = false;
     m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+    m_decoderMutex = nullptr;
 }
