@@ -133,14 +133,12 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 			m_outputHeight = height;
 		}
 
-		HRESULT hr = m_renderer.PresentMediaSample(pMediaSample);
-		if (FAILED(hr) && m_renderer.IsDeviceLost()) {
-			hr = m_renderer.Reset();
-			if (SUCCEEDED(hr)) {
-				hr = m_renderer.PresentMediaSample(pMediaSample);
-			}
-		}
-		return hr;
+		// Native D3D11 decoding owns the decoder device. Do not recreate a
+		// separate renderer device here after device loss: the decoder must
+		// reconnect and call ActivateD3D11Decoding() with its replacement device.
+		// Returning the device-loss error lets DirectShow tear down/reconnect
+		// the native path instead of presenting against a different device.
+		return m_renderer.PresentMediaSample(pMediaSample);
 	}
 
 	CD3D11AllocatorPresenter::CD3D11AllocatorPresenter(HWND hWnd, HRESULT& hr, CString& error)
