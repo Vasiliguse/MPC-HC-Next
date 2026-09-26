@@ -561,8 +561,10 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
 
     CComQIPtr<IMediaSideData> sideData(sample);
     if (!sideData) {
-        SetHDR10InputColorSpace(false);
-        return SetHDR10Metadata(nullptr);
+        // HDR signalling is derived from the media type's transfer function.
+        // Absence of optional side-data must not turn a valid PQ stream back
+        // into SDR.
+        return SetHDR10Metadata(nullptr); 
     }
 
     const BYTE* data = nullptr;
