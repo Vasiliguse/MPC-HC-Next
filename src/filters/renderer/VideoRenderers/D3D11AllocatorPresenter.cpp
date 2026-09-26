@@ -12,6 +12,14 @@ namespace DSObjects
 	{
 	}
 
+	STDMETHODIMP CD3D11RendererInputPin::GetAllocator(IMemAllocator** ppAllocator)
+	{
+		if (ppAllocator) {
+			*ppAllocator = nullptr;
+		}
+		return E_FAIL;
+	}
+
 	STDMETHODIMP CD3D11RendererInputPin::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 	{
 		CheckPointer(ppv, E_POINTER);
