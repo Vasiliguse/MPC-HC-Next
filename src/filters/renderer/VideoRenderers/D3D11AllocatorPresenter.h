@@ -16,14 +16,13 @@ namespace DSObjects
 {
 	class CD3D11VideoRendererFilter;
 
-	class CD3D11RendererInputPin final : public CRendererInputPin
+	class CD3D11RendererInputPin final : public CRendererInputPin, public ID3D11DecoderConfiguration
 	{
 	public:
 		CD3D11RendererInputPin(CD3D11VideoRendererFilter* renderer, HRESULT* phr);
-		STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
 	};
 
-	class CD3D11VideoRendererFilter : public CBaseRenderer, public ID3D11DecoderConfiguration
+	class CD3D11VideoRendererFilter : public CBaseRenderer
 	{
 	public:
 		CD3D11VideoRendererFilter(HWND hWnd, const ExtraRendererSettings& settings, HRESULT* phr);
@@ -36,6 +35,8 @@ namespace DSObjects
 		STDMETHODIMP ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags) override;
 		STDMETHODIMP_(UINT) GetD3D11AdapterIndex() override;
 		CBasePin* GetPin(int n) override;
+		HRESULT ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags);
+		UINT GetD3D11AdapterIndex() const;
 
 	private:
 		HWND m_hWnd = nullptr;
