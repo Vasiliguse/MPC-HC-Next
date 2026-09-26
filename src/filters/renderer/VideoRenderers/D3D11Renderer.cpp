@@ -403,20 +403,24 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_videoHeight = 0;
 }
 
-HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT width, UINT height)
+HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight)
 {
     if (!m_videoDevice) return E_UNEXPECTED;
-    if (m_videoProcessor && m_videoProcessorEnumerator && m_videoWidth == width && m_videoHeight == height) return S_OK;
+    if (m_videoProcessor && m_videoProcessorEnumerator
+        && m_videoWidth == inputWidth && m_videoHeight == inputHeight
+        && m_processorOutputWidth == outputWidth && m_processorOutputHeight == outputHeight) {
+        return S_OK;
+    }
 
     m_videoProcessor.Release();
     m_videoProcessorEnumerator.Release();
 
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc = {};
     desc.InputFrameFormat = format;
-    desc.InputWidth = width;
-    desc.InputHeight = height;
-    desc.OutputWidth = width;
-    desc.OutputHeight = height;
+    desc.InputWidth = inputWidth;
+    desc.InputHeight = inputHeight;
+    desc.OutputWidth = outputWidth;
+    desc.OutputHeight = outputHeight;
     desc.Usage = D3D11_VIDEO_USAGE_PLAYBACK_NORMAL;
 
     HRESULT hr = m_videoDevice->CreateVideoProcessorEnumerator(&desc, &m_videoProcessorEnumerator);
@@ -429,8 +433,10 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
     hr = m_videoDevice->CreateVideoProcessor(m_videoProcessorEnumerator, 0, &m_videoProcessor);
     if (FAILED(hr)) return hr;
 
-    m_videoWidth = width;
-    m_videoHeight = height;
+    m_videoWidth = inputWidth;
+    m_videoHeight = inputHeight;
+    m_processorOutputWidth = outputWidth;
+    m_processorOutputHeight = outputHeight;
     return S_OK;
 }
 
@@ -756,6 +762,9 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     }
     DXGI_ADAPTER_DESC textureAdapterDesc = {};
     DXGI_ADAPTER_DESC rendererAdapterDesc = {};
+    if (textureDevice != m_device) {
+        return DXGI_ERROR_INVALID_CALL;
+    }
     if (FAILED(textureAdapter->GetDesc(&textureAdapterDesc)) || FAILED(m_adapter->GetDesc(&rendererAdapterDesc)) ||
         textureAdapterDesc.AdapterLuid.HighPart != rendererAdapterDesc.AdapterLuid.HighPart ||
         textureAdapterDesc.AdapterLuid.LowPart != rendererAdapterDesc.AdapterLuid.LowPart) {
@@ -766,8 +775,17 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     texture->GetDesc(&textureDesc);
     if (!textureDesc.Width || !textureDesc.Height) return E_INVALIDARG;
 
+    CComPtr<ID3D11Texture2D> backBuffer;
+    HRESULT hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+    if (FAILED(hr)) return hr;
+
+    D3D11_TEXTURE2D_DESC outputDesc2D = {};
+    backBuffer->GetDesc(&outputDesc2D);
+    if (!outputDesc2D.Width || !outputDesc2D.Height) return E_INVALIDARG;
+
     D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
-    HRESULT hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height);
+    hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height,
+        outputDesc2D.Width, outputDesc2D.Height);
     if (FAILED(hr)) return hr;
 
     UINT inputSupport = 0;
@@ -784,10 +802,6 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     hr = m_videoDevice->CreateVideoProcessorInputView(texture, m_videoProcessorEnumerator, &inputDesc, &inputView);
     if (FAILED(hr)) return hr;
 
-    CComPtr<ID3D11Texture2D> backBuffer;
-    hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-    if (FAILED(hr)) return hr;
-
     CComPtr<ID3D11VideoProcessorOutputView> outputView;
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputDesc = {};
     outputDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
@@ -802,9 +816,6 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     stream.PastFrames = 0;
     stream.FutureFrames = 0;
     stream.pInputSurface = inputView;
-
-    D3D11_TEXTURE2D_DESC outputDesc2D = {};
-    backBuffer->GetDesc(&outputDesc2D);
 
     RECT sourceRect = { 0, 0, static_cast<LONG>(textureDesc.Width), static_cast<LONG>(textureDesc.Height) };
     RECT destRect = { 0, 0, static_cast<LONG>(outputDesc2D.Width), static_cast<LONG>(outputDesc2D.Height) };
@@ -866,6 +877,8 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
                     m_videoProcessorEnumerator.Release();
                     m_videoWidth = 0;
                     m_videoHeight = 0;
+                    m_processorOutputWidth = 0;
+                    m_processorOutputHeight = 0;
                 }
             }
             if (SUCCEEDED(hr)) {
