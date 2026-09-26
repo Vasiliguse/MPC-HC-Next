@@ -21,6 +21,7 @@
 #include "mpc_defines.h"
 #include "DSUtil/Utils.h"
 #include "DX11SubPic.h"
+#include <d3dcompiler.h>
 #include <DirectXMath.h>
 
 #define ENABLE_DUMP_SUBPIC 0
@@ -453,6 +454,33 @@ void CDX11SubPicAllocator::CreateBlendState()
 
 void CDX11SubPicAllocator::CreateOtherStates()
 {
+\tstatic const char* vsSource = R"(struct VSIn { float3 pos : POSITION; float2 uv : TEXCOORD0; }; struct VSOut { float4 pos : SV_Position; float2 uv : TEXCOORD0; }; VSOut main(VSIn input) { VSOut output; output.pos = float4(input.pos, 1.0); output.uv = input.uv; return output; })";
+\tstatic const char* psSource = R"(Texture2D tex : register(t0); SamplerState samp : register(s0); float4 main(float2 uv : TEXCOORD0) : SV_Target { return tex.Sample(samp, uv); })";
+\tauto compile = [](const char* source, const char* entry, const char* target, CComPtr<ID3DBlob>& blob) -> HRESULT {
+\t\tHMODULE compiler = LoadLibraryW(L"d3dcompiler_47.dll");
+\t\tif (!compiler) return HRESULT_FROM_WIN32(GetLastError());
+\t\ttypedef HRESULT (WINAPI* D3DCompileFn)(LPCVOID, SIZE_T, LPCSTR, const D3D_SHADER_MACRO*, ID3DInclude*, LPCSTR, LPCSTR, UINT, UINT, ID3DBlob**, ID3DBlob**);
+\t\tauto fn = reinterpret_cast<D3DCompileFn>(GetProcAddress(compiler, "D3DCompile"));
+\t\tif (!fn) { FreeLibrary(compiler); return E_NOINTERFACE; }
+\t\tCComPtr<ID3DBlob> errors;
+\t\tHRESULT hr = fn(source, strlen(source), nullptr, nullptr, nullptr, entry, target, 0, 0, &blob, &errors);
+\t\tFreeLibrary(compiler);
+\t\treturn hr;
+\t};
+
+\tCComPtr<ID3DBlob> vsBlob;
+\tCComPtr<ID3DBlob> psBlob;
+\tif (SUCCEEDED(compile(vsSource, "main", "vs_4_0", vsBlob))
+\t\t&& SUCCEEDED(compile(psSource, "main", "ps_4_0", psBlob))) {
+\t\tEXECUTE_ASSERT(S_OK == m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_pVertexShader));
+\t\tEXECUTE_ASSERT(S_OK == m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pPixelShader));
+
+\t\tconst D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
+\t\t\t{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+\t\t\t{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+\t\t};
+\t\tEXECUTE_ASSERT(S_OK == m_pDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &m_pInputLayout));
+\t}
 	D3D11_BUFFER_DESC BufferDesc = { sizeof(VERTEX) * 4, D3D11_USAGE_DYNAMIC, D3D11_BIND_VERTEX_BUFFER, D3D11_CPU_ACCESS_WRITE, 0, 0 };
 	EXECUTE_ASSERT(S_OK == m_pDevice->CreateBuffer(&BufferDesc, nullptr, &m_pVertexBuffer));
 
@@ -476,6 +504,9 @@ void CDX11SubPicAllocator::ReleaseAllStates()
 	m_pVertexBuffer.Release();
 	m_pSamplerPoint.Release();
 	m_pSamplerLinear.Release();
+	m_pVertexShader.Release();
+	m_pPixelShader.Release();
+	m_pInputLayout.Release();
 }
 
 HRESULT CDX11SubPicAllocator::Render(const MemPic_t& memPic, const CRect& dirtyRect, const CRect& srcRect, const CRect& dstRect)
@@ -563,8 +594,11 @@ HRESULT CDX11SubPicAllocator::Render(const MemPic_t& memPic, const CRect& dirtyR
 	UINT Stride = sizeof(VERTEX);
 	UINT Offset = 0;
 	pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer.p, &Stride, &Offset);
+	pDeviceContext->IASetInputLayout(m_pInputLayout);
+	pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
+	pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 	pDeviceContext->PSSetSamplers(0, 1, &(stretching ? m_pSamplerLinear.p : m_pSamplerPoint.p));
 	pDeviceContext->PSSetShaderResources(0, 1, &m_pOutputShaderResource.p);
 
