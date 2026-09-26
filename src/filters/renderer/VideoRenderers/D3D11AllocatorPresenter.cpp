@@ -123,10 +123,11 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 		const UINT height = std::max<LONG>(1, client.bottom - client.top);
 		if (width != m_outputWidth || height != m_outputHeight) {
 			HRESULT hr = m_renderer.Resize(width, height);
-			if (FAILED(hr) && (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)) {
-				hr = m_renderer.Reset();
-			}
 			if (FAILED(hr)) {
+				// Native D3D11 decoding owns the device. Never recover resize
+				// failures by creating a second renderer-owned device here.
+				// DirectShow must reconnect the native decoder and provide its
+				// replacement device through ActivateD3D11Decoding().
 				return hr;
 			}
 			m_outputWidth = width;
