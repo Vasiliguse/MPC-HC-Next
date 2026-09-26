@@ -20,6 +20,9 @@ namespace DSObjects
 	{
 	public:
 		CD3D11RendererInputPin(CD3D11VideoRendererFilter* renderer, HRESULT* phr);
+		STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+		STDMETHODIMP ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags) override;
+		STDMETHODIMP_(UINT) GetD3D11AdapterIndex() override;
 	};
 
 	class CD3D11VideoRendererFilter : public CBaseRenderer
@@ -31,10 +34,8 @@ namespace DSObjects
 		HRESULT CheckMediaType(const CMediaType* pmt) override;
 		HRESULT DoRenderSample(IMediaSample* pMediaSample) override;
 		HRESULT SetMediaType(const CMediaType* pmt) override;
-		STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
-		STDMETHODIMP ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags) override;
-		STDMETHODIMP_(UINT) GetD3D11AdapterIndex() override;
 		CBasePin* GetPin(int n) override;
+
 		HRESULT ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags);
 		UINT GetD3D11AdapterIndex() const;
 
