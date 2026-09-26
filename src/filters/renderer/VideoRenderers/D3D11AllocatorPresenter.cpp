@@ -7,6 +7,21 @@
 
 namespace DSObjects
 {
+	CD3D11RendererInputPin::CD3D11RendererInputPin(CD3D11VideoRendererFilter* renderer, HRESULT* phr)
+		: CRendererInputPin(renderer, phr, L"In")
+	{
+	}
+
+	STDMETHODIMP CD3D11RendererInputPin::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+	{
+		CheckPointer(ppv, E_POINTER);
+		if (riid == __uuidof(ID3D11DecoderConfiguration)) {
+			auto* renderer = static_cast<CD3D11VideoRendererFilter*>(m_pRenderer);
+			return renderer->NonDelegatingQueryInterface(riid, ppv);
+		}
+		return __super::NonDelegatingQueryInterface(riid, ppv);
+	}
+
 	CD3D11VideoRendererFilter::CD3D11VideoRendererFilter(
 		HWND hWnd, const ExtraRendererSettings& settings, HRESULT* phr)
 		: CBaseRenderer(CLSID_D3D11VideoRenderer, L"MPC D3D11 Video Renderer", nullptr, phr)
@@ -35,6 +50,24 @@ STDMETHODIMP CD3D11VideoRendererFilter::NonDelegatingQueryInterface(REFIID riid,
 		return S_OK;
 	}
 	return __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+CBasePin* CD3D11VideoRendererFilter::GetPin(int n)
+{
+	if (n != 0) {
+		return nullptr;
+	}
+
+	CAutoLock lock(&m_ObjectCreationLock);
+	if (!m_pInputPin) {
+		HRESULT hr = S_OK;
+		m_pInputPin = DNew CD3D11RendererInputPin(this, &hr);
+		if (!m_pInputPin || FAILED(hr)) {
+			delete m_pInputPin;
+			m_pInputPin = nullptr;
+		}
+	}
+	return m_pInputPin;
 }
 
 STDMETHODIMP CD3D11VideoRendererFilter::ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags)
