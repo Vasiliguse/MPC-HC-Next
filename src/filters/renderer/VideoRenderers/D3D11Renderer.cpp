@@ -331,11 +331,12 @@ HRESULT CD3D11Renderer::UpdateOutputInfo()
 
     m_output.valid = true;
     m_output.colorSpace = m_output.desc.ColorSpace;
-    // BitsPerColor alone is not sufficient: many SDR outputs expose a
-    // 10-bit panel. HDR10 capability is represented by the active DXGI
-    // output color space, while scRGB is handled separately in a later
-    // presentation path.
-    m_output.hdrSupported = IsHdr10ColorSpace(m_output.desc.ColorSpace);
+    // ColorSpace describes the current output mode, not the monitor's
+    // HDR capability. A capable HDR display can report the SDR color space
+    // while Windows HDR is currently disabled. Use the output bit depth as
+    // the capability gate; ConfigureSwapChainColorSpace() performs the
+    // authoritative DXGI present-support check for the requested HDR mode.
+    m_output.hdrSupported = m_output.desc.BitsPerColor >= 10;
 
     return S_OK;
 }
