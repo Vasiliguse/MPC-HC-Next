@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ tr.comp_mpciconlib=Simge Kütüphanesi
 tr.comp_mpcresources=Çeviriler
 tr.comp_mpcbeshellext=Sağ tık menü eklentisini yükle
 tr.comp_intel_msdk=H.264 MVC 3D Çözücüsü
-tr.msg_DeleteSettings=MPC-BE ayarlarını silmek istiyor musunuz?%n%nMPC-BE 'yi tekrar yüklemeyi planlıyorsanız bu ayarları silmemeniz önerilir.
+tr.msg_DeleteSettings=MPC-HC Next ayarlarını silmek istiyor musunuz?%n%nMPC-HC Next 'yi tekrar yüklemeyi planlıyorsanız bu ayarları silmemeniz önerilir.
 tr.msg_NoD3DX9DLL_found=En son DirectX paketi yüklü değil!%n%nLütfen en son DirectX Haziran 2010 paketini indirip kurunuz. İşletim sistemi sürümünüz, bu aşamada önemli değildir.
-tr.msg_SetupIsRunningWarning=MPC-BE kurulumu zaten çalışıyor.
-tr.msg_simd_sse2=Bu MPC-BE sürümü, SSE2 eklentisi destekleyen bir işlemci gerektirmektedir.%n%nİşlemciniz bu özelliği desteklemiyor.
+tr.msg_SetupIsRunningWarning=MPC-HC Next kurulumu zaten çalışıyor.
+tr.msg_simd_sse2=Bu MPC-HC Next sürümü, SSE2 eklentisi destekleyen bir işlemci gerektirmektedir.%n%nİşlemciniz bu özelliği desteklemiyor.
 tr.tsk_AllUsers=Tüm kullanıcılar için
 tr.tsk_CurrentUser=Sadece mevcut kullanıcı için
 tr.tsk_Other=Diğer görevler:
