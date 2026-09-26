@@ -157,11 +157,16 @@ HRESULT CD3D11Renderer::SelectAdapter()
     CComPtr<IDXGIOutput> targetOutput;
     HMONITOR monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
 
+    CComPtr<IDXGIFactory6> factory6;
+    m_factory->QueryInterface(IID_PPV_ARGS(&factory6));
+
     for (UINT adapterIndex = 0;; ++adapterIndex) {
         CComPtr<IDXGIAdapter1> adapter;
-        HRESULT hr = m_factory->EnumAdapterByGpuPreference(
-            adapterIndex, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-            IID_PPV_ARGS(&adapter));
+        HRESULT hr = factory6
+            ? factory6->EnumAdapterByGpuPreference(
+                adapterIndex, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+                IID_PPV_ARGS(&adapter))
+            : m_factory->EnumAdapters1(adapterIndex, &adapter);
 
         if (hr == DXGI_ERROR_NOT_FOUND) {
             break;
@@ -298,7 +303,9 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
     desc.BufferCount = kSwapChainBufferCount;
     desc.Scaling = DXGI_SCALING_STRETCH;
-    desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    desc.SwapEffect = IsWindows10OrGreater()
+        ? DXGI_SWAP_EFFECT_FLIP_DISCARD
+        : DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
     desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
     desc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
@@ -323,7 +330,12 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
 bool CD3D11Renderer::IsTearingSupported() const
 {
     BOOL supported = FALSE;
-    return SUCCEEDED(m_factory->CheckFeatureSupport(
+    CComPtr<IDXGIFactory5> factory5;
+    if (FAILED(m_factory->QueryInterface(IID_PPV_ARGS(&factory5)))) {
+        return false;
+    }
+
+    return SUCCEEDED(factory5->CheckFeatureSupport(
         DXGI_FEATURE_PRESENT_ALLOW_TEARING, &supported, sizeof(supported)))
         && supported;
 }
@@ -343,11 +355,26 @@ HRESULT CD3D11Renderer::UpdateOutputInfo()
     }
 
     hr = output->QueryInterface(IID_PPV_ARGS(&m_outputObject));
-    if (FAILED(hr)) {
-        return hr;
+    if (SUCCEEDED(hr)) {
+        hr = m_outputObject->GetDesc1(&m_output.desc);
+    } else {
+        DXGI_OUTPUT_DESC legacyDesc = {};
+        hr = output->GetDesc(&legacyDesc);
+        if (SUCCEEDED(hr)) {
+            m_output.desc = {};
+            wcsncpy_s(
+                m_output.desc.DeviceName,
+                _countof(m_output.desc.DeviceName),
+                legacyDesc.DeviceName,
+                _TRUNCATE);
+            m_output.desc.DesktopCoordinates = legacyDesc.DesktopCoordinates;
+            m_output.desc.AttachedToDesktop = legacyDesc.AttachedToDesktop;
+            m_output.desc.Rotation = legacyDesc.Rotation;
+            m_output.desc.Monitor = legacyDesc.Monitor;
+            m_output.desc.BitsPerColor = 8;
+            m_output.desc.ColorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+        }
     }
-
-    hr = m_outputObject->GetDesc1(&m_output.desc);
     if (FAILED(hr)) {
         return hr;
     }
@@ -564,7 +591,7 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         // HDR signalling is derived from the media type's transfer function.
         // Absence of optional side-data must not turn a valid PQ stream back
         // into SDR.
-        return SetHDR10Metadata(nullptr); 
+        return SetHDR10Metadata(nullptr);
     }
 
     const BYTE* data = nullptr;
