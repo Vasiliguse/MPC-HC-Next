@@ -16,10 +16,14 @@ namespace DSObjects
 
 	STDMETHODIMP CD3D11RendererInputPin::GetAllocator(IMemAllocator** ppAllocator)
 	{
-		if (ppAllocator) {
-			*ppAllocator = nullptr;
-		}
-		return E_FAIL;
+		CheckPointer(ppAllocator, E_POINTER);
+		*ppAllocator = nullptr;
+
+		// Native D3D11 decoding is negotiated through ID3D11DecoderConfiguration;
+		// the renderer deliberately does not expose a fake allocator. Returning
+		// E_NOINTERFACE here makes the graph use the decoder's native allocator
+		// negotiation instead of silently falling back to an invalid memory path.
+		return E_NOINTERFACE;
 	}
 
 	STDMETHODIMP CD3D11RendererInputPin::NonDelegatingQueryInterface(REFIID riid, void** ppv)
