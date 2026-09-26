@@ -79,6 +79,11 @@ void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, U
         : D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235;
 }
 
+void CD3D11Renderer::SetHDR10InputColorSpace(bool enabled)
+{
+    m_hdr10Input = enabled;
+}
+
 CD3D11Renderer::~CD3D11Renderer()
 {
     ReleaseDevice();
@@ -287,6 +292,7 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
     if (FAILED(hr)) return hr;
     hr = m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext));
     if (FAILED(hr)) return hr;
+    m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext1));
 
     return S_OK;
 }
@@ -519,6 +525,7 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
 
     CComQIPtr<IMediaSideData> sideData(sample);
     if (!sideData) {
+        SetHDR10InputColorSpace(false);
         return SetHDR10Metadata(nullptr);
     }
 
@@ -572,6 +579,8 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         hasMastering = true;
     }
 
+    const bool hdr10 = hasMastering && IsHdrOutputRequested();
+    SetHDR10InputColorSpace(hdr10);
     return hasMastering ? SetHDR10Metadata(&dxgi) : SetHDR10Metadata(nullptr);
 }
 
@@ -868,8 +877,15 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     outputColorSpace.YCbCr_Matrix = 0;
     outputColorSpace.YCbCr_xvYCC = 0;
     outputColorSpace.Nominal_Range = D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
-    m_videoContext->VideoProcessorSetStreamColorSpace(m_videoProcessor, 0, &m_inputColorSpace);
-    m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
+    if (m_hdr10Input && IsHdrOutputRequested() && m_videoContext1) {
+        m_videoContext1->VideoProcessorSetStreamColorSpace1(
+            m_videoProcessor, 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020);
+        m_videoContext1->VideoProcessorSetOutputColorSpace1(
+            m_videoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+    } else {
+        m_videoContext->VideoProcessorSetStreamColorSpace(m_videoProcessor, 0, &m_inputColorSpace);
+        m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
+    }
 
     return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
 }
@@ -962,6 +978,7 @@ HRESULT CD3D11Renderer::Reset()
 void CD3D11Renderer::ReleaseDevice()
 {
     ReleaseFrameResources();
+    m_videoContext1.Release();
     m_videoContext.Release();
     m_videoDevice.Release();
     m_outputObject.Release();
