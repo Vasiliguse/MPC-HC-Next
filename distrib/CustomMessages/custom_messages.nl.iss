@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ nl.comp_mpciconlib=Iconen voor mediabestanden
 nl.comp_mpcresources=Localisaties
 nl.comp_mpcbeshellext=Shellextensie installeren
 nl.comp_intel_msdk=H.264 MVC 3D Decoder
-nl.msg_DeleteSettings=Wilt u ook de instellingen van MPC-BE verwijderen?%n%nAls u MPC-BE opnieuw gaat installeren is dit niet nodig.
+nl.msg_DeleteSettings=Wilt u ook de instellingen van MPC-HC Next verwijderen?%n%nAls u MPC-HC Next opnieuw gaat installeren is dit niet nodig.
 nl.msg_NoD3DX9DLL_found=De nieuwste DirectX-runtime is niet geinstalleerd!%n%nGraag de nieuwste DirectX-runtime (Juni 2010) downloaden en installeren ongeacht uw Windowsversie.
-nl.msg_SetupIsRunningWarning=MPC-BE installatie is al gestart!
-nl.msg_simd_sse2=Deze versie van MPC-BE heeft een processor nodig die SSE2 ondersteunt.%n%nUw processor ondersteunt dit niet.
+nl.msg_SetupIsRunningWarning=MPC-HC Next installatie is al gestart!
+nl.msg_simd_sse2=Deze versie van MPC-HC Next heeft een processor nodig die SSE2 ondersteunt.%n%nUw processor ondersteunt dit niet.
 nl.tsk_AllUsers=Voor alle gebruikers
 nl.tsk_CurrentUser=Alleen voor de huidige gebruiker
 nl.tsk_Other=Andere taken:
