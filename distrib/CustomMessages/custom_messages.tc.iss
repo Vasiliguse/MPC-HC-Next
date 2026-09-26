@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ tc.comp_mpciconlib=圖示庫
 tc.comp_mpcresources=翻譯
 tc.comp_mpcbeshellext=安裝 shell extension
 tc.comp_intel_msdk=H.264 MVC 3D 解碼器
-tc.msg_DeleteSettings=您是否也要刪除 MPC-BE 設定？%n%n如果您打算再次安裝 MPC-BE 則無需刪除。
+tc.msg_DeleteSettings=您是否也要刪除 MPC-HC Next 設定？%n%n如果您打算再次安裝 MPC-HC Next 則無需刪除。
 tc.msg_NoD3DX9DLL_found=未安裝最新版本的 DirectX Runtime！%n%n不論您使用的作業系統為何，請下載並更新至最新版本的 DirectX Runtime （2010 年 6 月）。
-tc.msg_SetupIsRunningWarning=已在執行 MPC-BE 安裝程式！
-tc.msg_simd_sse2=此版的 MPC-BE 需要有支援 SSE2 延伸指令集的 CPU。%n%n您的 CPU 並未相容這些功能。
+tc.msg_SetupIsRunningWarning=已在執行 MPC-HC Next 安裝程式！
+tc.msg_simd_sse2=此版的 MPC-HC Next 需要有支援 SSE2 延伸指令集的 CPU。%n%n您的 CPU 並未相容這些功能。
 tc.tsk_AllUsers=安裝給所有使用者
 tc.tsk_CurrentUser=僅安裝給目前使用者
 tc.tsk_Other=其他工作：
