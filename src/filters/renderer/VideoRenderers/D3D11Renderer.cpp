@@ -419,7 +419,12 @@ HRESULT CD3D11Renderer::ConfigureSwapChainColorSpace()
     CComPtr<IDXGISwapChain3> swapChain3;
     HRESULT hr = m_swapChain->QueryInterface(IID_PPV_ARGS(&swapChain3));
     if (FAILED(hr)) {
-        return hr;
+        // DXGI 1.3 color-space control is not available on Windows 8.
+        // Keep the legacy SDR presentation path usable there; HDR10
+        // explicitly requires the newer swap-chain interface.
+        return colorSpace == DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
+            ? S_OK
+            : hr;
     }
 
     UINT support = 0;
