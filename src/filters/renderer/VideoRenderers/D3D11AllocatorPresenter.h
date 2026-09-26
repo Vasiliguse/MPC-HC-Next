@@ -14,6 +14,7 @@
 
 namespace DSObjects
 {
+	class CD3D11AllocatorPresenter;
 	class CD3D11VideoRendererFilter;
 
 	class CD3D11RendererInputPin final : public CRendererInputPin, public ID3D11DecoderConfiguration
@@ -32,7 +33,7 @@ namespace DSObjects
 	class CD3D11VideoRendererFilter : public CBaseRenderer
 	{
 	public:
-		CD3D11VideoRendererFilter(HWND hWnd, const ExtraRendererSettings& settings, HRESULT* phr);
+		CD3D11VideoRendererFilter(HWND hWnd, const ExtraRendererSettings& settings, CD3D11AllocatorPresenter* owner, HRESULT* phr);
 		~CD3D11VideoRendererFilter() override = default;
 
 		HRESULT CheckMediaType(const CMediaType* pmt) override;
@@ -42,9 +43,11 @@ namespace DSObjects
 
 		HRESULT ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags);
 		UINT GetD3D11AdapterIndex() const;
+		ID3D11Device* GetRendererDevice() const { return m_renderer.GetDevice(); }
 
 	private:
 		HWND m_hWnd = nullptr;
+		CD3D11AllocatorPresenter* m_owner = nullptr;
 		ExtraRendererSettings m_settings = {};
 		CD3D11Renderer m_renderer;
 		UINT m_sourceWidth = 0;
@@ -68,6 +71,9 @@ namespace DSObjects
 		STDMETHODIMP_(void) SetExtraSettings(ExtraRendererSettings* pExtraSets) override;
 
 	private:
+		HRESULT InitializeSubPicAllocator();
+		HRESULT RenderSubtitles();
+
 		ExtraRendererSettings m_extraSettings = {};
 		CComPtr<CD3D11VideoRendererFilter> m_rendererFilter;
 	};
