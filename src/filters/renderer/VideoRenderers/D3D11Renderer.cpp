@@ -70,10 +70,13 @@ void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, U
     m_inputColorSpace.RGB_Range = 0;
     m_inputColorSpace.YCbCr_Matrix = (transferMatrix == 2u) ? 0u : 1u;
     m_inputColorSpace.YCbCr_xvYCC = 0;
+    // DXVA2: 0 = unknown, 1 = full (0-255), 2 = studio (16-235),
+    // 3 = 48-208. D3D11 exposes full/studio ranges; unknown is kept at
+    // the driver-safe studio default rather than expanding YUV levels.
     m_inputColorSpace.Nominal_Range =
-        (nominalRange == 2u || nominalRange == 3u)
-        ? D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235
-        : D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
+        (nominalRange == 1u)
+        ? D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255
+        : D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235;
 }
 
 CD3D11Renderer::~CD3D11Renderer()
