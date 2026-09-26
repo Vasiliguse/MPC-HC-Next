@@ -10659,7 +10659,7 @@ void CMainFrame::OnHelpDocumentation()
 
 void CMainFrame::OnHelpToolbarImages()
 {
-	ShellExecuteW(m_hWnd, L"open", L"https://sourceforge.net/projects/mpcbe/files/Toolbars/", nullptr, nullptr, SW_SHOWDEFAULT);
+	ShellExecuteW(m_hWnd, L"open", L"https://github.com/Vasiliguse/MPC-HC-Next", nullptr, nullptr, SW_SHOWDEFAULT);
 }
 
 /*
