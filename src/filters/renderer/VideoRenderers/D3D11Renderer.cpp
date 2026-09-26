@@ -47,11 +47,6 @@ private:
     bool m_locked = false;
 };
 
-bool IsHdr10ColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace)
-{
-    return colorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
-        || colorSpace == DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020;
-}
 }
 
 CD3D11Renderer::CD3D11Renderer() = default;
@@ -428,6 +423,7 @@ void CD3D11Renderer::ReleaseFrameResources()
 
     m_videoProcessor.Release();
     m_videoProcessorEnumerator.Release();
+    m_videoProcessorEnumerator1.Release();
     m_backBufferRTV.Release();
     m_videoWidth = 0;
     m_videoHeight = 0;
@@ -446,6 +442,7 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
 
     m_videoProcessor.Release();
     m_videoProcessorEnumerator.Release();
+    m_videoProcessorEnumerator1.Release();
 
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc = {};
     desc.InputFrameFormat = format;
@@ -881,6 +878,26 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     outputColorSpace.YCbCr_xvYCC = 0;
     outputColorSpace.Nominal_Range = D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
     if (m_hdr10Input && IsHdrOutputRequested() && m_videoContext1) {
+        bool conversionSupported = false;
+        if (m_videoProcessorEnumerator1) {
+            BOOL supported = FALSE;
+            const HRESULT conversionHr =
+                m_videoProcessorEnumerator1->CheckVideoProcessorFormatConversion(
+                    textureDesc.Format,
+                    DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020,
+                    m_swapChainFormat,
+                    DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020,
+                    &supported);
+            conversionSupported = SUCCEEDED(conversionHr) && supported;
+        }
+
+        if (!conversionSupported) {
+            // Do not silently process an HDR10 stream through the legacy
+            // SDR color-space path: that would produce visibly incorrect
+            // PQ/BT.2020 colors. A later shader path can provide a fallback.
+            return DXGI_ERROR_UNSUPPORTED;
+        }
+
         m_videoContext1->VideoProcessorSetStreamColorSpace1(
             m_videoProcessor, 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020);
         m_videoContext1->VideoProcessorSetOutputColorSpace1(
@@ -931,6 +948,7 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
                     // Recreate it after an SDR/HDR swap-chain transition.
                     m_videoProcessor.Release();
                     m_videoProcessorEnumerator.Release();
+                    m_videoProcessorEnumerator1.Release();
                     m_videoWidth = 0;
                     m_videoHeight = 0;
                     m_processorOutputWidth = 0;
