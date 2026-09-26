@@ -35,6 +35,8 @@ public:
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval, UINT presentFlags);
     HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
+    HRESULT ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags);
+    UINT GetD3D11AdapterIndex() const;
     HRESULT PresentMediaSample(IMediaSample* sample);
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT SetHDR10MetadataFromSample(IMediaSample* sample);
