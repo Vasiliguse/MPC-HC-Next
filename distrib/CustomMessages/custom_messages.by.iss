@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ by.comp_mpciconlib=Бібліятэка значкоў
 by.comp_mpcresources=Пераклады
 by.comp_mpcbeshellext=Install the shell extension
 by.comp_intel_msdk=H.264 MVC 3D Decoder
-by.msg_DeleteSettings=Ці хочаце таксама выдаліць налады MPC-BE?%n%nКалі вы збіраецеся зноў усталяваць MPC-BE, тады іх можна пакінуць.
+by.msg_DeleteSettings=Ці хочаце таксама выдаліць налады MPC-HC Next?%n%nКалі вы збіраецеся зноў усталяваць MPC-HC Next, тады іх можна пакінуць.
 by.msg_NoD3DX9DLL_found=Найноўшая бібліятэка DirectX не ўсталяваная!%n%nСцягніце і ўсталюйце яе (версія June 2010), незалежна ад таго, якая ў вас аперацыйная сістэма.
-by.msg_SetupIsRunningWarning=Праграма ўсталявання MPC-BE ужо працуе!
-by.msg_simd_sse2=Гэтая будова MPC-BE вымагае працэсар, здольны выконваць інструкцыі SSE2.%n%nВаш працэсар гэтага не ўмее.
+by.msg_SetupIsRunningWarning=Праграма ўсталявання MPC-HC Next ужо працуе!
+by.msg_simd_sse2=Гэтая будова MPC-HC Next вымагае працэсар, здольны выконваць інструкцыі SSE2.%n%nВаш працэсар гэтага не ўмее.
 by.tsk_AllUsers=Для ўсіх карыстальнікаў
 by.tsk_CurrentUser=Толькі для дзейнага карыстальніка
 by.tsk_Other=Іншыя заданні:
