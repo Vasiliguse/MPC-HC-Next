@@ -6,7 +6,6 @@
 #include "D3D11AllocatorPresenter.h"
 #include "SubPic/DX11SubPic.h"
 #include "SubPic/SubPicQueueImpl.h"
-#include <dxva2api.h>
 
 namespace DSObjects
 {
