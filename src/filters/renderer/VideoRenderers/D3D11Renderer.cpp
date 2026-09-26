@@ -654,9 +654,7 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE outputColorSpace = {};
     outputColorSpace.RGB_Range = 0;
     outputColorSpace.Nominal_Range = 0;
-    outputColorSpace.RGB_709 = 1;
     if (IsHdrOutputRequested()) {
-        outputColorSpace.RGB_709 = 0;
         outputColorSpace.YCbCr_Matrix = 1;
         outputColorSpace.Nominal_Range = 2;
     }
