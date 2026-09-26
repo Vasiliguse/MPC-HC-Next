@@ -21,6 +21,7 @@ namespace DSObjects
 	public:
 		CD3D11RendererInputPin(CD3D11VideoRendererFilter* renderer, HRESULT* phr);
 		STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+		STDMETHODIMP GetAllocator(IMemAllocator** ppAllocator) override;
 		STDMETHODIMP ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags) override;
 		STDMETHODIMP_(UINT) GetD3D11AdapterIndex() override;
 	};
