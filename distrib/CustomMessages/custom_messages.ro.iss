@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ ro.comp_mpciconlib=Bibliotecă de pictograme
 ro.comp_mpcresources=Traduceri
 ro.comp_mpcbeshellext=Instalează extensia shell
 ro.comp_intel_msdk=Decodorul H.264 MVC 3D
-ro.msg_DeleteSettings=Dorești de asemenea, să ştergi setările pentru MPC-BE?%n%nDacă vrei să reinstalezi MPC-BE, atunci nu trebuie să le ştergi.
+ro.msg_DeleteSettings=Dorești de asemenea, să ştergi setările pentru MPC-HC Next?%n%nDacă vrei să reinstalezi MPC-HC Next, atunci nu trebuie să le ştergi.
 ro.msg_NoD3DX9DLL_found=Cel mai recent runtime DirectX nu este instalat!%n%nTe rugăm să descarci și să instalezi cel mai recent runtime DirectX din iunie 2010, indiferent de sistemul tău de operare.
-ro.msg_SetupIsRunningWarning=Instalatorul MPC-BE rulează deja!
-ro.msg_simd_sse2=Această versiune de MPC-BE necesită un procesor cu suport pentru extensii SSE2.%n%nProcesorul tău nu are aceste capacităţi.
+ro.msg_SetupIsRunningWarning=Instalatorul MPC-HC Next rulează deja!
+ro.msg_simd_sse2=Această versiune de MPC-HC Next necesită un procesor cu suport pentru extensii SSE2.%n%nProcesorul tău nu are aceste capacităţi.
 ro.tsk_AllUsers=Pentru toţi utilizatorii
 ro.tsk_CurrentUser=Doar pentru utilizatorul actual
 ro.tsk_Other=Alte activităţi:
