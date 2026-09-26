@@ -26,6 +26,28 @@ namespace DSObjects
 		return S_OK;
 	}
 
+STDMETHODIMP CD3D11VideoRendererFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+{
+	CheckPointer(ppv, E_POINTER);
+	if (riid == __uuidof(ID3D11DecoderConfiguration)) {
+		*ppv = static_cast<ID3D11DecoderConfiguration*>(this);
+		AddRef();
+		return S_OK;
+	}
+	return __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+STDMETHODIMP CD3D11VideoRendererFilter::ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags)
+{
+	UNREFERENCED_PARAMETER(nFlags);
+	return m_renderer.ActivateD3D11Decoding(pDevice, pContext, hMutex, nFlags);
+}
+
+STDMETHODIMP_(UINT) CD3D11VideoRendererFilter::GetD3D11AdapterIndex()
+{
+	return m_renderer.GetD3D11AdapterIndex();
+}
+
 	HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 	{
 		HRESULT hr = __super::SetMediaType(pmt);
