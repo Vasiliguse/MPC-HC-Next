@@ -10,6 +10,7 @@
 #include "D3D11Renderer.h"
 #include <algorithm>
 #include <cmath>
+#include <utility>
 #include <IMediaSideData.h>
 
 #include <VersionHelpers.h>
