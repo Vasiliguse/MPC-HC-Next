@@ -326,12 +326,21 @@ HRESULT CD3D11Renderer::UpdateOutputInfo()
 
     m_output.valid = true;
     m_output.colorSpace = m_output.desc.ColorSpace;
-    // ColorSpace describes the current output mode, not the monitor's
-    // HDR capability. A capable HDR display can report the SDR color space
-    // while Windows HDR is currently disabled. Use the output bit depth as
-    // the capability gate; ConfigureSwapChainColorSpace() performs the
-    // authoritative DXGI present-support check for the requested HDR mode.
-    m_output.hdrSupported = m_output.desc.BitsPerColor >= 10;
+
+    // ColorSpace is the current output mode, not a capability flag. Query
+    // the swap chain for actual HDR10 present support instead. This also
+    // prevents 10-bit SDR-only displays from being treated as HDR outputs.
+    m_output.hdrSupported = false;
+    CComPtr<IDXGISwapChain3> swapChain3;
+    if (m_swapChain
+        && SUCCEEDED(m_swapChain->QueryInterface(IID_PPV_ARGS(&swapChain3)))) {
+        UINT support = 0;
+        if (SUCCEEDED(swapChain3->CheckColorSpaceSupport(
+                DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, &support))) {
+            m_output.hdrSupported =
+                (support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) != 0;
+        }
+    }
 
     return S_OK;
 }
@@ -532,6 +541,7 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
     DXGI_HDR_METADATA_HDR10 dxgi = {};
 
     bool hasMastering = false;
+    bool hasContentLightLevel = false;
     if (SUCCEEDED(sideData->GetSideData(IID_MediaSideDataHDR, &data, &size)) &&
         data && size >= sizeof(MediaSideDataHDR)) {
         const auto* hdr = reinterpret_cast<const MediaSideDataHDR*>(data);
@@ -574,12 +584,13 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         const auto* cll = reinterpret_cast<const MediaSideDataHDRContentLightLevel*>(data);
         dxgi.MaxContentLightLevel = static_cast<UINT16>(std::min(cll->MaxCLL, 65535u));
         dxgi.MaxFrameAverageLightLevel = static_cast<UINT16>(std::min(cll->MaxFALL, 65535u));
-        hasMastering = true;
+        hasContentLightLevel = true;
     }
 
-    const bool hdr10 = hasMastering && IsHdrOutputRequested();
+    const bool hasHdrMetadata = hasMastering || hasContentLightLevel;
+    const bool hdr10 = hasHdrMetadata && IsHdrOutputRequested();
     SetHDR10InputColorSpace(hdr10);
-    return hasMastering ? SetHDR10Metadata(&dxgi) : SetHDR10Metadata(nullptr);
+    return hasHdrMetadata ? SetHDR10Metadata(&dxgi) : SetHDR10Metadata(nullptr);
 }
 
 HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags)
