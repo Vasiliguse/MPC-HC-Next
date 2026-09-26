@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ pl.comp_mpciconlib=Ikony plików multimedialnych
 pl.comp_mpcresources=Tłumaczenia
 pl.comp_mpcbeshellext=Install the shell extension
 pl.comp_intel_msdk=H.264 MVC 3D Decoder
-pl.msg_DeleteSettings=Czy chcesz usunąć ustawienia MPC-BE?%n%nJeśli planujesz ponownie zainstalować MPC-BE, wtedy nie trzeba ich usuwać.
+pl.msg_DeleteSettings=Czy chcesz usunąć ustawienia MPC-HC Next?%n%nJeśli planujesz ponownie zainstalować MPC-HC Next, wtedy nie trzeba ich usuwać.
 pl.msg_NoD3DX9DLL_found=Najnowszy DirectX runtime nie został zainstalowany!%n%nProszę pobrać i zainstalować najnowszy DirectX runtime June 2010 niezależnie od systemu operacyjnego.
-pl.msg_SetupIsRunningWarning=Instalator MPC-BE jest już uruchomiony!
-pl.msg_simd_sse2=Ta kompilacja MPC-BE wymaga procesora z obsługą zestawu instrukcji SSE2.%n%nTwój procesor ich nie obsługuje.
+pl.msg_SetupIsRunningWarning=Instalator MPC-HC Next jest już uruchomiony!
+pl.msg_simd_sse2=Ta kompilacja MPC-HC Next wymaga procesora z obsługą zestawu instrukcji SSE2.%n%nTwój procesor ich nie obsługuje.
 pl.tsk_AllUsers=Dla wszystkich użytkowników
 pl.tsk_CurrentUser=Tylko dla bieżącego użytkownika
 pl.tsk_Other=Inne zadania:
