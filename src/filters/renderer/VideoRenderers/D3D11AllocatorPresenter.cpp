@@ -104,6 +104,7 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 
 		UINT transferMatrix = 0;
 		UINT nominalRange = 0;
+		UINT transferFunction = 0;
 		if (pmt->formattype == FORMAT_VideoInfo && pmt->cbFormat >= sizeof(VIDEOINFOHEADER)) {
 			const auto* vih = reinterpret_cast<const VIDEOINFOHEADER*>(pmt->Format());
 			m_sourceWidth = std::abs(vih->bmiHeader.biWidth);
@@ -118,10 +119,11 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 				colorInfo.value = vih->dwControlFlags;
 				transferMatrix = colorInfo.VideoTransferMatrix;
 				nominalRange = colorInfo.NominalRange;
+				transferFunction = colorInfo.VideoTransferFunction;
 			}
 		}
 
-		m_renderer.SetInputColorInfo(transferMatrix, nominalRange, m_sourceHeight);
+		m_renderer.SetInputColorInfo(transferMatrix, nominalRange, transferFunction, m_sourceHeight);
 		return S_OK;
 	}
 
