@@ -268,6 +268,15 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
         return hr;
     }
 
+    // Query the D3D11.1 video context before selecting the swap-chain
+    // format. GetSwapChainFormat() uses this capability to decide whether
+    // the native HDR10 path can be created from the start.
+    hr = m_device->QueryInterface(IID_PPV_ARGS(&m_videoDevice));
+    if (FAILED(hr)) return hr;
+    hr = m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext));
+    if (FAILED(hr)) return hr;
+    m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext1));
+
     CComPtr<IDXGIDevice> dxgiDevice;
     hr = m_device->QueryInterface(IID_PPV_ARGS(&dxgiDevice));
     if (FAILED(hr)) {
@@ -304,12 +313,6 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
     // The swap chain owns presentation state; do not allow DXGI to inject
     // legacy Alt+Enter handling into the application's window manager.
     m_factory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
-
-    hr = m_device->QueryInterface(IID_PPV_ARGS(&m_videoDevice));
-    if (FAILED(hr)) return hr;
-    hr = m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext));
-    if (FAILED(hr)) return hr;
-    m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext1));
 
     return S_OK;
 }
