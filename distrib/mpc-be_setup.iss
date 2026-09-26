@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2009-2025 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -37,7 +37,7 @@
 #define ISPP_INVOKED
 #include "..\include\Version.h"
 
-#define app_name         "MPC-BE"
+#define app_name         "MPC-HC Next"
 #define copyright_year   str(MPC_YEAR_COMMENTS)
 #define app_url          str(MPC_VERSION_COMMENTS)
 #if MPC_VERSION_STATUS == 1 && MPC_VERSION_REV == 0
@@ -307,7 +307,7 @@ Type: files; Name: "{app}\mpcresources.??.dll"
 ;Root: "HKCU"; Subkey: "Software\{#app_name}\ShellExt"; ValueType: string; ValueName: "MpcPath"; ValueData: "{app}\{#mpcbe_exe}"; Flags: uninsdeletekey; Components: mpcbeshellext
 
 [Registry]
-Root: HKLM; Subkey: "SOFTWARE\Clients\Media\MPC-BE"; Flags: dontcreatekey uninsdeletekey
+Root: HKLM; Subkey: "SOFTWARE\Clients\Media\MPC-HC Next"; Flags: dontcreatekey uninsdeletekey
 Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#mpcbe_exe}"; ValueType: string; ValueName: ""; ValueData: "{app}\{#mpcbe_exe}"; Flags: deletekey uninsdeletekey
 
 [Code]
@@ -315,7 +315,7 @@ function IsProcessorFeaturePresent(Feature: Integer): Boolean;
 external 'IsProcessorFeaturePresent@kernel32.dll stdcall';
 
 const
-  installer_mutex = 'mpcbe_setup_mutex';
+  installer_mutex = 'mpc_hc_next_setup_mutex';
   LOAD_LIBRARY_AS_DATAFILE = $2;
 
   SHCONTCH_NOPROGRESSBOX = 4;
