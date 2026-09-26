@@ -82,6 +82,7 @@ private:
     CComPtr<ID3D11VideoContext1> m_videoContext1;
     CComPtr<ID3D11VideoProcessor> m_videoProcessor;
     CComPtr<ID3D11VideoProcessorEnumerator> m_videoProcessorEnumerator;
+    CComPtr<ID3D11VideoProcessorEnumerator1> m_videoProcessorEnumerator1;
     CComPtr<ID3D11RenderTargetView> m_backBufferRTV;
     UINT m_videoWidth = 0;
     UINT m_videoHeight = 0;
