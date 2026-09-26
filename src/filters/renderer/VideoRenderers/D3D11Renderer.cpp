@@ -56,6 +56,26 @@ bool IsHdr10ColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace)
 
 CD3D11Renderer::CD3D11Renderer() = default;
 
+void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT sourceHeight)
+{
+    // DXVA2 values: 0 = unknown, 1 = BT.709, 2 = BT.601, 3 = SMPTE 240M.
+    // D3D11's legacy color-space state exposes BT.601/BT.709 only, so unknown
+    // follows Microsoft's SD/HD default and SMPTE 240M is mapped to BT.709.
+    if (transferMatrix == 0) {
+        transferMatrix = sourceHeight > 576 ? 1u : 2u;
+    }
+
+    m_inputColorSpace = {};
+    m_inputColorSpace.Usage = 0;
+    m_inputColorSpace.RGB_Range = 0;
+    m_inputColorSpace.YCbCr_Matrix = (transferMatrix == 2u) ? 0u : 1u;
+    m_inputColorSpace.YCbCr_xvYCC = 0;
+    m_inputColorSpace.Nominal_Range =
+        (nominalRange == 2u || nominalRange == 3u)
+        ? D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235
+        : D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
+}
+
 CD3D11Renderer::~CD3D11Renderer()
 {
     ReleaseDevice();
@@ -845,7 +865,7 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     outputColorSpace.YCbCr_Matrix = 0;
     outputColorSpace.YCbCr_xvYCC = 0;
     outputColorSpace.Nominal_Range = D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
-    m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
+    m_videoContext->VideoProcessorSetStreamColorSpace(m_videoProcessor, 0, &m_inputColorSpace);\n    m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
 
     return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
 }
