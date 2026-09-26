@@ -517,6 +517,138 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
     return hasMastering ? SetHDR10Metadata(&dxgi) : SetHDR10Metadata(nullptr);
 }
 
+HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags)
+{
+	UNREFERENCED_PARAMETER(mutex);
+	UNREFERENCED_PARAMETER(flags);
+
+	if (!device || !context || !m_factory || !m_adapter) {
+		return E_INVALIDARG;
+	}
+
+	CComPtr<ID3D11Device> contextDevice;
+	context->GetDevice(&contextDevice);
+	if (contextDevice != device) {
+		return E_INVALIDARG;
+	}
+
+	if (!IsAdapterCompatible(device)) {
+		return DXGI_ERROR_DEVICE_REMOVED;
+	}
+
+	RECT clientRect = {};
+	::GetClientRect(m_hWnd, &clientRect);
+	const UINT width = std::max<LONG>(1, clientRect.right - clientRect.left);
+	const UINT height = std::max<LONG>(1, clientRect.bottom - clientRect.top);
+
+	// The decoder owns the D3D11 device that backs native video textures.
+	// The swap chain and video processor must use that same device; matching
+	// adapter LUIDs alone is not sufficient for cross-device resource access.
+	ReleaseFrameResources();
+	m_backBufferRTV.Release();
+	m_swapChain.Release();
+	m_videoContext.Release();
+	m_videoDevice.Release();
+	m_context.Release();
+	m_device.Release();
+
+	m_device = device;
+	m_context = context;
+
+	HRESULT hr = m_device->QueryInterface(IID_PPV_ARGS(&m_videoDevice));
+	if (FAILED(hr)) {
+		return hr;
+	}
+	hr = m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext));
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	m_allowTearing = IsTearingSupported();
+	m_swapChainFormat = GetSwapChainFormat();
+
+	DXGI_SWAP_CHAIN_DESC1 desc = {};
+	desc.Width = width;
+	desc.Height = height;
+	desc.Format = m_swapChainFormat;
+	desc.Stereo = FALSE;
+	desc.SampleDesc.Count = 1;
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
+	desc.BufferCount = kSwapChainBufferCount;
+	desc.Scaling = DXGI_SCALING_STRETCH;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+	desc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+
+	hr = m_factory->CreateSwapChainForHwnd(
+		m_device,
+		m_hWnd,
+		&desc,
+		nullptr,
+		nullptr,
+		&m_swapChain);
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	m_factory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
+
+	hr = UpdateOutputInfo();
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	const DXGI_FORMAT desiredFormat = GetSwapChainFormat();
+	if (desiredFormat != m_swapChainFormat) {
+		hr = m_swapChain->ResizeBuffers(
+			kSwapChainBufferCount, width, height, desiredFormat,
+			m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		m_swapChainFormat = desiredFormat;
+	}
+
+	hr = CreateBackBufferViews();
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	return ConfigureSwapChainColorSpace();
+}
+
+UINT CD3D11Renderer::GetD3D11AdapterIndex() const
+{
+	if (!m_factory || !m_adapter) {
+		return UINT_MAX;
+	}
+
+	DXGI_ADAPTER_DESC1 selected = {};
+	if (FAILED(m_adapter->GetDesc1(&selected))) {
+		return UINT_MAX;
+	}
+
+	for (UINT index = 0; ; ++index) {
+		CComPtr<IDXGIAdapter1> adapter;
+		HRESULT hr = m_factory->EnumAdapters1(index, &adapter);
+		if (hr == DXGI_ERROR_NOT_FOUND) {
+			break;
+		}
+		if (FAILED(hr) || !adapter) {
+			continue;
+		}
+
+		DXGI_ADAPTER_DESC1 desc = {};
+		if (SUCCEEDED(adapter->GetDesc1(&desc))
+			&& desc.AdapterLuid.HighPart == selected.AdapterLuid.HighPart
+			&& desc.AdapterLuid.LowPart == selected.AdapterLuid.LowPart) {
+			return index;
+		}
+	}
+
+	return UINT_MAX;
+}
+
 HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample)
 {
     if (!sample) {
