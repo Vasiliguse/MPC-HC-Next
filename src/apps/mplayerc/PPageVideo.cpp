@@ -46,6 +46,8 @@ static HRESULT IsRendererAvailable(int VideoRendererType)
 			return CheckFilterCLSID(CLSID_DXR);
 		case VIDRNDT_MADVR:
 			return CheckFilterCLSID(CLSID_madVR);
+		case VIDRNDT_D3D11:
+			return S_OK;
 		default:
 		return S_OK;
 	}
