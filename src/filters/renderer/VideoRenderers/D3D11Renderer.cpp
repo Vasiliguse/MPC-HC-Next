@@ -51,7 +51,7 @@ private:
 
 CD3D11Renderer::CD3D11Renderer() = default;
 
-void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT sourceHeight)
+void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT transferFunction, UINT sourceHeight)
 {
     // DXVA2 values: 0 = unknown, 1 = BT.709, 2 = BT.601, 3 = SMPTE 240M.
     // D3D11's legacy color-space state exposes BT.601/BT.709 only, so unknown
@@ -59,6 +59,9 @@ void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, U
     if (transferMatrix == 0) {
         transferMatrix = sourceHeight > 576 ? 1u : 2u;
     }
+
+    m_transferFunction = transferFunction;
+    m_hdr10Input = (transferFunction == 15);
 
     m_inputColorSpace = {};
     m_inputColorSpace.Usage = 0;
