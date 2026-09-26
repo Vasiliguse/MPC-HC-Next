@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ sk.comp_mpciconlib=Knižnica ikon
 sk.comp_mpcresources=Preklady
 sk.comp_mpcbeshellext=Install the shell extension
 sk.comp_intel_msdk=H.264 MVC 3D Decoder
-sk.msg_DeleteSettings=Chcete vymazať aj nastavenia programu MPC-BE?%n%nAk plánujete opätovnú inštaláciu programu MPC-BE, tak nie je potrebné ich vymazávať.
+sk.msg_DeleteSettings=Chcete vymazať aj nastavenia programu MPC-HC Next?%n%nAk plánujete opätovnú inštaláciu programu MPC-HC Next, tak nie je potrebné ich vymazávať.
 sk.msg_NoD3DX9DLL_found=Najnovšie rozhranie DirectX nie je nainštalované!%n%nProsím stiahnite a nainštalujte si ho June 2010 bez ohľadu na verziu operačného systému.
-sk.msg_SetupIsRunningWarning=Inštalácia programu MPC-BE je už spustená!
-sk.msg_simd_sse2=Toto zostavenie MPC-BE vyžaduje procesor s podporou inštrukcií SSE2.%n%nVáš procesor ich nepodporuje.
+sk.msg_SetupIsRunningWarning=Inštalácia programu MPC-HC Next je už spustená!
+sk.msg_simd_sse2=Toto zostavenie MPC-HC Next vyžaduje procesor s podporou inštrukcií SSE2.%n%nVáš procesor ich nepodporuje.
 sk.tsk_AllUsers=Pre všetkých používateľov
 sk.tsk_CurrentUser=Len pre aktuálneho používateľa
 sk.tsk_Other=Iné úlohy:
