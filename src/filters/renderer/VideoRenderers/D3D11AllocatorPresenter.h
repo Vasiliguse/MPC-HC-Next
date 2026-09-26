@@ -70,6 +70,9 @@ namespace DSObjects
 		STDMETHODIMP_(bool) DisplayChange() override;
 		STDMETHODIMP_(void) SetExtraSettings(ExtraRendererSettings* pExtraSets) override;
 
+		HRESULT OnD3D11DeviceActivated(ID3D11Device* device);
+		HRESULT RenderSubtitles();
+
 	private:
 		HRESULT InitializeSubPicAllocator();
 		HRESULT RenderSubtitles();
