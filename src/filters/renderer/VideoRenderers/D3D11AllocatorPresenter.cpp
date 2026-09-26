@@ -16,10 +16,19 @@ namespace DSObjects
 	{
 		CheckPointer(ppv, E_POINTER);
 		if (riid == __uuidof(ID3D11DecoderConfiguration)) {
-			auto* renderer = static_cast<CD3D11VideoRendererFilter*>(m_pRenderer);
-			return renderer->NonDelegatingQueryInterface(riid, ppv);
+			return GetInterface(static_cast<ID3D11DecoderConfiguration*>(this), ppv);
 		}
 		return __super::NonDelegatingQueryInterface(riid, ppv);
+	}
+
+	STDMETHODIMP CD3D11RendererInputPin::ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags)
+	{
+		return static_cast<CD3D11VideoRendererFilter*>(m_pRenderer)->ActivateD3D11Decoding(pDevice, pContext, hMutex, nFlags);
+	}
+
+	STDMETHODIMP_(UINT) CD3D11RendererInputPin::GetD3D11AdapterIndex()
+	{
+		return static_cast<CD3D11VideoRendererFilter*>(m_pRenderer)->GetD3D11AdapterIndex();
 	}
 
 	CD3D11VideoRendererFilter::CD3D11VideoRendererFilter(
@@ -41,47 +50,17 @@ namespace DSObjects
 		return S_OK;
 	}
 
-STDMETHODIMP CD3D11VideoRendererFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+HRESULT CD3D11VideoRendererFilter::ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags)
 {
-	CheckPointer(ppv, E_POINTER);
-	if (riid == __uuidof(ID3D11DecoderConfiguration)) {
-		*ppv = static_cast<ID3D11DecoderConfiguration*>(this);
-		AddRef();
-		return S_OK;
-	}
-	return __super::NonDelegatingQueryInterface(riid, ppv);
-}
-
-CBasePin* CD3D11VideoRendererFilter::GetPin(int n)
-{
-	if (n != 0) {
-		return nullptr;
-	}
-
-	CAutoLock lock(&m_ObjectCreationLock);
-	if (!m_pInputPin) {
-		HRESULT hr = S_OK;
-		m_pInputPin = DNew CD3D11RendererInputPin(this, &hr);
-		if (!m_pInputPin || FAILED(hr)) {
-			delete m_pInputPin;
-			m_pInputPin = nullptr;
-		}
-	}
-	return m_pInputPin;
-}
-
-STDMETHODIMP CD3D11VideoRendererFilter::ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags)
-{
-	UNREFERENCED_PARAMETER(nFlags);
 	return m_renderer.ActivateD3D11Decoding(pDevice, pContext, hMutex, nFlags);
 }
 
-STDMETHODIMP_(UINT) CD3D11VideoRendererFilter::GetD3D11AdapterIndex()
+UINT CD3D11VideoRendererFilter::GetD3D11AdapterIndex() const
 {
 	return m_renderer.GetD3D11AdapterIndex();
 }
 
-	HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
+HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 	{
 		HRESULT hr = __super::SetMediaType(pmt);
 		if (FAILED(hr) || !pmt || !pmt->Format()) {
