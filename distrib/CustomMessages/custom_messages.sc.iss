@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ sc.comp_mpciconlib=图标库
 sc.comp_mpcresources=翻译
 sc.comp_mpcbeshellext=安装 shell 扩展
 sc.comp_intel_msdk=H.264 MVC 3D 解码器
-sc.msg_DeleteSettings=是否同时删除 MPC-BE 设置？%n%n如果您打算再次安装 MPC-BE 则无需删除。
+sc.msg_DeleteSettings=是否同时删除 MPC-HC Next 设置？%n%n如果您打算再次安装 MPC-HC Next 则无需删除。
 sc.msg_NoD3DX9DLL_found=还没安装最新版本的 DirectX 运行库！%n%n无论哪个版本的操作系统，请下载及更新至最新版本的 DirectX 运行库（2010 年 6 月及以上）。
-sc.msg_SetupIsRunningWarning=MPC-BE 安装程序正在运行中！
-sc.msg_simd_sse2=该版本的 MPC-BE 需要支持 SSE2 指令集的处理器。%n%n但是您的处理器并不支持该指令集。
+sc.msg_SetupIsRunningWarning=MPC-HC Next 安装程序正在运行中！
+sc.msg_simd_sse2=该版本的 MPC-HC Next 需要支持 SSE2 指令集的处理器。%n%n但是您的处理器并不支持该指令集。
 sc.tsk_AllUsers=为所有用户安装
 sc.tsk_CurrentUser=仅为当前用户安装
 sc.tsk_Other=其他任务:
