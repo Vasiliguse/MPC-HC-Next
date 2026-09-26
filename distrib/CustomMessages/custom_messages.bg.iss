@@ -1,14 +1,14 @@
 ;
 ; (C) 2025 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ bg.comp_mpciconlib=Библиотека с икони
 bg.comp_mpcresources=Локализации
 bg.comp_mpcbeshellext=Инсталирай разширение на средата
 bg.comp_intel_msdk=H.264 MVC 3D Декодер
-bg.msg_DeleteSettings=Искате ли също да изтриете настройките на MPC-BE?%n%nАко планирате да инсталирате MPC-BE отново, не е нужно да ги изтривате.
+bg.msg_DeleteSettings=Искате ли също да изтриете настройките на MPC-HC Next?%n%nАко планирате да инсталирате MPC-HC Next отново, не е нужно да ги изтривате.
 bg.msg_NoD3DX9DLL_found=Най-новата среда за изпълнение на DirectX не е инсталирана!%n%nМоля, изтеглете и инсталирайте най-новата среда за изпълнение на DirectX от юни 2010 г., независимо от вашата операционна система.
-bg.msg_SetupIsRunningWarning=Инсталацията на MPC-BE вече е стартирана!
-bg.msg_simd_sse2=Тази компилация на MPC-BE изисква процесор с поддръжка на разширение SSE2.%n%nВашият процесор няма тези възможности.
+bg.msg_SetupIsRunningWarning=Инсталацията на MPC-HC Next вече е стартирана!
+bg.msg_simd_sse2=Тази компилация на MPC-HC Next изисква процесор с поддръжка на разширение SSE2.%n%nВашият процесор няма тези възможности.
 bg.tsk_AllUsers=За всички потребители
 bg.tsk_CurrentUser=Само за текущия потребител
 bg.tsk_Other=Други задачи:
