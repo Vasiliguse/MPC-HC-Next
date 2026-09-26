@@ -173,6 +173,7 @@ BOOL CPPageVideo::OnInitDialog()
 		case VIDRNDT_MPCVR:
 		case VIDRNDT_DXR:
 		case VIDRNDT_MADVR:
+		case VIDRNDT_D3D11:
 		case VIDRNDT_NULL_ANY:
 		case VIDRNDT_NULL_UNCOMP:
 			break;
