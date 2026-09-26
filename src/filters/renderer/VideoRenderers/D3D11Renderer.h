@@ -72,7 +72,7 @@ private:
     HWND m_hWnd = nullptr;
     ExtraRendererSettings m_settings = {};
 
-    CComPtr<IDXGIFactory6> m_factory;
+    CComPtr<IDXGIFactory2> m_factory;
     CComPtr<IDXGIAdapter1> m_adapter;
     CComPtr<ID3D11Device> m_device;
     CComPtr<ID3D11DeviceContext> m_context;
