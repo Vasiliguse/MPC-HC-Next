@@ -47,7 +47,7 @@ static HRESULT IsRendererAvailable(int VideoRendererType)
 		case VIDRNDT_MADVR:
 			return CheckFilterCLSID(CLSID_madVR);
 		case VIDRNDT_D3D11:
-			return S_OK;
+			return SysVersion::IsWin8orLater() ? S_OK : S_FALSE;
 		default:
 		return S_OK;
 	}
