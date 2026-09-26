@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ el.comp_mpciconlib=Βιβλιοθήκη Εικονιδίων
 el.comp_mpcresources=Μεταφράσεις
 el.comp_mpcbeshellext=Install the shell extension
 el.comp_intel_msdk=H.264 MVC 3D Decoder
-el.msg_DeleteSettings=Θέλετε να διαγράψετε τις ρυθμίσεις του MPC-BE;%n%nΑν σκοπεύετε να εγκαταστήσετε το MPC-BE πάλι τότε δεν χρειάζεται να τις διαγράψετε.
+el.msg_DeleteSettings=Θέλετε να διαγράψετε τις ρυθμίσεις του MPC-HC Next;%n%nΑν σκοπεύετε να εγκαταστήσετε το MPC-HC Next πάλι τότε δεν χρειάζεται να τις διαγράψετε.
 el.msg_NoD3DX9DLL_found=The latest DirectX runtime is not installed!%n%nPlease download and install the latest DirectX runtime June 2010 regardless of your operating system.
-el.msg_SetupIsRunningWarning=Η εγκατάσταση του MPC-BE εκτελείται ήδη!
-el.msg_simd_sse2=Αυτή η έκδοση του MPC-BE απαιτεί επεξεργαστή CPU με υποστήριξη SSE2.%n%nΟ επεξεργαστής σας δεν το υποστηρίζει.
+el.msg_SetupIsRunningWarning=Η εγκατάσταση του MPC-HC Next εκτελείται ήδη!
+el.msg_simd_sse2=Αυτή η έκδοση του MPC-HC Next απαιτεί επεξεργαστή CPU με υποστήριξη SSE2.%n%nΟ επεξεργαστής σας δεν το υποστηρίζει.
 el.tsk_AllUsers=Για όλους τους χρήστες
 el.tsk_CurrentUser=Για τον τρέχων χρήστη μόνο
 el.tsk_Other=Επιπλέον ενέργειες:
