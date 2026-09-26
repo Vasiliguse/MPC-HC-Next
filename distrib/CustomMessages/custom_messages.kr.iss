@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ kr.comp_mpciconlib=아이콘 라이브러리
 kr.comp_mpcresources=번역
 kr.comp_mpcbeshellext=쉘 확장 설치
 kr.comp_intel_msdk=H.264 MVC 3D Decoder
-kr.msg_DeleteSettings=MPC-BE의 설정도 함께 삭제하시겠습니까?%n%nMPC-BE를 추후 다시 설치하실 경우, 설정을 삭제하지 않으시는 것을 추천합니다.
+kr.msg_DeleteSettings=MPC-HC Next의 설정도 함께 삭제하시겠습니까?%n%nMPC-HC Next를 추후 다시 설치하실 경우, 설정을 삭제하지 않으시는 것을 추천합니다.
 kr.msg_NoD3DX9DLL_found=최신 DirectX 런타임이 설치되어 있지 않습니다!%n%n사용하는 운영체제에 맞는 최신 DirectX 런타임 June 2010을 내려받아 설치하십시오.
-kr.msg_SetupIsRunningWarning=이미 실행중인 MPC-BE 설치 프로그램이 있습니다!
-kr.msg_simd_sse2=이 버전의 MPC-BE는 SSE2 기술을 지원하는 CPU가 필요합니다.%n%n현재 PC의 CPU는 해당 기술을 지원하지 않습니다.
+kr.msg_SetupIsRunningWarning=이미 실행중인 MPC-HC Next 설치 프로그램이 있습니다!
+kr.msg_simd_sse2=이 버전의 MPC-HC Next는 SSE2 기술을 지원하는 CPU가 필요합니다.%n%n현재 PC의 CPU는 해당 기술을 지원하지 않습니다.
 kr.tsk_AllUsers=모든 사용자
 kr.tsk_CurrentUser=현재 사용자만
 kr.tsk_Other=다른 작업 :
