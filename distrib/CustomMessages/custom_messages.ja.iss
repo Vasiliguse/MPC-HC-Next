@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ ja.comp_mpciconlib=アイコン ライブラリー
 ja.comp_mpcresources=翻訳
 ja.comp_mpcbeshellext=シェル拡張のインストール
 ja.comp_intel_msdk=H.264 MVC 3D デコーダー
-ja.msg_DeleteSettings=MPC-BE の設定も削除しますか?%n%nMPC-BE を再度インストールする場合は、設定を削除する必要はありません。
+ja.msg_DeleteSettings=MPC-HC Next の設定も削除しますか?%n%nMPC-HC Next を再度インストールする場合は、設定を削除する必要はありません。
 ja.msg_NoD3DX9DLL_found=最新の DirectX ランタイムがインストールされていません!%n%nオペレーティング システムに関係なく最新の DirectX ランタイム June 2010 をダウンロードしてインストールしてください。
-ja.msg_SetupIsRunningWarning=MPC-BE のセットアップは既に実行されています!
-ja.msg_simd_sse2=このバージョンの MPC-BE には CPU の SSE2 拡張サポートが必要です。%n%nお使いの CPU はこの機能がありません。
+ja.msg_SetupIsRunningWarning=MPC-HC Next のセットアップは既に実行されています!
+ja.msg_simd_sse2=このバージョンの MPC-HC Next には CPU の SSE2 拡張サポートが必要です。%n%nお使いの CPU はこの機能がありません。
 ja.tsk_AllUsers=すべてのユーザー向け
 ja.tsk_CurrentUser=現在実行中のユーザーにのみ
 ja.tsk_Other=他のタスク:
