@@ -242,6 +242,28 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
     }
 #endif
 
+    if (hr == E_INVALIDARG) {
+        // D3D11.1 feature level is unavailable on Windows 8 / older D3D
+        // runtimes. Retry explicitly with the baseline 11.0 level so the
+        // renderer remains compatible with its existing Windows 8+ gate.
+        static constexpr D3D_FEATURE_LEVEL legacyLevels[] = {
+            D3D_FEATURE_LEVEL_11_0,
+        };
+        m_device.Release();
+        m_context.Release();
+        hr = D3D11CreateDevice(
+            m_adapter,
+            D3D_DRIVER_TYPE_UNKNOWN,
+            nullptr,
+            flags,
+            legacyLevels,
+            _countof(legacyLevels),
+            D3D11_SDK_VERSION,
+            &m_device,
+            &featureLevel,
+            &m_context);
+    }
+
     if (FAILED(hr)) {
         return hr;
     }
@@ -380,7 +402,8 @@ bool CD3D11Renderer::IsHdrOutputRequested() const
 {
     return m_settings.bEnableHDR
         && m_settings.iOutputColorMode == VIDEO_OUTPUT_COLOR_HDR10
-        && m_output.hdrSupported;
+        && m_output.hdrSupported
+        && m_videoContext1;
 }
 
 DXGI_FORMAT CD3D11Renderer::GetSwapChainFormat() const
