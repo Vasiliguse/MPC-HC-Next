@@ -25,7 +25,7 @@ namespace DSObjects
 		CheckPointer(ppv, E_POINTER);
 		if (riid == __uuidof(ID3D11DecoderConfiguration)) {
 			*ppv = static_cast<ID3D11DecoderConfiguration*>(this);
-			AddRef();
+			CRendererInputPin::AddRef();
 			return S_OK;
 		}
 		return __super::NonDelegatingQueryInterface(riid, ppv);
