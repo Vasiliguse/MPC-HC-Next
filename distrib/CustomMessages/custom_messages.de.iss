@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ de.comp_mpciconlib=Icon-Bibliothek
 de.comp_mpcresources=Übersetzungen (u.a. deutsch)
 de.comp_mpcbeshellext=Alternative Kontextmenü-Erweiterung
 de.comp_intel_msdk=H.264/MVC Decoder
-de.msg_DeleteSettings=Wollen Sie auch die Einstellungen von MPC-BE löschen?%n%nWenn Sie MPC-BE neu installieren möchten, müssen Sie diese Einstellungen nicht löschen.
+de.msg_DeleteSettings=Wollen Sie auch die Einstellungen von MPC-HC Next löschen?%n%nWenn Sie MPC-HC Next neu installieren möchten, müssen Sie diese Einstellungen nicht löschen.
 de.msg_NoD3DX9DLL_found=Die neueste DirectX-Runtime ist nicht installiert!%n%nLaden Sie die neueste DirectX-Runtime vom Juni 2010 herunter und installieren Sie sie, unabhängig von Ihrem Betriebssystem.
-de.msg_SetupIsRunningWarning=Das Installationsprogramm von MPC-BE wird bereits ausgeführt!
-de.msg_simd_sse2=Für diesen Build von MPC-BE ist eine CPU mit SSE2-Unterstützung erforderlich.%n%nIhre CPU unterstützt diese Befehlssatzerweiterung nicht.
+de.msg_SetupIsRunningWarning=Das Installationsprogramm von MPC-HC Next wird bereits ausgeführt!
+de.msg_simd_sse2=Für diesen Build von MPC-HC Next ist eine CPU mit SSE2-Unterstützung erforderlich.%n%nIhre CPU unterstützt diese Befehlssatzerweiterung nicht.
 de.tsk_AllUsers=Für alle Benutzer
 de.tsk_CurrentUser=Für aktuellen Benutzer
 de.tsk_Other=Weitere Aufgaben:
