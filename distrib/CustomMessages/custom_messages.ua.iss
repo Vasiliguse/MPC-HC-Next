@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ ua.comp_mpciconlib=Бібліотека іконок
 ua.comp_mpcresources=Локалізації
 ua.comp_mpcbeshellext=Install the shell extension
 ua.comp_intel_msdk=H.264 MVC 3D Decoder
-ua.msg_DeleteSettings=Чи хочете ви видалити налаштування MPC-BE?%n%nЯкщо ви плануєте просто повторно встановити MPC-BE, то вам не потрібно їх видаляти.
+ua.msg_DeleteSettings=Чи хочете ви видалити налаштування MPC-HC Next?%n%nЯкщо ви плануєте просто повторно встановити MPC-HC Next, то вам не потрібно їх видаляти.
 ua.msg_NoD3DX9DLL_found=Останню версію DirectX не встановлено!%n%nБудь ласка, завантажте і встановіть останню версію DirectX June 2010 відповідно до операційної системи, яку ви використовуєте.
-ua.msg_SetupIsRunningWarning=Встановлення MPC-BE вже запущено!
-ua.msg_simd_sse2=Для використання даної версії MPC-BE необхідно, щоб ваш процесор підтримував SSE2 розширення.%n%nАле ваш процесор не підтримує їх.
+ua.msg_SetupIsRunningWarning=Встановлення MPC-HC Next вже запущено!
+ua.msg_simd_sse2=Для використання даної версії MPC-HC Next необхідно, щоб ваш процесор підтримував SSE2 розширення.%n%nАле ваш процесор не підтримує їх.
 ua.tsk_AllUsers=Для всіх користувачів
 ua.tsk_CurrentUser=Лише для поточного користувача
 ua.tsk_Other=Інші завдання:
