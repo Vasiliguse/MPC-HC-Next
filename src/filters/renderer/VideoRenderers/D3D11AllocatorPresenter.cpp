@@ -4,6 +4,8 @@
 
 #include "stdafx.h"
 #include "D3D11AllocatorPresenter.h"
+#include "SubPic/DX11SubPic.h"
+#include "SubPic/SubPicQueueImpl.h"
 
 namespace DSObjects
 {
@@ -42,9 +44,10 @@ namespace DSObjects
 	}
 
 	CD3D11VideoRendererFilter::CD3D11VideoRendererFilter(
-		HWND hWnd, const ExtraRendererSettings& settings, HRESULT* phr)
+		HWND hWnd, const ExtraRendererSettings& settings, CD3D11AllocatorPresenter* owner, HRESULT* phr)
 		: CBaseRenderer(CLSID_D3D11VideoRenderer, L"MPC D3D11 Video Renderer", nullptr, phr)
 		, m_hWnd(hWnd)
+		, m_owner(owner)
 		, m_settings(settings)
 	{
 		if (phr && SUCCEEDED(*phr)) {
@@ -62,7 +65,11 @@ namespace DSObjects
 
 HRESULT CD3D11VideoRendererFilter::ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags)
 {
-	return m_renderer.ActivateD3D11Decoding(pDevice, pContext, hMutex, nFlags);
+	HRESULT hr = m_renderer.ActivateD3D11Decoding(pDevice, pContext, hMutex, nFlags);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return m_owner ? m_owner->OnD3D11DeviceActivated(pDevice) : S_OK;
 }
 
 UINT CD3D11VideoRendererFilter::GetD3D11AdapterIndex() const
@@ -139,7 +146,7 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 		// reconnect and call ActivateD3D11Decoding() with its replacement device.
 		// Returning the device-loss error lets DirectShow tear down/reconnect
 		// the native path instead of presenting against a different device.
-		return m_renderer.PresentMediaSample(pMediaSample);
+		return m_renderer.PresentMediaSample(pMediaSample, [this]() { return m_owner ? m_owner->RenderSubtitles() : S_FALSE; });
 	}
 
 	CD3D11AllocatorPresenter::CD3D11AllocatorPresenter(HWND hWnd, HRESULT& hr, CString& error)
@@ -157,7 +164,7 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 		*ppRenderer = nullptr;
 
 		HRESULT hr = S_OK;
-		auto* filter = DNew CD3D11VideoRendererFilter(m_hWnd, m_extraSettings, &hr);
+		auto* filter = DNew CD3D11VideoRendererFilter(m_hWnd, m_extraSettings, this, &hr);
 		if (!filter) {
 			return E_OUTOFMEMORY;
 		}
@@ -173,6 +180,41 @@ HRESULT CD3D11VideoRendererFilter::SetMediaType(const CMediaType* pmt)
 	STDMETHODIMP_(CLSID) CD3D11AllocatorPresenter::GetAPCLSID()
 	{
 		return CLSID_D3D11AllocatorPresenter;
+	}
+
+	HRESULT CD3D11AllocatorPresenter::OnD3D11DeviceActivated(ID3D11Device* device)
+	{
+		if (!device) return E_POINTER;
+		return InitializeSubPicAllocator();
+	}
+
+	HRESULT CD3D11AllocatorPresenter::InitializeSubPicAllocator()
+	{
+		ID3D11Device* device = m_rendererFilter ? m_rendererFilter->GetRendererDevice() : nullptr;
+		if (!device) return E_UNEXPECTED;
+		CRect client;
+		if (!GetClientRect(m_hWnd, &client)) return HRESULT_FROM_WIN32(GetLastError());
+		const CSize desktopSize(std::max<LONG>(1, client.Width()), std::max<LONG>(1, client.Height()));
+		InitMaxSubtitleTextureSize(m_SubpicSets.iMaxTexWidth, desktopSize);
+		if (m_pSubPicAllocator) return m_pSubPicAllocator->ChangeDevice(device);
+		m_pSubPicAllocator = DNew CDX11SubPicAllocator(device, m_maxSubtitleTextureSize);
+		if (!m_pSubPicAllocator) return E_OUTOFMEMORY;
+		m_pSubPicAllocator->SetInverseAlpha(true);
+		if (!m_pSubPicQueue) {
+			HRESULT hr = S_OK;
+			m_pSubPicQueue = (ISubPicQueue*)DNew CSubPicQueueNoThread(!m_SubpicSets.bAnimationWhenBuffering, m_pSubPicAllocator, &hr);
+			if (!m_pSubPicQueue || FAILED(hr)) {
+				m_pSubPicQueue.Release();
+				return FAILED(hr) ? hr : E_FAIL;
+			}
+		}
+		return S_OK;
+	}
+
+	HRESULT CD3D11AllocatorPresenter::RenderSubtitles()
+	{
+		if (!m_pSubPicAllocator || !m_pSubPicQueue) return S_FALSE;
+		return AlphaBltSubPic(m_windowRect, m_videoRect);
 	}
 
 	STDMETHODIMP_(void) CD3D11AllocatorPresenter::SetPosition(RECT w, RECT v)
