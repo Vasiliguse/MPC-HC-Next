@@ -9,11 +9,12 @@
 
 #include "AllocatorPresenterImpl.h"
 #include "D3D11Renderer.h"
+#include "../../transform/MPCVideoDec/D3D11Decoder/ID3DVideoMemoryConfiguration.h"
 #include <clsids.h>
 
 namespace DSObjects
 {
-	class CD3D11VideoRendererFilter : public CBaseRenderer
+	class CD3D11VideoRendererFilter : public CBaseRenderer, public ID3D11DecoderConfiguration
 	{
 	public:
 		CD3D11VideoRendererFilter(HWND hWnd, const ExtraRendererSettings& settings, HRESULT* phr);
@@ -22,6 +23,9 @@ namespace DSObjects
 		HRESULT CheckMediaType(const CMediaType* pmt) override;
 		HRESULT DoRenderSample(IMediaSample* pMediaSample) override;
 		HRESULT SetMediaType(const CMediaType* pmt) override;
+		STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+		STDMETHODIMP ActivateD3D11Decoding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, HANDLE hMutex, UINT nFlags) override;
+		STDMETHODIMP_(UINT) GetD3D11AdapterIndex() override;
 
 	private:
 		HWND m_hWnd = nullptr;
