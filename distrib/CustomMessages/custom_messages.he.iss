@@ -1,14 +1,14 @@
 ﻿;
 ; (C) 2024 see Authors.txt
 ;
-; This file is part of MPC-BE.
+; This file is part of MPC-HC Next.
 ;
-; MPC-BE is free software; you can redistribute it and/or modify
+; MPC-HC Next is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; MPC-BE is distributed in the hope that it will be useful,
+; MPC-HC Next is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
@@ -39,10 +39,10 @@ he.comp_mpciconlib=ספריית אייקונים
 he.comp_mpcresources=תרגומים
 he.comp_mpcbeshellext=Install the shell extension
 he.comp_intel_msdk=H.264 MVC 3D Decoder
-he.msg_DeleteSettings=האם ברצונך גם למחוק את ההגדרות של MPC-BE?%n%nאם אתה מתכנן להתקין את MPC-BE בשנית, אינך חייב להסירן.
+he.msg_DeleteSettings=האם ברצונך גם למחוק את ההגדרות של MPC-HC Next?%n%nאם אתה מתכנן להתקין את MPC-HC Next בשנית, אינך חייב להסירן.
 he.msg_NoD3DX9DLL_found=סביבת הריצה של ה-DirectX הכי חדש אינה מותקנת.%n%nאנא הורד והתקן את סביבת הריצה הכי חדשה June 2010 בלי קשר למערכת ההפעלה שברשותך.
-he.msg_SetupIsRunningWarning=ההתקנה של MPC-BE כבר רצה!
-he.msg_simd_sse2=גרסה זו של MPC-BE דורשת מעבד עם תמיכה בהרחבת SSE2.%n%nהמעבד שברשותך אינו תומך בכך.
+he.msg_SetupIsRunningWarning=ההתקנה של MPC-HC Next כבר רצה!
+he.msg_simd_sse2=גרסה זו של MPC-HC Next דורשת מעבד עם תמיכה בהרחבת SSE2.%n%nהמעבד שברשותך אינו תומך בכך.
 he.tsk_AllUsers=עבור כל המשתמשים
 he.tsk_CurrentUser=עבור המשתמש הנוכחי בלבד
 he.tsk_Other=פעולות אחרות:
