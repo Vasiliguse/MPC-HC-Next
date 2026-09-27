@@ -58,7 +58,7 @@ public:
 
 private:
     HRESULT CreateDeviceAndSwapChain();
-    HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight);
+    HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, DXGI_FORMAT inputFormat, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight);
     HRESULT CreateBackBufferViews();
     void ReleaseFrameResources();
     HRESULT DrainPendingFrames(bool waitForAll);
