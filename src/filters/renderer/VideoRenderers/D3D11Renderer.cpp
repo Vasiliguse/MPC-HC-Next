@@ -1072,6 +1072,12 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     m_videoContext->VideoProcessorSetOutputTargetRect(
         m_videoProcessor, TRUE, &destRect);
 
+    // The processor must receive the same frame/field mode used when its
+    // enumerator was created. Without this call, interlaced input is treated
+    // according to the driver's default instead of the sample flags.
+    m_videoContext->VideoProcessorSetStreamFrameFormat(
+        m_videoProcessor, 0, frameFormat);
+
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE outputColorSpace = {};
     outputColorSpace.Usage = 0;
     outputColorSpace.RGB_Range = 0;
