@@ -609,12 +609,15 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         return E_POINTER;
     }
 
+    const bool hdr10 = m_transferFunction == 15 && IsHdrOutputRequested();
+    SetHDR10InputColorSpace(hdr10);
+
     CComQIPtr<IMediaSideData> sideData(sample);
     if (!sideData) {
-        // HDR signalling is derived from the media type's transfer function.
-        // Absence of optional side-data must not turn a valid PQ stream back
-        // into SDR.
-        return SetHDR10Metadata(nullptr);
+        // HDR10 signalling comes from the media type. Optional mastering/CLL
+        // side-data is not required on every sample; preserve the last valid
+        // static metadata until the stream explicitly changes away from HDR10.
+        return hdr10 ? S_OK : SetHDR10Metadata(nullptr);
     }
 
     const BYTE* data = nullptr;
@@ -668,15 +671,19 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         hasContentLightLevel = true;
     }
 
-    const bool hdr10 = m_transferFunction == 15 && IsHdrOutputRequested();
-    SetHDR10InputColorSpace(hdr10);
-
     // Metadata is optional for HDR10 signalling. The transfer function
     // identifies PQ content; mastering/CLL side-data only supplies the
     // optional HDR10 metadata block sent to the display.
-    return hasMastering || hasContentLightLevel
+    if (!hdr10) {
+        return SetHDR10Metadata(nullptr);
+    }
+
+    // Keep the last valid static HDR10 metadata when a sample does not carry
+    // an optional metadata block. This avoids clearing the swap-chain metadata
+    // on every frame of streams that signal mastering data only once.
+    return (hasMastering || hasContentLightLevel)
         ? SetHDR10Metadata(&dxgi)
-        : SetHDR10Metadata(nullptr);
+        : S_OK;
 }
 
 HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags)
@@ -923,8 +930,16 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
             return E_ACCESSDENIED;
         }
         m_context->End(completionQuery);
+
+        PendingFrame pending;
+        pending.sample = sample;
+        pending.query = completionQuery;
+        m_pendingFrames.push_back(std::move(pending));
     }
-    PendingFrame pending;
+    return S_OK;
+}
+
+HRESULT CD3D11Renderer::PresentD3D11Texture
     pending.sample = sample;
     pending.query = completionQuery;
     m_pendingFrames.push_back(std::move(pending));
