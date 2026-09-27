@@ -335,7 +335,11 @@ HRESULT CD3D11Decoder::AllocateFramesContext(AVCodecContext* c, int width, int h
 
 	AVD3D11VAFramesContext* pFramesHWContext = (AVD3D11VAFramesContext*)pFrames->hwctx;
 	pFramesHWContext->BindFlags |= D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE;
-	pFramesHWContext->MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+	// Use NT handles so IDXGIResource1::CreateSharedHandle can expose decoder
+	// surfaces to the D3D12 renderer. This remains capability-gated on the
+	// renderer side because decoder array textures are not universally covered
+	// by the D3D11.1 guaranteed shared-resource subset.
+	pFramesHWContext->MiscFlags |= D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
 
 	int ret = av_hwframe_ctx_init(*ppFramesCtx);
 	if (ret < 0) {
