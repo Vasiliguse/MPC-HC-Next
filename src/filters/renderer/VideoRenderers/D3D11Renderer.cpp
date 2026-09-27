@@ -507,6 +507,7 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_videoWidth = 0;
     m_videoHeight = 0;
     m_videoFrameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
+    m_videoInputFormat = DXGI_FORMAT_UNKNOWN;
     m_processorOutputWidth = 0;
     m_processorOutputHeight = 0;
 }
@@ -516,6 +517,7 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, DX
     if (!m_videoDevice) return E_UNEXPECTED;
     if (m_videoProcessor && m_videoProcessorEnumerator
         && m_videoFrameFormat == format
+        && m_videoInputFormat == inputFormat
         && m_videoWidth == inputWidth && m_videoHeight == inputHeight
         && m_processorOutputWidth == outputWidth && m_processorOutputHeight == outputHeight) {
         return S_OK;
@@ -558,6 +560,7 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, DX
     if (FAILED(hr)) return hr;
 
     m_videoFrameFormat = format;
+    m_videoInputFormat = inputFormat;
     m_videoWidth = inputWidth;
     m_videoHeight = inputHeight;
     m_processorOutputWidth = outputWidth;
