@@ -506,6 +506,7 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_backBufferRTV.Release();
     m_videoWidth = 0;
     m_videoHeight = 0;
+    m_videoFrameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
     m_processorOutputWidth = 0;
     m_processorOutputHeight = 0;
 }
@@ -514,6 +515,7 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
 {
     if (!m_videoDevice) return E_UNEXPECTED;
     if (m_videoProcessor && m_videoProcessorEnumerator
+        && m_videoFrameFormat == format
         && m_videoWidth == inputWidth && m_videoHeight == inputHeight
         && m_processorOutputWidth == outputWidth && m_processorOutputHeight == outputHeight) {
         return S_OK;
@@ -547,6 +549,7 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
     hr = m_videoDevice->CreateVideoProcessor(m_videoProcessorEnumerator, 0, &m_videoProcessor);
     if (FAILED(hr)) return hr;
 
+    m_videoFrameFormat = format;
     m_videoWidth = inputWidth;
     m_videoHeight = inputHeight;
     m_processorOutputWidth = outputWidth;
@@ -698,6 +701,13 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	::GetClientRect(m_hWnd, &clientRect);
 	const UINT width = std::max<LONG>(1, clientRect.right - clientRect.left);
 	const UINT height = std::max<LONG>(1, clientRect.bottom - clientRect.top);
+
+	// Serialize teardown against the old decoder context before releasing
+	// its resources. The decoder and renderer share the immediate context.
+	ScopedDecoderMutex oldDecoderLock(m_decoderMutex);
+	if (!oldDecoderLock.Locked()) {
+		return E_ACCESSDENIED;
+	}
 
 	// The decoder owns the D3D11 device that backs native video textures.
 	// The swap chain and video processor must use that same device; matching
