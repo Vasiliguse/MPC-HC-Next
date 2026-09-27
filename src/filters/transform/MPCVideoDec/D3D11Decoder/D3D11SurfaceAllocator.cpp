@@ -82,7 +82,7 @@ STDMETHODIMP CD3D11MediaSample::GetD3D11Texture(int nView, ID3D11Texture2D **ppT
     if (nView != 0)
         return E_INVALIDARG;
 
-    if (m_pFrame)
+    if (m_pFrame && m_pFrame->data[0])
     {
         *ppTexture = (ID3D11Texture2D *)m_pFrame->data[0];
         *pArraySlice = (UINT)(intptr_t)m_pFrame->data[1];
