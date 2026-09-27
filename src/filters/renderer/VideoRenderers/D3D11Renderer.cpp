@@ -1198,5 +1198,9 @@ void CD3D11Renderer::ReleaseDevice()
     m_allowTearing = false;
     m_deviceLost = false;
     m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+    m_hdr10Input = false;
+    m_transferFunction = 0;
+    m_hdr10Metadata = {};
+    m_hasHdr10Metadata = false;
     m_decoderMutex = nullptr;
 }
