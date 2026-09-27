@@ -99,6 +99,7 @@ private:
     HANDLE m_decoderMutex = nullptr;
     DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE m_inputColorSpace = {};
+    DXGI_COLOR_SPACE_TYPE m_inputDxgiColorSpace = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
     bool m_hdr10Input = false;
     UINT m_transferFunction = 0;
     DXGI_HDR_METADATA_HDR10 m_hdr10Metadata = {};
