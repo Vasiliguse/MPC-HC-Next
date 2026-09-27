@@ -16,7 +16,7 @@ bool IsHdr10ColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace) {
 
 bool IsDeviceLostHr(HRESULT hr) {
     return hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET ||
-           hr == DXGI_ERROR_DRIVER_INTERNAL_ERROR;
+           hr == DXGI_ERROR_DEVICE_HUNG || hr == DXGI_ERROR_DRIVER_INTERNAL_ERROR;
 }
 }
 
@@ -431,17 +431,26 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     }
 
     hr = allocator->Reset();
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
 
     hr = m_commandList->Reset(allocator, nullptr);
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
 
     CComPtr<ID3D12Resource> backBuffer;
     hr = m_swapChain->GetBuffer(m_frameIndex, IID_PPV_ARGS(&backBuffer));
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
@@ -498,6 +507,9 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     m_commandList->ResourceBarrier(1, &presentBarrier);
 
     hr = m_commandList->Close();
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
