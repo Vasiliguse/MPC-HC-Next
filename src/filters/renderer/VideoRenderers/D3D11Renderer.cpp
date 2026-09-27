@@ -526,6 +526,12 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
     HRESULT hr = m_videoDevice->CreateVideoProcessorEnumerator(&desc, &m_videoProcessorEnumerator);
     if (FAILED(hr)) return hr;
 
+    // IDXGI/D3D11.1 video-color-space conversion is optional. Keep the
+    // legacy enumerator path available, but retain the 1.x interface when
+    // the driver exposes it so HDR10 conversion can be capability-checked
+    // instead of being assumed.
+    m_videoProcessorEnumerator->QueryInterface(IID_PPV_ARGS(&m_videoProcessorEnumerator1));
+
     UINT support = 0;
     hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(m_swapChainFormat, &support);
     if (FAILED(hr) || !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
