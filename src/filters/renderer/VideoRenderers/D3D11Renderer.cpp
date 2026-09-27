@@ -1158,6 +1158,13 @@ HRESULT CD3D11Renderer::Reset()
 
 void CD3D11Renderer::ReleaseDevice()
 {
+    // ReleaseFrameResources() waits on D3D11 queries and therefore must not
+    // race the decoder using the shared immediate context.
+    ScopedDecoderMutex decoderLock(m_decoderMutex);
+    if (!decoderLock.Locked()) {
+        return;
+    }
+
     ReleaseFrameResources();
     m_videoContext1.Release();
     m_videoContext.Release();
