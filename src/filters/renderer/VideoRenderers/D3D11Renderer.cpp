@@ -62,15 +62,43 @@ CD3D11Renderer::CD3D11Renderer() = default;
 
 void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT transferFunction, UINT sourceHeight)
 {
-    // DXVA2 values: 0 = unknown, 1 = BT.709, 2 = BT.601, 3 = SMPTE 240M.
-    // D3D11's legacy color-space state exposes BT.601/BT.709 only, so unknown
-    // follows Microsoft's SD/HD default and SMPTE 240M is mapped to BT.709.
+    // DXVA2 values used by MPCVideoDec:
+    // 0 = unknown, 1 = BT.709, 2 = BT.601, 3 = SMPTE 240M,
+    // 5 = BT.2020 NCL, 6 = BT.2020 CL.
     if (transferMatrix == 0) {
         transferMatrix = sourceHeight > 576 ? 1u : 2u;
     }
 
+    const bool fullRange = nominalRange == 1u;
+    const bool bt2020 = transferMatrix == 5u || transferMatrix == 6u;
+
     m_transferFunction = transferFunction;
-    m_hdr10Input = (transferFunction == 15);
+    m_hdr10Input = transferFunction == 15u;
+
+    if (transferFunction == 15u) {
+        // SMPTE ST 2084/PQ. D3D11.1 uses the top-left chroma siting form
+        // for native HDR video processor input.
+        m_inputDxgiColorSpace = DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020;
+    } else if (transferFunction == 18u && bt2020) {
+        // ARIB STD-B67/HLG. Preserve the declared full/studio range.
+        m_inputDxgiColorSpace = fullRange
+            ? DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020
+            : DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020;
+    } else if (bt2020) {
+        m_inputDxgiColorSpace = fullRange
+            ? DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020
+            : DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020;
+    } else if (transferMatrix == 2u) {
+        m_inputDxgiColorSpace = fullRange
+            ? DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601
+            : DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601;
+    } else {
+        // BT.709 is also the safe approximation for SMPTE 240M in the
+        // legacy D3D11 color-space structure.
+        m_inputDxgiColorSpace = fullRange
+            ? DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709
+            : DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
+    }
 
     m_inputColorSpace = {};
     m_inputColorSpace.Usage = 0;
@@ -78,10 +106,9 @@ void CD3D11Renderer::SetInputColorInfo(UINT transferMatrix, UINT nominalRange, U
     m_inputColorSpace.YCbCr_Matrix = (transferMatrix == 2u) ? 0u : 1u;
     m_inputColorSpace.YCbCr_xvYCC = 0;
     // DXVA2: 0 = unknown, 1 = full (0-255), 2 = studio (16-235),
-    // 3 = 48-208. D3D11 exposes full/studio ranges; unknown is kept at
-    // the driver-safe studio default rather than expanding YUV levels.
+    // 3 = 48-208. D3D11 exposes full/studio ranges; unknown remains studio.
     m_inputColorSpace.Nominal_Range =
-        (nominalRange == 1u)
+        fullRange
         ? D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255
         : D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235;
 }
@@ -508,6 +535,7 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_videoHeight = 0;
     m_videoFrameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
     m_videoInputFormat = DXGI_FORMAT_UNKNOWN;
+    m_inputDxgiColorSpace = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
     m_processorOutputWidth = 0;
     m_processorOutputHeight = 0;
 }
@@ -1050,32 +1078,49 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     outputColorSpace.YCbCr_Matrix = 0;
     outputColorSpace.YCbCr_xvYCC = 0;
     outputColorSpace.Nominal_Range = D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
-    if (m_hdr10Input && IsHdrOutputRequested() && m_videoContext1) {
-        bool conversionSupported = false;
-        if (m_videoProcessorEnumerator1) {
-            BOOL supported = FALSE;
-            const HRESULT conversionHr =
-                m_videoProcessorEnumerator1->CheckVideoProcessorFormatConversion(
-                    textureDesc.Format,
-                    DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020,
-                    m_swapChainFormat,
-                    DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020,
-                    &supported);
-            conversionSupported = SUCCEEDED(conversionHr) && supported;
-        }
 
-        if (!conversionSupported) {
-            // Do not silently process an HDR10 stream through the legacy
-            // SDR color-space path: that would produce visibly incorrect
-            // PQ/BT.2020 colors. A later shader path can provide a fallback.
+    const DXGI_COLOR_SPACE_TYPE outputDxgiColorSpace = IsHdrOutputRequested()
+        ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
+        : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+
+    if (m_videoContext1 && m_videoProcessorEnumerator1) {
+        BOOL supported = FALSE;
+        const HRESULT conversionHr =
+            m_videoProcessorEnumerator1->CheckVideoProcessorFormatConversion(
+                textureDesc.Format,
+                m_inputDxgiColorSpace,
+                m_swapChainFormat,
+                outputDxgiColorSpace,
+                &supported);
+        if (FAILED(conversionHr)) {
+            if (IsDeviceLostHr(conversionHr)) {
+                m_deviceLost = true;
+            }
+            return conversionHr;
+        }
+        if (!supported) {
+            // Never silently reinterpret BT.2020/PQ/HLG input as BT.709.
+            // The D3D11.1 driver must explicitly advertise this conversion.
             return DXGI_ERROR_UNSUPPORTED;
         }
 
         m_videoContext1->VideoProcessorSetStreamColorSpace1(
-            m_videoProcessor, 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020);
+            m_videoProcessor, 0, m_inputDxgiColorSpace);
         m_videoContext1->VideoProcessorSetOutputColorSpace1(
-            m_videoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+            m_videoProcessor, outputDxgiColorSpace);
     } else {
+        // D3D11.1 color-space control is required for BT.2020 and HDR
+        // transfer functions. The legacy structure cannot represent them.
+        if (m_inputDxgiColorSpace != DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601
+            && m_inputDxgiColorSpace != DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601
+            && m_inputDxgiColorSpace != DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709
+            && m_inputDxgiColorSpace != DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709) {
+            return DXGI_ERROR_UNSUPPORTED;
+        }
+        if (IsHdrOutputRequested()) {
+            return DXGI_ERROR_UNSUPPORTED;
+        }
+
         m_videoContext->VideoProcessorSetStreamColorSpace(m_videoProcessor, 0, &m_inputColorSpace);
         m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
     }
@@ -1200,6 +1245,7 @@ void CD3D11Renderer::ReleaseDevice()
     m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     m_hdr10Input = false;
     m_transferFunction = 0;
+    m_inputDxgiColorSpace = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
     m_hdr10Metadata = {};
     m_hasHdr10Metadata = false;
     m_decoderMutex = nullptr;
