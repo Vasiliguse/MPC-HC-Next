@@ -425,6 +425,70 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
     return ConfigureSwapChainColorSpace();
 }
 
+bool CD3D12Renderer::IsAdapterCompatible(ID3D11Device* device) const
+{
+    if (!device || !m_adapter) {
+        return false;
+    }
+
+    CComPtr<IDXGIDevice> dxgiDevice;
+    CComPtr<IDXGIAdapter> decoderAdapter;
+    DXGI_ADAPTER_DESC decoderDesc = {};
+    DXGI_ADAPTER_DESC1 rendererDesc = {};
+
+    if (FAILED(device->QueryInterface(IID_PPV_ARGS(&dxgiDevice))) ||
+        FAILED(dxgiDevice->GetAdapter(&decoderAdapter)) ||
+        FAILED(decoderAdapter->GetDesc(&decoderDesc)) ||
+        FAILED(m_adapter->GetDesc1(&rendererDesc))) {
+        return false;
+    }
+
+    return decoderDesc.AdapterLuid == rendererDesc.AdapterLuid;
+}
+
+HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12Resource** resource)
+{
+    if (!texture || !resource || !m_device) {
+        return E_INVALIDARG;
+    }
+    *resource = nullptr;
+
+    if (!IsAdapterCompatible([&]() -> ID3D11Device* {
+        CComPtr<ID3D11Device> device;
+        texture->GetDevice(&device);
+        return device.p;
+    }())) {
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
+    CComPtr<IDXGIResource1> sharedResource;
+    HRESULT hr = texture->QueryInterface(IID_PPV_ARGS(&sharedResource));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    HANDLE sharedHandle = nullptr;
+    hr = sharedResource->CreateSharedHandle(
+        nullptr,
+        DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
+        nullptr,
+        &sharedHandle);
+    if (FAILED(hr)) {
+        // The decoder currently uses the legacy D3D11_RESOURCE_MISC_SHARED
+        // path. CreateSharedHandle intentionally fails for that resource type;
+        // keep this as a capability gate until the decoder surfaces are moved
+        // to D3D11_RESOURCE_MISC_SHARED_NTHANDLE.
+        return hr;
+    }
+
+    hr = m_device->OpenSharedHandle(sharedHandle, IID_PPV_ARGS(resource));
+    CloseHandle(sharedHandle);
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
+    return hr;
+}
+
 HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState)
 {
     if (!source || !m_swapChain || !m_device || !m_commandQueue ||
