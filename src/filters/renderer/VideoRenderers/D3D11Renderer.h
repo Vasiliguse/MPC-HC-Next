@@ -101,6 +101,8 @@ private:
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE m_inputColorSpace = {};
     bool m_hdr10Input = false;
     UINT m_transferFunction = 0;
+    DXGI_HDR_METADATA_HDR10 m_hdr10Metadata = {};
+    bool m_hasHdr10Metadata = false;
 
     struct PendingFrame {
         CComPtr<IMediaSample> sample;
