@@ -940,6 +940,11 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     hr = m_videoDevice->CreateVideoProcessorOutputView(backBuffer, m_videoProcessorEnumerator, &outputDesc, &outputView);
     if (FAILED(hr)) return hr;
 
+    // The video processor owns the back-buffer write. Any prior render-target
+    // binding must be cleared before the processor blit to avoid simultaneous
+    // read/write binding hazards on D3D11 drivers.
+    m_context->OMSetRenderTargets(0, nullptr, nullptr);
+
     D3D11_VIDEO_PROCESSOR_STREAM stream = {};
     stream.Enable = TRUE;
     stream.OutputIndex = 0;
