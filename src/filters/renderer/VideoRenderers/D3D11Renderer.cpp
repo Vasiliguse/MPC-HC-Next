@@ -626,17 +626,23 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
     const bool hdr10 = m_transferFunction == 15 && IsHdrOutputRequested();
     SetHDR10InputColorSpace(hdr10);
 
+    if (!hdr10) {
+        m_hasHdr10Metadata = false;
+        m_hdr10Metadata = {};
+        return SetHDR10Metadata(nullptr);
+    }
+
     CComQIPtr<IMediaSideData> sideData(sample);
     if (!sideData) {
         // HDR10 signalling comes from the media type. Optional mastering/CLL
         // side-data is not required on every sample; preserve the last valid
         // static metadata until the stream explicitly changes away from HDR10.
-        return hdr10 ? S_OK : SetHDR10Metadata(nullptr);
+        return S_OK;
     }
 
     const BYTE* data = nullptr;
     size_t size = 0;
-    DXGI_HDR_METADATA_HDR10 dxgi = {};
+    DXGI_HDR_METADATA_HDR10 dxgi = m_hasHdr10Metadata ? m_hdr10Metadata : DXGI_HDR_METADATA_HDR10{};
 
     bool hasMastering = false;
     bool hasContentLightLevel = false;
@@ -685,19 +691,17 @@ HRESULT CD3D11Renderer::SetHDR10MetadataFromSample(IMediaSample* sample)
         hasContentLightLevel = true;
     }
 
-    // Metadata is optional for HDR10 signalling. The transfer function
-    // identifies PQ content; mastering/CLL side-data only supplies the
-    // optional HDR10 metadata block sent to the display.
-    if (!hdr10) {
-        return SetHDR10Metadata(nullptr);
+    // Update only the metadata fields carried by this sample. HDR10 mastering
+    // data and content-light levels are independently optional and may arrive
+    // on different samples; retaining the previous fields avoids replacing
+    // valid static metadata with zeros.
+    if (hasMastering || hasContentLightLevel) {
+        m_hdr10Metadata = dxgi;
+        m_hasHdr10Metadata = true;
+        return SetHDR10Metadata(&m_hdr10Metadata);
     }
 
-    // Keep the last valid static HDR10 metadata when a sample does not carry
-    // an optional metadata block. This avoids clearing the swap-chain metadata
-    // on every frame of streams that signal mastering data only once.
-    return (hasMastering || hasContentLightLevel)
-        ? SetHDR10Metadata(&dxgi)
-        : S_OK;
+    return m_hasHdr10Metadata ? SetHDR10Metadata(&m_hdr10Metadata) : S_OK;
 }
 
 HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags)
