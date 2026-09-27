@@ -17,6 +17,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="D3D11Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11AllocatorPresenter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="AllocatorCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -85,6 +94,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="D3D11Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11AllocatorPresenter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="AllocatorCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
