@@ -586,6 +586,9 @@ HRESULT CD3D11Renderer::DrainPendingFrames(bool waitForAll)
         HRESULT hr = m_context->GetData(
             frame.query, &complete, sizeof(complete), D3D11_ASYNC_GETDATA_DONOTFLUSH);
         if (FAILED(hr)) {
+            if (IsDeviceLostHr(hr)) {
+                m_deviceLost = true;
+            }
             return hr;
         }
 
@@ -1138,7 +1141,7 @@ HRESULT CD3D11Renderer::Present(UINT syncInterval, UINT presentFlags)
     }
 
     const HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
-    if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
+    if (IsDeviceLostHr(hr)) {
         m_deviceLost = true;
     }
 
