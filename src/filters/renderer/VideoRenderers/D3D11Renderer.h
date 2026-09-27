@@ -37,7 +37,7 @@ public:
     HRESULT Initialize(HWND hWnd, const ExtraRendererSettings& settings);
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval, UINT presentFlags);
-    HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0);
+    HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice = 0, D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
     void SetInputColorInfo(UINT transferMatrix, UINT nominalRange, UINT transferFunction, UINT sourceHeight);
     void SetHDR10InputColorSpace(bool enabled);
     HRESULT ActivateD3D11Decoding(ID3D11Device* device, ID3D11DeviceContext* context, HANDLE mutex, UINT flags);
