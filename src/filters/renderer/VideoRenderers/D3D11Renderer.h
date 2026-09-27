@@ -87,6 +87,7 @@ private:
     CComPtr<ID3D11RenderTargetView> m_backBufferRTV;
     UINT m_videoWidth = 0;
     UINT m_videoHeight = 0;
+    D3D11_VIDEO_FRAME_FORMAT m_videoFrameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
     UINT m_processorOutputWidth = 0;
     UINT m_processorOutputHeight = 0;
     CComPtr<IDXGIOutput6> m_outputObject;
