@@ -715,6 +715,12 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	m_context = context;
 	m_decoderMutex = mutex;
 
+	// The decoder device can be recreated during a graph reconnect. Do not
+	// reuse output capability state or the previous swap-chain format while
+	// constructing the new swap chain; recalculate it from the new device/output.
+	m_output = {};
+	m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+
 	HRESULT hr = m_device->QueryInterface(IID_PPV_ARGS(&m_videoDevice));
 	if (FAILED(hr)) {
 		return hr;
