@@ -882,12 +882,12 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         AM_SAMPLE2_PROPERTIES props = {};
         if (SUCCEEDED(sample2->GetProperties(sizeof(props), reinterpret_cast<BYTE*>(&props)))) {
             const DWORD scanFlags = props.dwTypeSpecificFlags & (AM_VIDEO_FLAG_WEAVE | AM_VIDEO_FLAG_FIELD1FIRST);
-            if (scanFlags == AM_VIDEO_FLAG_FIELD1FIRST) {
-                frameFormat = D3D11_VIDEO_FRAME_FORMAT_INTERLACED_TOP_FIELD_FIRST;
-            } else if (scanFlags == (AM_VIDEO_FLAG_WEAVE | AM_VIDEO_FLAG_FIELD1FIRST)) {
-                frameFormat = D3D11_VIDEO_FRAME_FORMAT_INTERLACED_BOTTOM_FIELD_FIRST;
-            } else if (scanFlags == 0) {
+            if (scanFlags & AM_VIDEO_FLAG_WEAVE) {
                 frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
+            } else if (scanFlags & AM_VIDEO_FLAG_FIELD1FIRST) {
+                frameFormat = D3D11_VIDEO_FRAME_FORMAT_INTERLACED_TOP_FIELD_FIRST;
+            } else {
+                frameFormat = D3D11_VIDEO_FRAME_FORMAT_INTERLACED_BOTTOM_FIELD_FIRST;
             }
         }
     }
