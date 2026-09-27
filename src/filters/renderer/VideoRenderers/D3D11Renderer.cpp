@@ -511,7 +511,7 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_processorOutputHeight = 0;
 }
 
-HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight)
+HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, DXGI_FORMAT inputFormat, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight)
 {
     if (!m_videoDevice) return E_UNEXPECTED;
     if (m_videoProcessor && m_videoProcessorEnumerator
@@ -543,8 +543,16 @@ HRESULT CD3D11Renderer::EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, UI
     m_videoProcessorEnumerator->QueryInterface(IID_PPV_ARGS(&m_videoProcessorEnumerator1));
 
     UINT support = 0;
+    hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(inputFormat, &support);
+    if (FAILED(hr) || !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) {
+        return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+    }
+
+    support = 0;
     hr = m_videoProcessorEnumerator->CheckVideoProcessorFormat(m_swapChainFormat, &support);
-    if (FAILED(hr) || !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+    if (FAILED(hr) || !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) {
+        return FAILED(hr) ? hr : DXGI_ERROR_UNSUPPORTED;
+    }
 
     hr = m_videoDevice->CreateVideoProcessor(m_videoProcessorEnumerator, 0, &m_videoProcessor);
     if (FAILED(hr)) return hr;
@@ -982,7 +990,7 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     backBuffer->GetDesc(&outputDesc2D);
     if (!outputDesc2D.Width || !outputDesc2D.Height) return E_INVALIDARG;
 
-    hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height,
+    hr = EnsureVideoProcessor(frameFormat, textureDesc.Format, textureDesc.Width, textureDesc.Height,
         outputDesc2D.Width, outputDesc2D.Height);
     if (FAILED(hr)) return hr;
 
