@@ -939,13 +939,6 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
     return S_OK;
 }
 
-HRESULT CD3D11Renderer::PresentD3D11Texture
-    pending.sample = sample;
-    pending.query = completionQuery;
-    m_pendingFrames.push_back(std::move(pending));
-    return S_OK;
-}
-
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice, D3D11_VIDEO_FRAME_FORMAT frameFormat)
 {
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
