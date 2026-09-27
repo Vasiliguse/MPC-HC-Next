@@ -177,6 +177,9 @@ HRESULT CD3D12Renderer::CreateRenderTargetViews()
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
     HRESULT hr = m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_rtvHeap));
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
@@ -187,6 +190,9 @@ HRESULT CD3D12Renderer::CreateRenderTargetViews()
     for (UINT i = 0; i < kBufferCount; ++i) {
         CComPtr<ID3D12Resource> buffer;
         hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&buffer));
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
         if (FAILED(hr)) {
             return hr;
         }
@@ -217,6 +223,9 @@ HRESULT CD3D12Renderer::CreateFrameResources()
     for (auto& allocator : m_commandAllocators) {
         HRESULT hr = m_device->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
         if (FAILED(hr)) {
             return hr;
         }
@@ -225,6 +234,9 @@ HRESULT CD3D12Renderer::CreateFrameResources()
     HRESULT hr = m_device->CreateCommandList(
         0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[0], nullptr,
         IID_PPV_ARGS(&m_commandList));
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
@@ -235,6 +247,9 @@ HRESULT CD3D12Renderer::CreateFrameResources()
     }
 
     hr = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
@@ -245,7 +260,7 @@ HRESULT CD3D12Renderer::CreateFrameResources()
     }
 
     m_fenceValue = 0;
-    return CreateRenderTargetViews();
+    return S_OK;
 }
 
 HRESULT CD3D12Renderer::SignalAndWait()
@@ -256,12 +271,18 @@ HRESULT CD3D12Renderer::SignalAndWait()
 
     const UINT64 value = ++m_fenceValue;
     HRESULT hr = m_commandQueue->Signal(m_fence, value);
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
 
     if (m_fence->GetCompletedValue() < value) {
         hr = m_fence->SetEventOnCompletion(value, m_fenceEvent);
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
         if (FAILED(hr)) {
             return hr;
         }
@@ -387,10 +408,10 @@ HRESULT CD3D12Renderer::Resize(UINT width, UINT height) {
         : DXGI_FORMAT_B8G8R8A8_UNORM;
     if (desiredFormat != m_swapChainFormat) {
         hr = m_swapChain->ResizeBuffers(kBufferCount, width, height, desiredFormat, flags);
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
         if (FAILED(hr)) {
-            if (IsDeviceLostHr(hr)) {
-                m_deviceLost = true;
-            }
             return hr;
         }
         m_swapChainFormat = desiredFormat;
@@ -422,6 +443,9 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     if (m_frameFenceValues[m_frameIndex] != 0 &&
         m_fence->GetCompletedValue() < m_frameFenceValues[m_frameIndex]) {
         hr = m_fence->SetEventOnCompletion(m_frameFenceValues[m_frameIndex], m_fenceEvent);
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
         if (FAILED(hr)) {
             return hr;
         }
@@ -517,6 +541,14 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     ID3D12CommandList* lists[] = { m_commandList };
     m_commandQueue->ExecuteCommandLists(1, lists);
 
+    if (m_device) {
+        const HRESULT deviceReason = m_device->GetDeviceRemovedReason();
+        if (IsDeviceLostHr(deviceReason)) {
+            m_deviceLost = true;
+            return deviceReason;
+        }
+    }
+
     hr = Present(0);
     if (FAILED(hr)) {
         return hr;
@@ -524,6 +556,9 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
 
     const UINT64 fenceValue = ++m_fenceValue;
     hr = m_commandQueue->Signal(m_fence, fenceValue);
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
     if (FAILED(hr)) {
         return hr;
     }
