@@ -877,7 +877,22 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         return hr;
     }
 
-    hr = PresentD3D11Texture(texture, arraySlice);
+    D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
+    if (CComQIPtr<IMediaSample2> sample2 = sample) {
+        AM_SAMPLE2_PROPERTIES props = {};
+        if (SUCCEEDED(sample2->GetProperties(sizeof(props), reinterpret_cast<BYTE*>(&props)))) {
+            const DWORD scanFlags = props.dwTypeSpecificFlags & (AM_VIDEO_FLAG_WEAVE | AM_VIDEO_FLAG_FIELD1FIRST);
+            if (scanFlags == AM_VIDEO_FLAG_FIELD1FIRST) {
+                frameFormat = D3D11_VIDEO_FRAME_FORMAT_INTERLACED_TOP_FIELD_FIRST;
+            } else if (scanFlags == (AM_VIDEO_FLAG_WEAVE | AM_VIDEO_FLAG_FIELD1FIRST)) {
+                frameFormat = D3D11_VIDEO_FRAME_FORMAT_INTERLACED_BOTTOM_FIELD_FIRST;
+            } else if (scanFlags == 0) {
+                frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
+            }
+        }
+    }
+
+    hr = PresentD3D11Texture(texture, arraySlice, frameFormat);
     if (FAILED(hr)) {
         return hr;
     }
@@ -916,7 +931,7 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
     return S_OK;
 }
 
-HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice)
+HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice, D3D11_VIDEO_FRAME_FORMAT frameFormat)
 {
     if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
 
@@ -956,7 +971,6 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     backBuffer->GetDesc(&outputDesc2D);
     if (!outputDesc2D.Width || !outputDesc2D.Height) return E_INVALIDARG;
 
-    D3D11_VIDEO_FRAME_FORMAT frameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
     hr = EnsureVideoProcessor(frameFormat, textureDesc.Width, textureDesc.Height,
         outputDesc2D.Width, outputDesc2D.Height);
     if (FAILED(hr)) return hr;
