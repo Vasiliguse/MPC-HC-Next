@@ -453,16 +453,18 @@ HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12R
     }
     *resource = nullptr;
 
-    if (!IsAdapterCompatible([&]() -> ID3D11Device* {
-        CComPtr<ID3D11Device> device;
-        texture->GetDevice(&device);
-        return device.p;
-    }())) {
+    CComPtr<ID3D11Device> textureDevice;
+    HRESULT hr = texture->GetDevice(&textureDevice);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (!IsAdapterCompatible(textureDevice)) {
         return DXGI_ERROR_UNSUPPORTED;
     }
 
     CComPtr<IDXGIResource1> sharedResource;
-    HRESULT hr = texture->QueryInterface(IID_PPV_ARGS(&sharedResource));
+    hr = texture->QueryInterface(IID_PPV_ARGS(&sharedResource));
     if (FAILED(hr)) {
         return hr;
     }
