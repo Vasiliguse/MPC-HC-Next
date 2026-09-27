@@ -21,6 +21,14 @@
 namespace {
 constexpr UINT kSwapChainBufferCount = 3;
 
+bool IsDeviceLostHr(HRESULT hr)
+{
+    return hr == DXGI_ERROR_DEVICE_REMOVED
+        || hr == DXGI_ERROR_DEVICE_RESET
+        || hr == DXGI_ERROR_DEVICE_HUNG
+        || hr == DXGI_ERROR_DRIVER_INTERNAL_ERROR;
+}
+
 class ScopedDecoderMutex
 {
 public:
@@ -808,13 +816,29 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         return E_POINTER;
     }
 
-    HRESULT hr = DrainPendingFrames(false);
+    HRESULT hr = S_OK;
+    CComPtr<ID3D11Query> completionQuery;
+    {
+        ScopedDecoderMutex decoderLock(m_decoderMutex);
+        if (!decoderLock.Locked()) {
+            return E_ACCESSDENIED;
+        }
+
+        hr = DrainPendingFrames(false);
     if (FAILED(hr)) {
         return hr;
     }
 
-    if (m_pendingFrames.size() >= 3) {
-        hr = DrainPendingFrames(true);
+        if (m_pendingFrames.size() >= 3) {
+            hr = DrainPendingFrames(true);
+            if (FAILED(hr)) {
+                return hr;
+            }
+        }
+
+        D3D11_QUERY_DESC queryDesc = {};
+        queryDesc.Query = D3D11_QUERY_EVENT;
+        hr = m_device->CreateQuery(&queryDesc, &completionQuery);
         if (FAILED(hr)) {
             return hr;
         }
@@ -823,14 +847,6 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
     CComQIPtr<IMediaSampleD3D11> d3d11Sample(sample);
     if (!d3d11Sample) {
         return E_NOINTERFACE;
-    }
-
-    D3D11_QUERY_DESC queryDesc = {};
-    queryDesc.Query = D3D11_QUERY_EVENT;
-    CComPtr<ID3D11Query> completionQuery;
-    hr = m_device->CreateQuery(&queryDesc, &completionQuery);
-    if (FAILED(hr)) {
-        return hr;
     }
 
     CComPtr<ID3D11Texture2D> texture;
@@ -851,6 +867,10 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
     }
 
     if (overlay) {
+        ScopedDecoderMutex decoderLock(m_decoderMutex);
+        if (!decoderLock.Locked()) {
+            return E_ACCESSDENIED;
+        }
         if (!m_backBufferRTV) {
             return E_UNEXPECTED;
         }
@@ -866,7 +886,13 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         return hr;
     }
 
-    m_context->End(completionQuery);
+    {
+        ScopedDecoderMutex decoderLock(m_decoderMutex);
+        if (!decoderLock.Locked()) {
+            return E_ACCESSDENIED;
+        }
+        m_context->End(completionQuery);
+    }
     PendingFrame pending;
     pending.sample = sample;
     pending.query = completionQuery;
@@ -1011,6 +1037,11 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
         return S_FALSE;
     }
 
+    ScopedDecoderMutex decoderLock(m_decoderMutex);
+    if (!decoderLock.Locked()) {
+        return E_ACCESSDENIED;
+    }
+
     m_context->OMSetRenderTargets(0, nullptr, nullptr);
     ReleaseFrameResources();
 
@@ -1021,7 +1052,7 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
         m_swapChainFormat,
         m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
-    if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
+    if (IsDeviceLostHr(hr)) {
         m_deviceLost = true;
     }
 
