@@ -1422,8 +1422,8 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 					dst.center_of_ellipse_x = src.center_of_ellipse_x;
 					dst.center_of_ellipse_y = src.center_of_ellipse_y;
 					dst.rotation_angle = src.rotation_angle;
-					dst.semiMajor_axis_internal_ellipse = src.semimajor_axis_internal_ellipse;
-					dst.semiMajor_axis_external_ellipse = src.semimajor_axis_external_ellipse;
+					dst.semimajor_axis_internal_ellipse = src.semimajor_axis_internal_ellipse;
+					dst.semimajor_axis_external_ellipse = src.semimajor_axis_external_ellipse;
 					dst.semiminor_axis_external_ellipse = src.semiminor_axis_external_ellipse;
 					dst.overlap_process_option = src.overlap_process_option;
 
@@ -4598,75 +4598,3 @@ HRESULT CMPCVideoDecFilter::CreateDXVA2Decoder(LPDIRECT3DSURFACE9* ppDecoderRend
 	else {
 		CleanupDXVAVariables();
 		DLog(L"DXVA2 decoder creation failed with error %s", HR2Str(hr));
-	}
-
-	return hr;
-}
-
-HRESULT CMPCVideoDecFilter::ReinitDXVA2Decoder()
-{
-	HRESULT hr = E_FAIL;
-
-	m_pDXVADecoder.reset();
-	if (m_pDXVA2Allocator && IsDXVASupported(m_hwType == HwType::DXVA2) && SUCCEEDED(FindDecoderConfiguration())) {
-		hr = RecommitAllocator();
-	}
-
-	return hr;
-}
-
-HRESULT CMPCVideoDecFilter::InitAllocator(IMemAllocator **ppAlloc)
-{
-	if (UseDXVA2()) {
-		HRESULT hr = S_FALSE;
-		m_pDXVA2Allocator = new(std::nothrow) CVideoDecDXVAAllocator(this, &hr);
-		if (!m_pDXVA2Allocator) {
-			return E_OUTOFMEMORY;
-		}
-		if (FAILED(hr)) {
-			SAFE_DELETE(m_pDXVA2Allocator);
-			return hr;
-		}
-
-		// Return the IMemAllocator interface.
-		return m_pDXVA2Allocator->QueryInterface(IID_PPV_ARGS(ppAlloc));
-	} else {
-		return m_pD3D11Decoder->InitAllocator(ppAlloc);
-	}
-}
-
-HRESULT CMPCVideoDecFilter::RecommitAllocator()
-{
-	HRESULT hr = S_OK;
-
-	if (m_pDXVA2Allocator) {
-		// Re-Commit the allocator (creates surfaces and new decoder)
-		hr = m_pDXVA2Allocator->Decommit();
-		GetOutputPin()->GetConnected()->BeginFlush();
-		GetOutputPin()->GetConnected()->EndFlush();
-		if (m_pDXVA2Allocator->DecommitInProgress()) {
-			DLog(L"CMPCVideoDecFilter::RecommitAllocator() : WARNING! Flush had no effect, decommit of the allocator still not complete");
-		}
-
-		hr = m_pDXVA2Allocator->Commit();
-	}
-
-	return hr;
-}
-
-// ISpecifyPropertyPages2
-
-STDMETHODIMP CMPCVideoDecFilter::GetPages(CAUUID* pPages)
-{
-	CheckPointer(pPages, E_POINTER);
-
-#ifdef REGISTER_FILTER
-	pPages->cElems    = 2;
-#else
-	pPages->cElems    = 1;
-#endif
-	pPages->pElems    = (GUID*)CoTaskMemAlloc(sizeof(GUID) * pPages->cElems);
-	pPages->pElems[0] = __uuidof(CMPCVideoDecSettingsWnd);
-#ifdef REGISTER_FILTER
-	pPages->pElems[1] = __uuidof(CMPCVideoDecCodecWnd);
-#endif
