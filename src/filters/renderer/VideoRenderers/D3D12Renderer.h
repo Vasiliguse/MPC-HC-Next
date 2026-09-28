@@ -4,7 +4,6 @@
 #include "IAllocatorPresenter.h"
 #include <d3d11.h>
 #include <d3d11_4.h>
-#include <d3d11on12.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
@@ -79,7 +78,4 @@ private:
     CComPtr<ID3D12Resource> m_sharedInputResource;
     CComPtr<ID3D11Fence> m_sharedInputFence;
     CComPtr<ID3D12Fence> m_sharedFence;
-    CComPtr<ID3D11Device> m_d3d11On12Device;
-    CComPtr<ID3D11DeviceContext> m_d3d11On12Context;
-    CComPtr<ID3D11On12Device2> m_d3d11On12Device2;
 };
