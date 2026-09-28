@@ -593,7 +593,7 @@ HRESULT CD3D11Renderer::EnsureSharedOutputTexture(UINT width, UINT height)
     desc.Format = m_swapChainFormat;
     desc.SampleDesc.Count = 1;
     desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
     desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
 
     HRESULT hr = m_device->CreateTexture2D(&desc, nullptr, &m_sharedOutputTexture);
