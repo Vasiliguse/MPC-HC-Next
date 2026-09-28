@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "IAllocatorPresenter.h"
 #include <d3d11.h>
+#include <d3d11_4.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
@@ -18,8 +19,10 @@ public:
     HRESULT Initialize(HWND hWnd, const ExtraRendererSettings& settings);
     HRESULT Resize(UINT width, UINT height);
     HRESULT Present(UINT syncInterval = 1);
-    HRESULT PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState = D3D12_RESOURCE_STATE_COPY_SOURCE);
+    HRESULT PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState = D3D12_RESOURCE_STATE_COPY_SOURCE, ID3D12Fence* waitFence = nullptr, UINT64 waitValue = 0);
+    HRESULT PresentD3D11Texture(ID3D11Texture2D* texture, ID3D11Fence* fence, UINT64 fenceValue);
     HRESULT OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12Resource** resource);
+    HRESULT OpenSharedD3D11Fence(ID3D11Fence* fence, ID3D12Fence** sharedFence);
     bool IsAdapterCompatible(ID3D11Device* device) const;
     HRESULT SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata);
     HRESULT Reset();
