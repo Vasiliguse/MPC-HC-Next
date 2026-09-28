@@ -557,6 +557,55 @@ HRESULT CD3D11Renderer::EnsureSharedOutputTexture(UINT width, UINT height)
     return S_OK;
 }
 
+HRESULT CD3D11Renderer::EnsureSharedOutputFence()
+{
+    if (!m_device) {
+        return E_UNEXPECTED;
+    }
+    if (m_sharedOutputFence) {
+        return S_OK;
+    }
+
+    CComQIPtr<ID3D11Device5> device5 = m_device;
+    if (!device5) {
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
+    HRESULT hr = device5->CreateFence(
+        0, D3D11_FENCE_FLAG_SHARED, IID_PPV_ARGS(&m_sharedOutputFence));
+    if (FAILED(hr)) {
+        m_sharedOutputFence.Release();
+        return hr;
+    }
+
+    m_sharedOutputFenceValue = 0;
+    return S_OK;
+}
+
+HRESULT CD3D11Renderer::SignalSharedOutputFence()
+{
+    if (!m_context || !m_sharedOutputFence) {
+        return E_UNEXPECTED;
+    }
+
+    CComQIPtr<ID3D11DeviceContext4> context4 = m_context;
+    if (!context4) {
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
+    const UINT64 value = ++m_sharedOutputFenceValue;
+    HRESULT hr = context4->Signal(m_sharedOutputFence, value);
+    if (FAILED(hr)) {
+        --m_sharedOutputFenceValue;
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
+        return hr;
+    }
+
+    return S_OK;
+}
+
 void CD3D11Renderer::ReleaseFrameResources()
 {
     DrainPendingFrames(true);
@@ -566,6 +615,8 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_videoProcessorEnumerator.Release();
     m_videoProcessorEnumerator1.Release();
     m_sharedOutputTexture.Release();
+    m_sharedOutputFence.Release();
+    m_sharedOutputFenceValue = 0;
     m_backBufferRTV.Release();
     m_videoWidth = 0;
     m_videoHeight = 0;
@@ -1181,6 +1232,16 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
 
     if (m_sharedOutputTexture) {
         m_context->CopyResource(backBuffer, m_sharedOutputTexture);
+
+        hr = EnsureSharedOutputFence();
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        hr = SignalSharedOutputFence();
+        if (FAILED(hr)) {
+            return hr;
+        }
     }
 
     return S_OK;
