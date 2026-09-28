@@ -133,6 +133,9 @@ HRESULT CD3D11Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
 
     m_hWnd = hWnd;
     m_settings = settings;
+    m_externalPresentation = settings.iRendererBackend == VIDEO_RENDERER_BACKEND_D3D12;
+    m_d3d12CompletionFence.Release();
+    m_lastD3D12FenceValue = 0;
 
     HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&m_factory));
     if (FAILED(hr)) {
@@ -145,20 +148,31 @@ HRESULT CD3D11Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         return hr;
     }
 
+    if (m_externalPresentation) {
+        hr = m_d3d12Renderer.Initialize(m_hWnd, m_settings);
+        if (FAILED(hr)) {
+            ReleaseDevice();
+            return hr;
+        }
+        m_output = m_d3d12Renderer.GetOutputInfo();
+    }
+
     hr = CreateDeviceAndSwapChain();
     if (FAILED(hr)) {
         ReleaseDevice();
         return hr;
     }
 
-    hr = UpdateOutputInfo();
-    if (FAILED(hr)) {
-        ReleaseDevice();
-        return hr;
+    if (!m_externalPresentation) {
+        hr = UpdateOutputInfo();
+        if (FAILED(hr)) {
+            ReleaseDevice();
+            return hr;
+        }
     }
 
     const DXGI_FORMAT desiredFormat = GetSwapChainFormat();
-    if (desiredFormat != m_swapChainFormat) {
+    if (!m_externalPresentation && desiredFormat != m_swapChainFormat) {
         RECT clientRect = {};
         ::GetClientRect(m_hWnd, &clientRect);
         const UINT width = std::max<LONG>(1, clientRect.right - clientRect.left);
@@ -173,16 +187,18 @@ HRESULT CD3D11Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
         m_swapChainFormat = desiredFormat;
     }
 
-    hr = CreateBackBufferViews();
-    if (FAILED(hr)) {
-        ReleaseDevice();
-        return hr;
-    }
+    if (!m_externalPresentation) {
+        hr = CreateBackBufferViews();
+        if (FAILED(hr)) {
+            ReleaseDevice();
+            return hr;
+        }
 
-    hr = ConfigureSwapChainColorSpace();
-    if (FAILED(hr)) {
-        ReleaseDevice();
-        return hr;
+        hr = ConfigureSwapChainColorSpace();
+        if (FAILED(hr)) {
+            ReleaseDevice();
+            return hr;
+        }
     }
 
     return S_OK;
@@ -329,6 +345,12 @@ HRESULT CD3D11Renderer::CreateDeviceAndSwapChain()
 
     m_allowTearing = IsTearingSupported();
 
+    if (m_externalPresentation) {
+        m_swapChain.Release();
+        m_backBufferRTV.Release();
+        return S_OK;
+    }
+
     DXGI_SWAP_CHAIN_DESC1 desc = {};
     desc.Width = 0;
     desc.Height = 0;
@@ -380,8 +402,32 @@ HRESULT CD3D11Renderer::UpdateOutputInfo()
 {
     m_output = {};
 
-    if (!m_swapChain) {
+    if (!m_swapChain && !m_externalPresentation) {
         return E_UNEXPECTED;
+    }
+
+    if (!m_swapChain && m_externalPresentation) {
+        CComPtr<IDXGIOutput> output;
+        HMONITOR monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+        for (UINT index = 0; ; ++index) {
+            CComPtr<IDXGIOutput> candidate;
+            if (m_adapter->EnumOutputs(index, &candidate) == DXGI_ERROR_NOT_FOUND) break;
+            if (!candidate) continue;
+            DXGI_OUTPUT_DESC outputDesc = {};
+            if (SUCCEEDED(candidate->GetDesc(&outputDesc)) && outputDesc.Monitor == monitor) {
+                output = candidate;
+                break;
+            }
+        }
+        if (!output) return DXGI_ERROR_NOT_FOUND;
+        HRESULT hr = output->QueryInterface(IID_PPV_ARGS(&m_outputObject));
+        if (FAILED(hr)) return hr;
+        hr = m_outputObject->GetDesc1(&m_output.desc);
+        if (FAILED(hr)) return hr;
+        m_output.valid = true;
+        m_output.colorSpace = m_output.desc.ColorSpace;
+        m_output.hdrSupported = m_d3d12Renderer.GetOutputInfo().hdrSupported;
+        return S_OK;
     }
 
     CComPtr<IDXGIOutput> output;
@@ -438,6 +484,7 @@ HRESULT CD3D11Renderer::UpdateOutputInfo()
 
 HRESULT CD3D11Renderer::ConfigureSwapChainColorSpace()
 {
+    if (m_externalPresentation) return S_OK;
     if (!m_swapChain) {
         return E_UNEXPECTED;
     }
@@ -489,6 +536,7 @@ DXGI_FORMAT CD3D11Renderer::GetSwapChainFormat() const
 
 HRESULT CD3D11Renderer::SetHDR10Metadata(const DXGI_HDR_METADATA_HDR10* metadata)
 {
+    if (m_externalPresentation) return m_d3d12Renderer.SetHDR10Metadata(metadata);
     if (!m_swapChain) {
         return E_UNEXPECTED;
     }
@@ -557,6 +605,38 @@ HRESULT CD3D11Renderer::EnsureSharedOutputTexture(UINT width, UINT height)
     return S_OK;
 }
 
+HRESULT CD3D11Renderer::EnsureD3D12CompletionFence()
+{
+    if (!m_externalPresentation || !m_device) return E_UNEXPECTED;
+    if (m_d3d12CompletionFence) return S_OK;
+
+    ID3D12Fence* completionFence = m_d3d12Renderer.GetCompletionFence();
+    ID3D12Device* d3d12Device = m_d3d12Renderer.GetDevice();
+    if (!completionFence || !d3d12Device) return E_UNEXPECTED;
+
+    CComPtr<ID3D11Device5> device5 = m_device;
+    if (!device5) return DXGI_ERROR_UNSUPPORTED;
+
+    HANDLE sharedHandle = nullptr;
+    HRESULT hr = d3d12Device->CreateSharedHandle(
+        completionFence, nullptr, GENERIC_ALL, nullptr, &sharedHandle);
+    if (FAILED(hr)) return hr;
+
+    hr = device5->OpenSharedFence(sharedHandle, IID_PPV_ARGS(&m_d3d12CompletionFence));
+    CloseHandle(sharedHandle);
+    return hr;
+}
+
+HRESULT CD3D11Renderer::WaitForD3D12Presentation()
+{
+    if (!m_externalPresentation || !m_context || !m_d3d12CompletionFence || m_lastD3D12FenceValue == 0) return S_OK;
+    CComPtr<ID3D11DeviceContext4> context4 = m_context;
+    if (!context4) return DXGI_ERROR_UNSUPPORTED;
+    HRESULT hr = context4->Wait(m_d3d12CompletionFence, m_lastD3D12FenceValue);
+    if (FAILED(hr) && IsDeviceLostHr(hr)) m_deviceLost = true;
+    return hr;
+}
+
 HRESULT CD3D11Renderer::EnsureSharedOutputFence()
 {
     if (!m_device) {
@@ -617,6 +697,8 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_sharedOutputTexture.Release();
     m_sharedOutputFence.Release();
     m_sharedOutputFenceValue = 0;
+    m_d3d12CompletionFence.Release();
+    m_lastD3D12FenceValue = 0;
     m_backBufferRTV.Release();
     m_videoWidth = 0;
     m_videoHeight = 0;
@@ -884,6 +966,10 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	m_allowTearing = IsTearingSupported();
 	m_swapChainFormat = GetSwapChainFormat();
 
+	if (m_externalPresentation) {
+		return EnsureD3D12CompletionFence();
+	}
+
 	DXGI_SWAP_CHAIN_DESC1 desc = {};
 	desc.Width = width;
 	desc.Height = height;
@@ -972,7 +1058,9 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         return E_POINTER;
     }
 
-    HRESULT hr = S_OK;
+    HRESULT hr = WaitForD3D12Presentation();
+    if (FAILED(hr)) return hr;
+    hr = S_OK;
     CComPtr<ID3D11Query> completionQuery;
     {
         ScopedDecoderMutex decoderLock(m_decoderMutex);
@@ -1037,7 +1125,7 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         return hr;
     }
 
-    if (overlay) {
+    if (overlay && !m_externalPresentation) {
         ScopedDecoderMutex decoderLock(m_decoderMutex);
         if (!decoderLock.Locked()) {
             return E_ACCESSDENIED;
@@ -1050,6 +1138,17 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
         if (FAILED(hr)) {
             return hr;
         }
+    }
+
+    if (m_externalPresentation) {
+        hr = m_d3d12Renderer.PresentD3D11Texture(
+            m_sharedOutputTexture, m_sharedOutputFence, m_sharedOutputFenceValue);
+        if (FAILED(hr)) {
+            if (m_d3d12Renderer.IsDeviceLost()) m_deviceLost = true;
+            return hr;
+        }
+        m_lastD3D12FenceValue = m_d3d12Renderer.GetCompletionFenceValue();
+        return S_OK;
     }
 
     hr = Present(0, 0);
