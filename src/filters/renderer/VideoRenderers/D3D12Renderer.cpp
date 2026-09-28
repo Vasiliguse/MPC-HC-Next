@@ -455,10 +455,11 @@ HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12R
     *resource = nullptr;
 
     CComPtr<ID3D11Device> textureDevice;
-    HRESULT hr = texture->GetDevice(&textureDevice);
-    if (FAILED(hr)) {
-        return hr;
+    texture->GetDevice(&textureDevice);
+    if (!textureDevice) {
+        return E_FAIL;
     }
+    HRESULT hr = S_OK;
 
     if (!IsAdapterCompatible(textureDevice)) {
         return DXGI_ERROR_UNSUPPORTED;
@@ -480,7 +481,7 @@ HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12R
     }
 
     HANDLE sharedHandle = nullptr;
-    sharedResource->CreateSharedHandle(
+    hr = sharedResource->CreateSharedHandle(
         nullptr,
         DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
         nullptr,
