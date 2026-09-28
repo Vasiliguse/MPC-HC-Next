@@ -69,4 +69,11 @@ private:
     bool m_tearingSupported = false;
     bool m_deviceLost = false;
     DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+    // Imported D3D11 resources/fences are cached and kept alive until the
+    // corresponding D3D12 GPU work has completed.
+    CComPtr<ID3D11Texture2D> m_sharedInputTexture;
+    CComPtr<ID3D12Resource> m_sharedInputResource;
+    CComPtr<ID3D11Fence> m_sharedInputFence;
+    CComPtr<ID3D12Fence> m_sharedFence;
 };
