@@ -463,6 +463,15 @@ HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12R
         return DXGI_ERROR_UNSUPPORTED;
     }
 
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    texture->GetDesc(&textureDesc);
+    if ((textureDesc.MiscFlags & D3D11_RESOURCE_MISC_SHARED_NTHANDLE) == 0) {
+        // D3D12::OpenSharedHandle consumes NT handles. Legacy D3D11 shared
+        // resources use the older GetSharedHandle path and cannot be passed
+        // to this importer safely.
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
     CComPtr<IDXGIResource1> sharedResource;
     hr = texture->QueryInterface(IID_PPV_ARGS(&sharedResource));
     if (FAILED(hr)) {
