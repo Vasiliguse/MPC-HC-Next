@@ -1415,10 +1415,10 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 				for (unsigned int i = 0; i < hdr10plus.num_windows; ++i) {
 					const auto& src = metadata->params[i];
 					auto& dst = hdr10plus.windows[i];
-					dst.upper_left_corner_x = static_cast<unsigned int>(std::llround(q2d(src.window_upper_left_corner_x) * 1000000.0));
-					dst.upper_left_corner_y = static_cast<unsigned int>(std::llround(q2d(src.window_upper_left_corner_y) * 1000000.0));
-					dst.lower_right_corner_x = static_cast<unsigned int>(std::llround(q2d(src.window_lower_right_corner_x) * 1000000.0));
-					dst.lower_right_corner_y = static_cast<unsigned int>(std::llround(q2d(src.window_lower_right_corner_y) * 1000000.0));
+					dst.upper_left_corner_x = static_cast<unsigned int>(std::llround(q2d(src.window_upper_left_corner_x) * std::max(0, pFrame->width - 1)));
+					dst.upper_left_corner_y = static_cast<unsigned int>(std::llround(q2d(src.window_upper_left_corner_y) * std::max(0, pFrame->height - 1)));
+					dst.lower_right_corner_x = static_cast<unsigned int>(std::llround(q2d(src.window_lower_right_corner_x) * std::max(0, pFrame->width - 1)));
+					dst.lower_right_corner_y = static_cast<unsigned int>(std::llround(q2d(src.window_lower_right_corner_y) * std::max(0, pFrame->height - 1)));
 					dst.center_of_ellipse_x = src.center_of_ellipse_x;
 					dst.center_of_ellipse_y = src.center_of_ellipse_y;
 					dst.rotation_angle = src.rotation_angle;
