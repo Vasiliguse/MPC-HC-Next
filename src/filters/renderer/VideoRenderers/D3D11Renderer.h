@@ -67,6 +67,8 @@ private:
     HRESULT EnsureSharedOutputTexture(UINT width, UINT height);
     HRESULT EnsureSharedOutputFence();
     HRESULT SignalSharedOutputFence();
+    HRESULT EnsureD3D12CompletionFence();
+    HRESULT WaitForD3D12Presentation();
     HRESULT CreateBackBufferViews();
     void ReleaseFrameResources();
     HRESULT DrainPendingFrames(bool waitForAll);
@@ -110,6 +112,8 @@ private:
     bool m_externalPresentation = false;
     HANDLE m_decoderMutex = nullptr;
     CD3D12Renderer m_d3d12Renderer;
+    CComPtr<ID3D11Fence> m_d3d12CompletionFence;
+    UINT64 m_lastD3D12FenceValue = 0;
     DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE m_inputColorSpace = {};
     DXGI_COLOR_SPACE_TYPE m_inputDxgiColorSpace = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
