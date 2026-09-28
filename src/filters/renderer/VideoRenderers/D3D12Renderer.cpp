@@ -246,7 +246,7 @@ HRESULT CD3D12Renderer::CreateFrameResources()
         return hr;
     }
 
-    hr = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+    hr = m_device->CreateFence(0, D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&m_fence));
     if (IsDeviceLostHr(hr)) {
         m_deviceLost = true;
     }
@@ -693,19 +693,53 @@ HRESULT CD3D12Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, ID3D11Fenc
         return E_INVALIDARG;
     }
 
-    CComPtr<ID3D12Resource> resource;
-    HRESULT hr = OpenSharedD3D11Texture(texture, &resource);
-    if (FAILED(hr)) {
-        return hr;
+    // A D3D11 output texture is reused by the next video-processor pass.
+    // Wait for the previous D3D12 submission before replacing the imported
+    // resource/fence references; this is the correctness baseline until the
+    // interop path gains a ring of shared output textures.
+    if (m_sharedInputTexture && m_sharedInputTexture.p != texture) {
+        HRESULT waitHr = WaitForGpu();
+        if (FAILED(waitHr)) {
+            return waitHr;
+        }
+        m_sharedInputTexture.Release();
+        m_sharedInputResource.Release();
+        m_sharedInputFence.Release();
+        m_sharedFence.Release();
     }
 
-    CComPtr<ID3D12Fence> sharedFence;
-    hr = OpenSharedD3D11Fence(fence, &sharedFence);
-    if (FAILED(hr)) {
-        return hr;
+    HRESULT hr = S_OK;
+    if (!m_sharedInputTexture) {
+        hr = OpenSharedD3D11Texture(texture, &m_sharedInputResource);
+        if (FAILED(hr)) {
+            return hr;
+        }
+        hr = OpenSharedD3D11Fence(fence, &m_sharedFence);
+        if (FAILED(hr)) {
+            m_sharedInputResource.Release();
+            return hr;
+        }
+        m_sharedInputTexture = texture;
+        m_sharedInputFence = fence;
     }
 
-    return PresentTexture(resource, D3D12_RESOURCE_STATE_COPY_SOURCE, sharedFence, fenceValue);
+    if (m_sharedInputFence.p != fence) {
+        HRESULT waitHr = WaitForGpu();
+        if (FAILED(waitHr)) {
+            return waitHr;
+        }
+        hr = OpenSharedD3D11Fence(fence, &m_sharedFence);
+        if (FAILED(hr)) {
+            return hr;
+        }
+        m_sharedInputFence = fence;
+    }
+
+    return PresentTexture(
+        m_sharedInputResource,
+        D3D12_RESOURCE_STATE_COPY_SOURCE,
+        m_sharedFence,
+        fenceValue);
 }
 
 HRESULT CD3D12Renderer::Present(UINT syncInterval) {
@@ -746,6 +780,11 @@ void CD3D12Renderer::ReleaseDevice() {
         CloseHandle(m_fenceEvent);
         m_fenceEvent = nullptr;
     }
+
+    m_sharedInputTexture.Release();
+    m_sharedInputResource.Release();
+    m_sharedInputFence.Release();
+    m_sharedFence.Release();
 
     m_swapChain.Release();
     m_commandQueue.Release();
