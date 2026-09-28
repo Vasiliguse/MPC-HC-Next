@@ -57,6 +57,7 @@ extern "C" {
 	#include <ExtLib/ffmpeg/libavutil/imgutils.h>
 	#include <ExtLib/ffmpeg/libavutil/mastering_display_metadata.h>
 	#include <ExtLib/ffmpeg/libavutil/dovi_meta.h>
+	#include <ExtLib/ffmpeg/libavutil/hdr_dynamic_metadata.h>
 	#include <ExtLib/ffmpeg/libavutil/opt.h>
 	namespace cuda {
 		#include <ExtLib/ffmpeg/libavutil/hwcontext_cuda_internal.h>
