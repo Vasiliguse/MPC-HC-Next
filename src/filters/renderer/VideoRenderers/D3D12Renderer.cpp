@@ -480,7 +480,7 @@ HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12R
     }
 
     HANDLE sharedHandle = nullptr;
-    hr = sharedResource->CreateSharedHandle(
+    sharedResource->CreateSharedHandle(
         nullptr,
         DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
         nullptr,
