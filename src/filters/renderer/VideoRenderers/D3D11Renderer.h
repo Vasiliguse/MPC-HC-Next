@@ -11,6 +11,7 @@
 #include "stdafx.h"
 #include "IAllocatorPresenter.h"
 #include "IMediaSampleD3D11.h"
+#include "D3D12Renderer.h"
 
 #include <d3d11.h>
 #include <d3d11_1.h>
@@ -106,7 +107,9 @@ private:
     OutputInfo m_output = {};
     bool m_allowTearing = false;
     bool m_deviceLost = false;
+    bool m_externalPresentation = false;
     HANDLE m_decoderMutex = nullptr;
+    CD3D12Renderer m_d3d12Renderer;
     DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE m_inputColorSpace = {};
     DXGI_COLOR_SPACE_TYPE m_inputDxgiColorSpace = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
