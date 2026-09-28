@@ -443,7 +443,8 @@ bool CD3D12Renderer::IsAdapterCompatible(ID3D11Device* device) const
         return false;
     }
 
-    return decoderDesc.AdapterLuid == rendererDesc.AdapterLuid;
+    return decoderDesc.AdapterLuid.HighPart == rendererDesc.AdapterLuid.HighPart
+        && decoderDesc.AdapterLuid.LowPart == rendererDesc.AdapterLuid.LowPart;
 }
 
 HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12Resource** resource)
