@@ -34,6 +34,8 @@ public:
     ID3D12CommandQueue* GetCommandQueue() const { return m_commandQueue; }
     IDXGISwapChain4* GetSwapChain() const { return m_swapChain; }
     DXGI_FORMAT GetSwapChainFormat() const { return m_swapChainFormat; }
+    ID3D12Fence* GetCompletionFence() const { return m_fence; }
+    UINT64 GetCompletionFenceValue() const { return m_fenceValue; }
 
 private:
     HRESULT CreateDeviceAndSwapChain();
