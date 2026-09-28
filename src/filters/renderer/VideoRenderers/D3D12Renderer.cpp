@@ -502,7 +502,41 @@ HRESULT CD3D12Renderer::OpenSharedD3D11Texture(ID3D11Texture2D* texture, ID3D12R
     return hr;
 }
 
-HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState)
+HRESULT CD3D12Renderer::OpenSharedD3D11Fence(ID3D11Fence* fence, ID3D12Fence** sharedFence)
+{
+    if (!fence || !sharedFence || !m_device) {
+        return E_INVALIDARG;
+    }
+    *sharedFence = nullptr;
+
+    CComPtr<ID3D11Device> fenceDevice;
+    fence->GetDevice(&fenceDevice);
+    if (!fenceDevice) {
+        return E_FAIL;
+    }
+    if (!IsAdapterCompatible(fenceDevice)) {
+        return DXGI_ERROR_UNSUPPORTED;
+    }
+
+    HANDLE sharedHandle = nullptr;
+    HRESULT hr = fence->CreateSharedHandle(
+        nullptr,
+        DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
+        nullptr,
+        &sharedHandle);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = m_device->OpenSharedHandle(sharedHandle, IID_PPV_ARGS(sharedFence));
+    CloseHandle(sharedHandle);
+    if (IsDeviceLostHr(hr)) {
+        m_deviceLost = true;
+    }
+    return hr;
+}
+
+HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_STATES sourceState, ID3D12Fence* waitFence, UINT64 waitValue)
 {
     if (!source || !m_swapChain || !m_device || !m_commandQueue ||
         m_commandAllocators.empty() || !m_commandList || !m_rtvHeap ||
@@ -615,6 +649,16 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
         return hr;
     }
 
+    if (waitFence) {
+        hr = m_commandQueue->Wait(waitFence, waitValue);
+        if (IsDeviceLostHr(hr)) {
+            m_deviceLost = true;
+        }
+        if (FAILED(hr)) {
+            return hr;
+        }
+    }
+
     ID3D12CommandList* lists[] = { m_commandList };
     m_commandQueue->ExecuteCommandLists(1, lists);
 
@@ -641,6 +685,27 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
     }
     m_frameFenceValues[m_frameIndex] = fenceValue;
     return S_OK;
+}
+
+HRESULT CD3D12Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, ID3D11Fence* fence, UINT64 fenceValue)
+{
+    if (!texture || !fence || fenceValue == 0) {
+        return E_INVALIDARG;
+    }
+
+    CComPtr<ID3D12Resource> resource;
+    HRESULT hr = OpenSharedD3D11Texture(texture, &resource);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    CComPtr<ID3D12Fence> sharedFence;
+    hr = OpenSharedD3D11Fence(fence, &sharedFence);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return PresentTexture(resource, D3D12_RESOURCE_STATE_COPY_SOURCE, sharedFence, fenceValue);
 }
 
 HRESULT CD3D12Renderer::Present(UINT syncInterval) {
