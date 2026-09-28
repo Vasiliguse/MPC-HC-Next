@@ -4599,3 +4599,797 @@ HRESULT CMPCVideoDecFilter::CreateDXVA2Decoder(LPDIRECT3DSURFACE9* ppDecoderRend
 	else {
 		CleanupDXVAVariables();
 		DLog(L"DXVA2 decoder creation failed with error %s", HR2Str(hr));
+	}
+
+	return hr;
+}
+
+HRESULT CMPCVideoDecFilter::ReinitDXVA2Decoder()
+{
+	HRESULT hr = E_FAIL;
+
+	m_pDXVADecoder.reset();
+	if (m_pDXVA2Allocator && IsDXVASupported(m_hwType == HwType::DXVA2) && SUCCEEDED(FindDecoderConfiguration())) {
+		hr = RecommitAllocator();
+	}
+
+	return hr;
+}
+
+HRESULT CMPCVideoDecFilter::InitAllocator(IMemAllocator **ppAlloc)
+{
+	if (UseDXVA2()) {
+		HRESULT hr = S_FALSE;
+		m_pDXVA2Allocator = new(std::nothrow) CVideoDecDXVAAllocator(this, &hr);
+		if (!m_pDXVA2Allocator) {
+			return E_OUTOFMEMORY;
+		}
+		if (FAILED(hr)) {
+			SAFE_DELETE(m_pDXVA2Allocator);
+			return hr;
+		}
+
+		// Return the IMemAllocator interface.
+		return m_pDXVA2Allocator->QueryInterface(IID_PPV_ARGS(ppAlloc));
+	} else {
+		return m_pD3D11Decoder->InitAllocator(ppAlloc);
+	}
+}
+
+HRESULT CMPCVideoDecFilter::RecommitAllocator()
+{
+	HRESULT hr = S_OK;
+
+	if (m_pDXVA2Allocator) {
+		// Re-Commit the allocator (creates surfaces and new decoder)
+		hr = m_pDXVA2Allocator->Decommit();
+		GetOutputPin()->GetConnected()->BeginFlush();
+		GetOutputPin()->GetConnected()->EndFlush();
+		if (m_pDXVA2Allocator->DecommitInProgress()) {
+			DLog(L"CMPCVideoDecFilter::RecommitAllocator() : WARNING! Flush had no effect, decommit of the allocator still not complete");
+		}
+
+		hr = m_pDXVA2Allocator->Commit();
+	}
+
+	return hr;
+}
+
+// ISpecifyPropertyPages2
+
+STDMETHODIMP CMPCVideoDecFilter::GetPages(CAUUID* pPages)
+{
+	CheckPointer(pPages, E_POINTER);
+
+#ifdef REGISTER_FILTER
+	pPages->cElems    = 2;
+#else
+	pPages->cElems    = 1;
+#endif
+	pPages->pElems    = (GUID*)CoTaskMemAlloc(sizeof(GUID) * pPages->cElems);
+	pPages->pElems[0] = __uuidof(CMPCVideoDecSettingsWnd);
+#ifdef REGISTER_FILTER
+	pPages->pElems[1] = __uuidof(CMPCVideoDecCodecWnd);
+#endif
+
+	return S_OK;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::CreatePage(const GUID& guid, IPropertyPage** ppPage)
+{
+	CheckPointer(ppPage, E_POINTER);
+
+	if (*ppPage != nullptr) {
+		return E_INVALIDARG;
+	}
+
+	HRESULT hr;
+
+	if (guid == __uuidof(CMPCVideoDecSettingsWnd)) {
+		(*ppPage = DNew CInternalPropertyPageTempl<CMPCVideoDecSettingsWnd>(nullptr, &hr))->AddRef();
+	}
+#ifdef REGISTER_FILTER
+	else if (guid == __uuidof(CMPCVideoDecCodecWnd)) {
+		(*ppPage = DNew CInternalPropertyPageTempl<CMPCVideoDecCodecWnd>(nullptr, &hr))->AddRef();
+	}
+#endif
+
+	return *ppPage ? S_OK : E_FAIL;
+}
+
+// EVR functions
+HRESULT CMPCVideoDecFilter::DetectVideoCard_EVR(IPin *pPin)
+{
+	IMFGetService* pGetService;
+	HRESULT hr = pPin->QueryInterface(IID_PPV_ARGS(&pGetService));
+	if (SUCCEEDED(hr)) {
+		// Try to get the adapter description of the active DirectX 9 device.
+		IDirect3DDeviceManager9* pDevMan9;
+		hr = pGetService->GetService(MR_VIDEO_ACCELERATION_SERVICE, IID_PPV_ARGS(&pDevMan9));
+		if (SUCCEEDED(hr)) {
+			HANDLE hDevice;
+			hr = pDevMan9->OpenDeviceHandle(&hDevice);
+			if (SUCCEEDED(hr)) {
+				IDirect3DDevice9* pD3DDev9;
+				hr = pDevMan9->LockDevice(hDevice, &pD3DDev9, TRUE);
+				if (hr == DXVA2_E_NEW_VIDEO_DEVICE) {
+					// Invalid device handle. Try to open a new device handle.
+					hr = pDevMan9->CloseDeviceHandle(hDevice);
+					if (SUCCEEDED(hr)) {
+						hr = pDevMan9->OpenDeviceHandle(&hDevice);
+						// Try to lock the device again.
+						if (SUCCEEDED(hr)) {
+							hr = pDevMan9->LockDevice(hDevice, &pD3DDev9, TRUE);
+						}
+					}
+				}
+				if (SUCCEEDED(hr)) {
+					D3DDEVICE_CREATION_PARAMETERS DevPar9;
+					hr = pD3DDev9->GetCreationParameters(&DevPar9);
+					if (SUCCEEDED(hr)) {
+						IDirect3D9* pD3D9;
+						hr = pD3DDev9->GetDirect3D(&pD3D9);
+						if (SUCCEEDED(hr)) {
+							D3DADAPTER_IDENTIFIER9 AdapID9;
+							hr = pD3D9->GetAdapterIdentifier(DevPar9.AdapterOrdinal, 0, &AdapID9);
+							if (SUCCEEDED(hr)) {
+								// copy adapter description
+								m_nPCIVendor         = AdapID9.VendorId;
+								m_nPCIDevice         = AdapID9.DeviceId;
+								m_VideoDriverVersion = AdapID9.DriverVersion.QuadPart;
+								if (SysVersion::IsWin81orLater() && (m_VideoDriverVersion & 0xffff00000000) == 0 && (m_VideoDriverVersion & 0xffff) == 0) {
+									// fix bug in GetAdapterIdentifier()
+									m_VideoDriverVersion = (m_VideoDriverVersion & 0xffff000000000000) | ((m_VideoDriverVersion & 0xffff0000) << 16) | 0xffffffff;
+								}
+								m_strDeviceDescription.Format(L"%hs (%04X:%04X)", AdapID9.Description, m_nPCIVendor, m_nPCIDevice);
+							}
+						}
+						pD3D9->Release();
+					}
+					pD3DDev9->Release();
+					pDevMan9->UnlockDevice(hDevice, FALSE);
+				}
+				pDevMan9->CloseDeviceHandle(hDevice);
+			}
+			pDevMan9->Release();
+		}
+		pGetService->Release();
+	}
+	return hr;
+}
+
+HRESULT CMPCVideoDecFilter::SetFFMpegCodec(int nCodec, bool bEnabled)
+{
+	CAutoLock cAutoLock(&m_csProps);
+
+	if (nCodec < 0 || nCodec >= VDEC_COUNT) {
+		return E_FAIL;
+	}
+
+	m_VideoFilters[nCodec] = bEnabled;
+	return S_OK;
+}
+
+// IFFmpegDecFilter
+STDMETHODIMP CMPCVideoDecFilter::SaveSettings()
+{
+#ifdef REGISTER_FILTER
+	CRegKey key;
+	if (ERROR_SUCCESS == key.Create(HKEY_CURRENT_USER, OPT_REGKEY_VideoDec)) {
+		key.SetDWORDValue(OPT_ThreadNumber, m_nThreadNumber);
+		key.SetDWORDValue(OPT_DiscardMode, m_nDiscardMode);
+		key.SetDWORDValue(OPT_ScanType, (int)m_nScanType);
+		key.SetDWORDValue(OPT_ARMode, m_nARMode);
+		for (int i = 0; i < HWCodec_count; i++) {
+			key.SetDWORDValue(hwdec_opt_names[i], m_bHwCodecs[i]);
+		}
+		key.SetDWORDValue(OPT_HwDecoder, m_nHwDecoder);
+		CStringW str;
+		str.Format(L"%04X:%04X", m_HwAdapter.VendorId, m_HwAdapter.DeviceId);
+		key.SetStringValue(OPT_HwAdapter, str);
+		key.SetDWORDValue(OPT_DXVACheck, m_nDXVACheckCompatibility);
+		key.SetDWORDValue(OPT_DisableDXVA_SD, m_nDXVA_SD);
+
+		for (int i = 0; i < PixFmt_count; i++) {
+			CString optname = OPT_SW_prefix;
+			optname += GetSWOF(i)->desc.name;
+			key.SetDWORDValue(optname, m_fPixFmts[i]);
+		}
+		key.SetDWORDValue(OPT_SwConvertToRGB, m_bSwConvertToRGB);
+		key.SetDWORDValue(OPT_SwRGBLevels, m_nSwRGBLevels);
+	}
+	if (ERROR_SUCCESS == key.Create(HKEY_CURRENT_USER, OPT_REGKEY_VCodecs)) {
+		for (size_t i = 0; i < std::size(vcodecs); i++) {
+			DWORD dw = m_nActiveCodecs & vcodecs[i].flag ? 1 : 0;
+			key.SetDWORDValue(vcodecs[i].opt_name, dw);
+		}
+	}
+#else
+	CProfile& profile = AfxGetProfile();
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_ThreadNumber, m_nThreadNumber);
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_DiscardMode, m_nDiscardMode);
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_ScanType, (int)m_nScanType);
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_ARMode, m_nARMode);
+	for (int i = 0; i < HWCodec_count; i++) {
+		profile.WriteInt(OPT_SECTION_VideoDec, hwdec_opt_names[i], m_bHwCodecs[i]);
+	}
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_HwDecoder, m_nHwDecoder);
+	CStringW str;
+	str.Format(L"%04X:%04X", m_HwAdapter.VendorId, m_HwAdapter.DeviceId);
+	profile.WriteString(OPT_SECTION_VideoDec, OPT_HwAdapter, str);
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_DXVACheck, m_nDXVACheckCompatibility);
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_DisableDXVA_SD, m_nDXVA_SD);
+	profile.WriteBool(OPT_SECTION_VideoDec, OPT_SwConvertToRGB, m_bSwConvertToRGB);
+	profile.WriteInt(OPT_SECTION_VideoDec, OPT_SwRGBLevels, m_nSwRGBLevels);
+	for (int i = 0; i < PixFmt_count; i++) {
+		CString optname = OPT_SW_prefix;
+		optname += GetSWOF(i)->desc.name;
+		profile.WriteBool(OPT_SECTION_VideoDec, optname, m_fPixFmts[i]);
+	}
+#endif
+
+	return S_OK;
+}
+
+// === IMPCVideoDecFilter
+
+STDMETHODIMP CMPCVideoDecFilter::SetThreadNumber(int nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nThreadNumber = nValue;
+	return S_OK;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetThreadNumber()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nThreadNumber;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetDiscardMode(int nValue)
+{
+	if (nValue != AVDISCARD_DEFAULT && nValue != AVDISCARD_NONREF) {
+		return E_INVALIDARG;
+	}
+
+	CAutoLock cAutoLock(&m_csProps);
+	m_nDiscardMode = nValue;
+
+	if (m_pAVCtx) {
+		m_pAVCtx->skip_frame = (AVDiscard)m_nDiscardMode;
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetDiscardMode()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nDiscardMode;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetScanType(MPC_SCAN_TYPE nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nScanType = nValue;
+	return S_OK;
+}
+
+STDMETHODIMP_(MPC_SCAN_TYPE) CMPCVideoDecFilter::GetScanType()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nScanType;
+}
+
+STDMETHODIMP_(GUID*) CMPCVideoDecFilter::GetDXVADecoderGuid()
+{
+	return m_pGraph ? (m_pDXVADecoder ? &m_DXVADecoderGUID : (m_hwType == HwType::D3D11 && m_pD3D11Decoder ? m_pD3D11Decoder->GetDecoderGuid() : nullptr)) : nullptr;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetActiveCodecs(ULONGLONG nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nActiveCodecs = nValue;
+	return S_OK;
+}
+
+STDMETHODIMP_(ULONGLONG) CMPCVideoDecFilter::GetActiveCodecs()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nActiveCodecs;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetARMode(int nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nARMode = nValue;
+	return S_OK;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetARMode()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nARMode;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetHwCodec(MPCHwCodec hwcodec, bool enable)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	if (hwcodec < 0 || hwcodec >= HWCodec_count) {
+		return E_INVALIDARG;
+	}
+
+	m_bHwCodecs[hwcodec] = enable;
+	return S_OK;
+}
+
+STDMETHODIMP_(bool) CMPCVideoDecFilter::GetHwCodec(MPCHwCodec hwcodec)
+{
+	CAutoLock cAutoLock(&m_csProps);
+
+	if (hwcodec < 0 || hwcodec >= HWCodec_count) {
+		return false;
+	}
+
+	return m_bHwCodecs[hwcodec];
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetHwDecoder(int value)
+{
+	CAutoLock cAutoLock(&m_csProps);
+
+	if (value < 0 || value >= HWDec_count) {
+		return E_INVALIDARG;
+	}
+	m_nHwDecoder = (MPCHwDecoder)value;
+	return S_OK;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetHwDecoder()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nHwDecoder;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetDXVACheckCompatibility(int nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nDXVACheckCompatibility = nValue;
+	return S_OK;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetDXVACheckCompatibility()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nDXVACheckCompatibility;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetDXVA_SD(int nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nDXVA_SD = nValue;
+	return S_OK;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetDXVA_SD()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nDXVA_SD;
+}
+
+// === New swscaler options
+STDMETHODIMP CMPCVideoDecFilter::SetSwRefresh(int nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+
+	if (nValue &&
+			((m_pAVCtx && m_nDecoderMode == MODE_SOFTWARE) || m_pMSDKDecoder)) {
+		ChangeOutputMediaFormat(nValue);
+	}
+	return S_OK;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetSwPixelFormat(MPCPixelFormat pf, bool enable)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	if (pf < 0 || pf >= PixFmt_count) {
+		return E_INVALIDARG;
+	}
+
+	m_fPixFmts[pf] = enable;
+	return S_OK;
+}
+
+STDMETHODIMP_(bool) CMPCVideoDecFilter::GetSwPixelFormat(MPCPixelFormat pf)
+{
+	CAutoLock cAutoLock(&m_csProps);
+
+	if (pf < 0 || pf >= PixFmt_count) {
+		return false;
+	}
+
+	return m_fPixFmts[pf];
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetSwConvertToRGB(bool enable)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_bSwConvertToRGB = enable;
+	return S_OK;
+}
+
+STDMETHODIMP_(bool) CMPCVideoDecFilter::GetSwConvertToRGB()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_bSwConvertToRGB;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetSwRGBLevels(int nValue)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_nSwRGBLevels = nValue;
+	return S_OK;
+}
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetSwRGBLevels()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_nSwRGBLevels;
+}
+
+STDMETHODIMP_(int) CMPCVideoDecFilter::GetColorSpaceConversion()
+{
+	CAutoLock cAutoLock(&m_csProps);
+
+	if (!m_pAVCtx) {
+		return -1; // no decoder
+	}
+
+	if (m_nDecoderMode != MODE_SOFTWARE || m_pAVCtx->pix_fmt == AV_PIX_FMT_NONE || m_FormatConverter.GetOutPixFormat() == PixFmt_None) {
+		return -2; // no conversion
+	}
+
+	const AVPixFmtDescriptor* av_pfdesc = av_pix_fmt_desc_get(m_pAVCtx->pix_fmt);
+	if (!av_pfdesc) {
+		return -2;
+	}
+	bool in_rgb		= !!(av_pfdesc->flags & (AV_PIX_FMT_FLAG_RGB|AV_PIX_FMT_FLAG_PAL));
+	bool out_rgb	= (m_FormatConverter.GetOutPixFormat() == PixFmt_RGB32 || m_FormatConverter.GetOutPixFormat() == PixFmt_RGB48);
+	if (in_rgb < out_rgb) {
+		return 1; // YUV->RGB conversion
+	}
+	if (in_rgb > out_rgb) {
+		return 2; // RGB->YUV conversion
+	}
+
+	return 0; // YUV->YUV or RGB->RGB conversion
+}
+
+STDMETHODIMP CMPCVideoDecFilter::GetD3D11Adapter(MPC_ADAPTER_ID* pAdapterId)
+{
+	CAutoLock cLock(&m_csInitDec);
+	CheckPointer(pAdapterId, E_FAIL);
+
+	pAdapterId->VendorId = m_HwAdapter.VendorId;
+	pAdapterId->DeviceId = m_HwAdapter.DeviceId;
+
+	return S_OK;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetD3D11Adapter(UINT VendorId, UINT DeviceId)
+{
+	CAutoLock cLock(&m_csInitDec);
+
+	m_HwAdapter.VendorId = VendorId;
+	m_HwAdapter.DeviceId = DeviceId;
+
+	return S_OK;
+}
+
+STDMETHODIMP_(CString) CMPCVideoDecFilter::GetInformation(MPCInfo index)
+{
+	CAutoLock cLock(&m_csInitDec);
+
+	CString infostr;
+
+	switch (index) {
+		case INFO_MPCVersion:
+			infostr.SetString(MPC_VERSION_WSTR);
+			break;
+		case INFO_InputFormat:
+			if (m_pAVCtx) {
+				const auto& pix_fmt = (m_pAVCtx->sw_pix_fmt != AV_PIX_FMT_NONE) ? m_pAVCtx->sw_pix_fmt : m_pAVCtx->pix_fmt;
+
+				infostr = m_pAVCtx->codec_descriptor->name;
+				if (m_pAVCtx->codec_id == AV_CODEC_ID_RAWVIDEO) {
+					infostr.AppendFormat(L" '%s'", FourccToWStr(m_pAVCtx->codec_tag));
+				}
+				if (const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(pix_fmt)) {
+					if (desc->flags & AV_PIX_FMT_FLAG_PAL) {
+						infostr.Append(L", palettized RGB");
+					}
+					else if (desc->nb_components == 1 || desc->nb_components == 2) {
+						infostr.AppendFormat(L", Gray %d-bit", GetLumaBits(pix_fmt));
+					}
+					else if(desc->flags & AV_PIX_FMT_FLAG_RGB) {
+						int bidepth = 0;
+						for (int i = 0; i < desc->nb_components; i++) {
+							bidepth += desc->comp[i].depth;
+						}
+						infostr.Append(desc->flags & AV_PIX_FMT_FLAG_ALPHA ? L", RGBA" : L", RGB");
+						infostr.AppendFormat(L" %dbpp", bidepth);
+					}
+					else if (desc->nb_components == 0) {
+						// unknown
+					} else {
+						infostr.Append(desc->flags & AV_PIX_FMT_FLAG_ALPHA ? L", YUVA" : L", YUV");
+						infostr.AppendFormat(L" %d-bit %s", GetLumaBits(pix_fmt), GetChromaSubsamplingStr(pix_fmt));
+						if (desc->name && !strncmp(desc->name, "yuvj", 4)) {
+							infostr.Append(L" full range");
+						}
+					}
+				}
+			} else if (m_pMSDKDecoder) {
+				infostr = L"h264(MVC 3D), YUV 8-bit, 4:2:0";
+			}
+			break;
+		case INFO_FrameSize:
+			if (m_win && m_hin) {
+				__int64 sarx = (__int64)m_arx * m_hin;
+				__int64 sary = (__int64)m_ary * m_win;
+				ReduceDim(sarx, sary);
+				infostr.Format(L"%dx%d, SAR %d:%d, DAR %d:%d", m_win, m_hin, (int)sarx, (int)sary, m_arx, m_ary);
+			}
+			break;
+		case INFO_OutputFormat:
+			if (GUID* DxvaGuid = GetDXVADecoderGuid()) {
+				infostr.Format(L"%s (%s)", UseDXVA2() ? L"DXVA2" : L"D3D11", GetDXVAModeString(*DxvaGuid));
+				break;
+			}
+			switch (m_hwType) {
+				case HwType::D3D11CopyBack: infostr = L"D3D11 Copy-back: "; break;
+				case HwType::D3D12CopyBack: infostr = L"D3D12 Copy-back: "; break;
+				case HwType::NVDEC:         infostr = L"NVDEC: ";           break;
+			}
+			if (const SW_OUT_FMT* swof = GetSWOF(m_FormatConverter.GetOutPixFormat())) {
+				infostr.AppendFormat(L"%s (%d-bit %s)", swof->desc.name, swof->desc.cdepth, GetChromaSubsamplingStr(swof->av_pix_fmt));
+			}
+			break;
+		case INFO_GraphicsAdapter:
+			infostr = m_strDeviceDescription;
+			break;
+	}
+
+	return infostr;
+}
+
+// IExFilterConfig
+
+STDMETHODIMP CMPCVideoDecFilter::Flt_GetInt(LPCSTR field, int* value)
+{
+	CheckPointer(value, E_POINTER);
+
+	if (!strcmp(field, "decode_mode")) {
+		CAutoLock cLock(&m_csInitDec);
+
+		if (m_nDecoderMode == MODE_SOFTWARE && !m_bUseFFmpeg) {
+			*value = MODE_NONE;
+		} else {
+			*value = m_nDecoderMode;
+		}
+		return S_OK;
+	}
+
+	if (!strcmp(field, "decode_mode_mvc")) {
+		// 0 - no, 1 - software decode, 2 - h/w decode
+		*value = (m_pMSDKDecoder ? 1 + m_pMSDKDecoder->GetHwAcceleration() : 0);
+		return S_OK;
+	}
+
+	return E_INVALIDARG;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::Flt_GetInt64(LPCSTR field, __int64 *value)
+{
+	CheckPointer(value, E_POINTER);
+
+	if (!strcmp(field, "version")) {
+		*value  = ((uint64_t)MPC_VERSION_MAJOR << 48)
+			| ((uint64_t)MPC_VERSION_MINOR << 32)
+			| ((uint64_t)MPC_VERSION_PATCH << 16)
+			| ((uint64_t)MPC_VERSION_REV);
+		return S_OK;
+	}
+
+	return E_INVALIDARG;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::Flt_GetString(LPCSTR field, LPWSTR* value, unsigned* chars)
+{
+	// experimental !
+
+	if (!strcmp(field, "input_format")) {
+		CStringW ret = GetInformation(INFO_InputFormat);
+
+		int len = ret.GetLength();
+		size_t sz = (len + 1) * sizeof(WCHAR);
+		LPWSTR buf = (LPWSTR)LocalAlloc(LPTR, sz);
+
+		if (!buf) {
+			return E_OUTOFMEMORY;
+		}
+
+		wcscpy_s(buf, len + 1, ret);
+		*chars = len;
+		*value = buf;
+
+		return S_OK;
+	}
+
+	if (!strcmp(field, "output_format")) {
+		CStringW ret = GetInformation(INFO_OutputFormat);
+
+		int len = ret.GetLength();
+		size_t sz = (len + 1) * sizeof(WCHAR);
+		LPWSTR buf = (LPWSTR)LocalAlloc(LPTR, sz);
+
+		if (!buf) {
+			return E_OUTOFMEMORY;
+		}
+
+		wcscpy_s(buf, len + 1, ret);
+		*chars = len;
+		*value = buf;
+
+		return S_OK;
+	}
+
+	return E_INVALIDARG;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::Flt_SetBool(LPCSTR field, bool value)
+{
+	if (strcmp(field, "hw_decoding") == 0) {
+		CAutoLock cLock(&m_csInitDec);
+
+		m_bEnableHwDecoding = value;
+		return S_OK;
+	}
+
+	return E_INVALIDARG;
+}
+
+STDMETHODIMP CMPCVideoDecFilter::Flt_SetInt(LPCSTR field, int value)
+{
+	if (strcmp(field, "mvc_mode") == 0) {
+		CAutoLock cLock(&m_csInitDec);
+
+		int nMode = value >> 16;
+		bool bSwapLR = (value & 1);
+
+		if (nMode < 0 || nMode > MVC_OUTPUT_TopBottom) {
+			return E_INVALIDARG;
+		}
+		m_iMvcOutputMode = nMode;
+		m_bMvcSwapLR = bSwapLR;
+
+		if (m_pMSDKDecoder) {
+			m_pMSDKDecoder->SetOutputMode(nMode, bSwapLR);
+		}
+
+		return S_OK;
+	}
+
+	return E_INVALIDARG;
+}
+
+//
+
+HRESULT CMPCVideoDecFilter::CheckDXVA2Decoder(AVCodecContext *c)
+{
+	CheckPointer(m_pAVCtx, E_POINTER);
+
+	HRESULT hr = S_OK;
+
+	if (m_pDXVADecoder) {
+		if ((m_nSurfaceWidth != FFALIGN(c->coded_width, m_nAlign) || m_nSurfaceHeight != FFALIGN(c->coded_height, m_nAlign))
+				|| ((m_CodecId == AV_CODEC_ID_HEVC || m_CodecId == AV_CODEC_ID_VP9) && m_dxva_pix_fmt != m_pAVCtx->sw_pix_fmt)) {
+			const int depth = GetLumaBits(m_pAVCtx->sw_pix_fmt);
+			const bool bHighBitdepth = (depth == 10) && ((m_CodecId == AV_CODEC_ID_HEVC && m_pAVCtx->profile == AV_PROFILE_HEVC_MAIN_10)
+														  || (m_CodecId == AV_CODEC_ID_VP9 && m_pAVCtx->profile == AV_PROFILE_VP9_2));
+
+			const bool bBitdepthChanged = (m_bHighBitdepth != bHighBitdepth);
+
+			m_nSurfaceWidth = FFALIGN(c->coded_width, m_nAlign);
+			m_nSurfaceHeight = FFALIGN(c->coded_height, m_nAlign);
+			m_bHighBitdepth = bHighBitdepth;
+
+			avcodec_flush_buffers(c);
+			if (SUCCEEDED(hr = FindDecoderConfiguration())) {
+				if (bBitdepthChanged) {
+					ChangeOutputMediaFormat(2);
+				}
+				hr = RecommitAllocator();
+			}
+
+			if (FAILED(hr)) {
+				m_bFailDXVA2Decode = TRUE;
+			} else {
+				m_dxva_pix_fmt = m_pAVCtx->sw_pix_fmt;
+			}
+		}
+	}
+
+	return hr;
+}
+
+int CMPCVideoDecFilter::av_get_buffer(struct AVCodecContext *c, AVFrame *pic, int flags)
+{
+	CMPCVideoDecFilter* pFilter = static_cast<CMPCVideoDecFilter*>(c->opaque);
+	CheckPointer(pFilter->m_pDXVADecoder, -1);
+	if (!pFilter->CheckDXVACompatible(c->codec_id, c->sw_pix_fmt, c->profile)) {
+		pFilter->m_bDXVACompatible = false;
+		return -1;
+	}
+
+	if (FAILED(pFilter->CheckDXVA2Decoder(c))) {
+		return -1;
+	}
+
+	return pFilter->m_pDXVADecoder->get_buffer_dxva(pic);
+}
+
+enum AVPixelFormat CMPCVideoDecFilter::av_get_format(struct AVCodecContext *c, const enum AVPixelFormat * pix_fmts)
+{
+	CMPCVideoDecFilter* pFilter = static_cast<CMPCVideoDecFilter*>(c->opaque);
+	const enum AVPixelFormat *p;
+	for (p = pix_fmts; *p != -1; p++) {
+		const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(*p);
+
+		if (!desc || !(desc->flags & AV_PIX_FMT_FLAG_HWACCEL))
+			break;
+
+		if (*p == AV_PIX_FMT_DXVA2_VLD) {
+			if (FAILED(pFilter->CheckDXVA2Decoder(c))) {
+				continue;
+			}
+			break;
+		} else if (*p == pFilter->m_HWPixFmt) {
+			return *p;
+		}
+	}
+
+	return *p;
+}
+
+// CVideoDecOutputPin
+
+CVideoDecOutputPin::CVideoDecOutputPin(LPCWSTR pObjectName, CBaseVideoFilter* pFilter, HRESULT* phr, LPCWSTR pName)
+	: CBaseVideoOutputPin(pObjectName, pFilter, phr, pName)
+	, m_pVideoDecFilter(static_cast<CMPCVideoDecFilter*>(pFilter))
+{
+}
+
+CVideoDecOutputPin::~CVideoDecOutputPin()
+{
+}
+
+HRESULT CVideoDecOutputPin::InitAllocator(IMemAllocator **ppAlloc)
+{
+	if (m_pVideoDecFilter && (m_pVideoDecFilter->UseDXVA2() || m_pVideoDecFilter->UseD3D11())) {
+		return m_pVideoDecFilter->InitAllocator(ppAlloc);
+	}
+
+	return __super::InitAllocator(ppAlloc);
+}
+
+namespace MPCVideoDec {
+	void GetSupportedFormatList(FORMATS& fmts)
+	{
+		fmts.clear();
+
+		for (size_t i = 0; i < std::size(sudPinTypesIn); i++) {
+			FORMAT fmt = { sudPinTypesIn[i].clsMajorType, ffCodecs[i].clsMinorType, ffCodecs[i].FFMPEGCode};
+			fmts.push_back(fmt);
+		}
+	}
+} // namespace MPCVideoDec
