@@ -1078,11 +1078,20 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     hr = m_videoDevice->CreateVideoProcessorInputView(texture, m_videoProcessorEnumerator, &inputDesc, &inputView);
     if (FAILED(hr)) return hr;
 
+    hr = EnsureSharedOutputTexture(outputDesc2D.Width, outputDesc2D.Height);
+    if (FAILED(hr)) {
+        m_sharedOutputTexture.Release();
+    }
+
+    ID3D11Texture2D* processorTarget = m_sharedOutputTexture
+        ? m_sharedOutputTexture.p
+        : backBuffer.p;
+
     CComPtr<ID3D11VideoProcessorOutputView> outputView;
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputDesc = {};
     outputDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
     outputDesc.Texture2D.MipSlice = 0;
-    hr = m_videoDevice->CreateVideoProcessorOutputView(backBuffer, m_videoProcessorEnumerator, &outputDesc, &outputView);
+    hr = m_videoDevice->CreateVideoProcessorOutputView(processorTarget, m_videoProcessorEnumerator, &outputDesc, &outputView);
     if (FAILED(hr)) return hr;
 
     // The video processor owns the back-buffer write. Any prior render-target
@@ -1166,7 +1175,14 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
         m_videoContext->VideoProcessorSetOutputColorSpace(m_videoProcessor, &outputColorSpace);
     }
 
-    return m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
+    hr = m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
+    if (FAILED(hr)) return hr;
+
+    if (m_sharedOutputTexture) {
+        m_context->CopyResource(backBuffer, m_sharedOutputTexture);
+    }
+
+    return S_OK;
 }
 
 HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
