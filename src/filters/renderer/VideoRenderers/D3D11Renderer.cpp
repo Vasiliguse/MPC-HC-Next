@@ -565,6 +565,7 @@ void CD3D11Renderer::ReleaseFrameResources()
     m_videoProcessor.Release();
     m_videoProcessorEnumerator.Release();
     m_videoProcessorEnumerator1.Release();
+    m_sharedOutputTexture.Release();
     m_backBufferRTV.Release();
     m_videoWidth = 0;
     m_videoHeight = 0;
