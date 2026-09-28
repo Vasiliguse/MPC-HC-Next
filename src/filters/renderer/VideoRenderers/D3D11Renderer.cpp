@@ -964,11 +964,14 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	m_context->QueryInterface(IID_PPV_ARGS(&m_videoContext1));
 
 	m_allowTearing = IsTearingSupported();
-	m_swapChainFormat = GetSwapChainFormat();
 
 	if (m_externalPresentation) {
+		m_output = m_d3d12Renderer.GetOutputInfo();
+		m_swapChainFormat = GetSwapChainFormat();
 		return EnsureD3D12CompletionFence();
 	}
+
+	m_swapChainFormat = GetSwapChainFormat();
 
 	DXGI_SWAP_CHAIN_DESC1 desc = {};
 	desc.Width = width;
@@ -1173,7 +1176,7 @@ HRESULT CD3D11Renderer::PresentMediaSample(IMediaSample* sample, const std::func
 
 HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT arraySlice, D3D11_VIDEO_FRAME_FORMAT frameFormat)
 {
-    if (!texture || !m_swapChain || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
+    if (!texture || (!m_swapChain && !m_externalPresentation) || !m_context || !m_videoDevice || !m_videoContext) return E_INVALIDARG;
 
     ScopedDecoderMutex decoderLock(m_decoderMutex);
     if (!decoderLock.Locked()) {
@@ -1204,11 +1207,23 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     if (!textureDesc.Width || !textureDesc.Height) return E_INVALIDARG;
 
     CComPtr<ID3D11Texture2D> backBuffer;
-    HRESULT hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-    if (FAILED(hr)) return hr;
-
     D3D11_TEXTURE2D_DESC outputDesc2D = {};
-    backBuffer->GetDesc(&outputDesc2D);
+    HRESULT hr = S_OK;
+
+    if (m_externalPresentation) {
+        RECT clientRect = {};
+        if (!::GetClientRect(m_hWnd, &clientRect)) {
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+        outputDesc2D.Width = std::max<LONG>(1, clientRect.right - clientRect.left);
+        outputDesc2D.Height = std::max<LONG>(1, clientRect.bottom - clientRect.top);
+        outputDesc2D.Format = m_swapChainFormat;
+    } else {
+        hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+        if (FAILED(hr)) return hr;
+        backBuffer->GetDesc(&outputDesc2D);
+    }
+
     if (!outputDesc2D.Width || !outputDesc2D.Height) return E_INVALIDARG;
 
     hr = EnsureVideoProcessor(frameFormat, textureDesc.Format, textureDesc.Width, textureDesc.Height,
@@ -1232,11 +1247,10 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     hr = EnsureSharedOutputTexture(outputDesc2D.Width, outputDesc2D.Height);
     if (FAILED(hr)) {
         m_sharedOutputTexture.Release();
+        return hr;
     }
 
-    ID3D11Texture2D* processorTarget = m_sharedOutputTexture
-        ? m_sharedOutputTexture.p
-        : backBuffer.p;
+    ID3D11Texture2D* processorTarget = m_sharedOutputTexture.p;
 
     CComPtr<ID3D11VideoProcessorOutputView> outputView;
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputDesc = {};
@@ -1329,9 +1343,11 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
     hr = m_videoContext->VideoProcessorBlt(m_videoProcessor, outputView, 0, 1, &stream);
     if (FAILED(hr)) return hr;
 
-    if (m_sharedOutputTexture) {
+    if (!m_externalPresentation && backBuffer) {
         m_context->CopyResource(backBuffer, m_sharedOutputTexture);
+    }
 
+    if (m_sharedOutputTexture) {
         hr = EnsureSharedOutputFence();
         if (FAILED(hr)) {
             return hr;
@@ -1348,12 +1364,27 @@ HRESULT CD3D11Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, UINT array
 
 HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
 {
-    if (!m_swapChain) {
-        return E_UNEXPECTED;
-    }
-
     if (!width || !height) {
         return S_FALSE;
+    }
+
+    if (m_externalPresentation) {
+        ScopedDecoderMutex decoderLock(m_decoderMutex);
+        if (!decoderLock.Locked()) return E_ACCESSDENIED;
+
+        HRESULT hr = WaitForD3D12Presentation();
+        if (FAILED(hr)) return hr;
+
+        ReleaseFrameResources();
+        hr = m_d3d12Renderer.Resize(width, height);
+        if (FAILED(hr)) {
+            if (m_d3d12Renderer.IsDeviceLost()) m_deviceLost = true;
+            return hr;
+        }
+
+        m_output = m_d3d12Renderer.GetOutputInfo();
+        m_swapChainFormat = GetSwapChainFormat();
+        return EnsureD3D12CompletionFence();
     }
 
     ScopedDecoderMutex decoderLock(m_decoderMutex);
