@@ -522,6 +522,41 @@ HRESULT CD3D11Renderer::CreateBackBufferViews()
     return S_OK;
 }
 
+HRESULT CD3D11Renderer::EnsureSharedOutputTexture(UINT width, UINT height)
+{
+    if (!m_device || width == 0 || height == 0) {
+        return E_INVALIDARG;
+    }
+
+    if (m_sharedOutputTexture) {
+        D3D11_TEXTURE2D_DESC current = {};
+        m_sharedOutputTexture->GetDesc(&current);
+        if (current.Width == width && current.Height == height && current.Format == m_swapChainFormat) {
+            return S_OK;
+        }
+        m_sharedOutputTexture.Release();
+    }
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = m_swapChainFormat;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+    desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
+
+    HRESULT hr = m_device->CreateTexture2D(&desc, nullptr, &m_sharedOutputTexture);
+    if (FAILED(hr)) {
+        m_sharedOutputTexture.Release();
+        return hr;
+    }
+
+    return S_OK;
+}
+
 void CD3D11Renderer::ReleaseFrameResources()
 {
     DrainPendingFrames(true);
