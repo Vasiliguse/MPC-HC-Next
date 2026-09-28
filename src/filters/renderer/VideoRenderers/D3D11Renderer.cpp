@@ -154,7 +154,11 @@ HRESULT CD3D11Renderer::Initialize(HWND hWnd, const ExtraRendererSettings& setti
             ReleaseDevice();
             return hr;
         }
-        m_output = m_d3d12Renderer.GetOutputInfo();
+        const auto& output = m_d3d12Renderer.GetOutputInfo();
+        m_output.valid = output.valid;
+        m_output.hdrSupported = output.hdrSupported;
+        m_output.colorSpace = output.colorSpace;
+        m_output.desc = output.desc;
     }
 
     hr = CreateDeviceAndSwapChain();
@@ -614,7 +618,7 @@ HRESULT CD3D11Renderer::EnsureD3D12CompletionFence()
     ID3D12Device* d3d12Device = m_d3d12Renderer.GetDevice();
     if (!completionFence || !d3d12Device) return E_UNEXPECTED;
 
-    CComPtr<ID3D11Device5> device5 = m_device;
+    CComQIPtr<ID3D11Device5> device5 = m_device;
     if (!device5) return DXGI_ERROR_UNSUPPORTED;
 
     HANDLE sharedHandle = nullptr;
@@ -630,7 +634,7 @@ HRESULT CD3D11Renderer::EnsureD3D12CompletionFence()
 HRESULT CD3D11Renderer::WaitForD3D12Presentation()
 {
     if (!m_externalPresentation || !m_context || !m_d3d12CompletionFence || m_lastD3D12FenceValue == 0) return S_OK;
-    CComPtr<ID3D11DeviceContext4> context4 = m_context;
+    CComQIPtr<ID3D11DeviceContext4> context4 = m_context;
     if (!context4) return DXGI_ERROR_UNSUPPORTED;
     HRESULT hr = context4->Wait(m_d3d12CompletionFence, m_lastD3D12FenceValue);
     if (FAILED(hr) && IsDeviceLostHr(hr)) m_deviceLost = true;
@@ -966,7 +970,11 @@ HRESULT CD3D11Renderer::ActivateD3D11Decoding(ID3D11Device* device, ID3D11Device
 	m_allowTearing = IsTearingSupported();
 
 	if (m_externalPresentation) {
-		m_output = m_d3d12Renderer.GetOutputInfo();
+		const auto& output = m_d3d12Renderer.GetOutputInfo();
+		        m_output.valid = output.valid;
+		        m_output.hdrSupported = output.hdrSupported;
+		        m_output.colorSpace = output.colorSpace;
+		        m_output.desc = output.desc;
 		m_swapChainFormat = GetSwapChainFormat();
 		return EnsureD3D12CompletionFence();
 	}
@@ -1382,7 +1390,11 @@ HRESULT CD3D11Renderer::Resize(UINT width, UINT height)
             return hr;
         }
 
-        m_output = m_d3d12Renderer.GetOutputInfo();
+        const auto& output = m_d3d12Renderer.GetOutputInfo();
+        m_output.valid = output.valid;
+        m_output.hdrSupported = output.hdrSupported;
+        m_output.colorSpace = output.colorSpace;
+        m_output.desc = output.desc;
         m_swapChainFormat = GetSwapChainFormat();
         return EnsureD3D12CompletionFence();
     }
