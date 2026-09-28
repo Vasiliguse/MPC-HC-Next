@@ -134,6 +134,31 @@ HRESULT CD3D12Renderer::CreateDeviceAndSwapChain() {
         return hr;
     }
 
+    IUnknown* queues[] = { m_commandQueue };
+    hr = D3D11On12CreateDevice(
+        m_device,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+        nullptr,
+        0,
+        queues,
+        1,
+        0,
+        &m_d3d11On12Device,
+        &m_d3d11On12Context,
+        nullptr);
+    if (FAILED(hr)) {
+        m_d3d11On12Device.Release();
+        m_d3d11On12Context.Release();
+        return hr;
+    }
+
+    hr = m_d3d11On12Device->QueryInterface(IID_PPV_ARGS(&m_d3d11On12Device2));
+    if (FAILED(hr)) {
+        m_d3d11On12Device.Release();
+        m_d3d11On12Context.Release();
+        return hr;
+    }
+
     RECT rc = {};
     GetClientRect(m_hWnd, &rc);
     const UINT width = std::max<UINT>(1, rc.right - rc.left);
@@ -689,57 +714,45 @@ HRESULT CD3D12Renderer::PresentTexture(ID3D12Resource* source, D3D12_RESOURCE_ST
 
 HRESULT CD3D12Renderer::PresentD3D11Texture(ID3D11Texture2D* texture, ID3D11Fence* fence, UINT64 fenceValue)
 {
-    if (!texture || !fence || fenceValue == 0) {
+    if (!texture || !fence || fenceValue == 0 || !m_d3d11On12Device2) {
         return E_INVALIDARG;
     }
 
-    // A D3D11 output texture is reused by the next video-processor pass.
-    // Wait for the previous D3D12 submission before replacing the imported
-    // resource/fence references; this is the correctness baseline until the
-    // interop path gains a ring of shared output textures.
-    if (m_sharedInputTexture && m_sharedInputTexture.p != texture) {
-        HRESULT waitHr = WaitForGpu();
-        if (FAILED(waitHr)) {
-            return waitHr;
-        }
-        m_sharedInputTexture.Release();
-        m_sharedInputResource.Release();
-        m_sharedInputFence.Release();
-        m_sharedFence.Release();
+    CComPtr<ID3D12Resource> resource;
+    HRESULT hr = m_d3d11On12Device2->UnwrapUnderlyingResource(
+        texture,
+        m_commandQueue,
+        IID_PPV_ARGS(&resource));
+    if (FAILED(hr)) {
+        if (IsDeviceLostHr(hr)) m_deviceLost = true;
+        return hr;
     }
 
-    HRESULT hr = S_OK;
-    if (!m_sharedInputTexture) {
-        hr = OpenSharedD3D11Texture(texture, &m_sharedInputResource);
-        if (FAILED(hr)) {
-            return hr;
-        }
-        hr = OpenSharedD3D11Fence(fence, &m_sharedFence);
-        if (FAILED(hr)) {
-            m_sharedInputResource.Release();
-            return hr;
-        }
-        m_sharedInputTexture = texture;
-        m_sharedInputFence = fence;
-    }
-
-    if (m_sharedInputFence.p != fence) {
-        HRESULT waitHr = WaitForGpu();
-        if (FAILED(waitHr)) {
-            return waitHr;
-        }
-        hr = OpenSharedD3D11Fence(fence, &m_sharedFence);
-        if (FAILED(hr)) {
-            return hr;
-        }
-        m_sharedInputFence = fence;
-    }
-
-    return PresentTexture(
-        m_sharedInputResource,
-        D3D12_RESOURCE_STATE_COPY_SOURCE,
-        m_sharedFence,
+    // UnwrapUnderlyingResource places the native D3D11 resource in COMMON and
+    // schedules translation-layer waits. The native decoder's own fence is
+    // still supplied because its work is produced by a separate D3D11 device.
+    hr = PresentTexture(
+        resource,
+        D3D12_RESOURCE_STATE_COMMON,
+        m_sharedFence ? m_sharedFence.p : nullptr,
         fenceValue);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    const UINT64 completionValue = m_fenceValue;
+    ID3D12Fence* completionFence = m_fence;
+    hr = m_d3d11On12Device2->ReturnUnderlyingResource(
+        texture,
+        1,
+        &completionValue,
+        &completionFence);
+    if (FAILED(hr)) {
+        if (IsDeviceLostHr(hr)) m_deviceLost = true;
+        return hr;
+    }
+
+    return S_OK;
 }
 
 HRESULT CD3D12Renderer::Present(UINT syncInterval) {
@@ -785,6 +798,9 @@ void CD3D12Renderer::ReleaseDevice() {
     m_sharedInputResource.Release();
     m_sharedInputFence.Release();
     m_sharedFence.Release();
+    m_d3d11On12Device2.Release();
+    m_d3d11On12Context.Release();
+    m_d3d11On12Device.Release();
 
     m_swapChain.Release();
     m_commandQueue.Release();
