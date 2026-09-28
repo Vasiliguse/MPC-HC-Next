@@ -14,6 +14,7 @@
 
 #include <d3d11.h>
 #include <d3d11_1.h>
+#include <d3d11_4.h>
 #include <dxgi1_6.h>
 #include <deque>
 #include <functional>
@@ -55,12 +56,16 @@ public:
     ID3D11DeviceContext* GetContext() const { return m_context; }
     bool IsAdapterCompatible(ID3D11Device* device) const;
     ID3D11Texture2D* GetSharedOutputTexture() const { return m_sharedOutputTexture; }
+    ID3D11Fence* GetSharedOutputFence() const { return m_sharedOutputFence; }
+    UINT64 GetSharedOutputFenceValue() const { return m_sharedOutputFenceValue; }
     IDXGISwapChain1* GetSwapChain() const { return m_swapChain; }
 
 private:
     HRESULT CreateDeviceAndSwapChain();
     HRESULT EnsureVideoProcessor(D3D11_VIDEO_FRAME_FORMAT format, DXGI_FORMAT inputFormat, UINT inputWidth, UINT inputHeight, UINT outputWidth, UINT outputHeight);
     HRESULT EnsureSharedOutputTexture(UINT width, UINT height);
+    HRESULT EnsureSharedOutputFence();
+    HRESULT SignalSharedOutputFence();
     HRESULT CreateBackBufferViews();
     void ReleaseFrameResources();
     HRESULT DrainPendingFrames(bool waitForAll);
@@ -88,6 +93,8 @@ private:
     CComPtr<ID3D11VideoProcessorEnumerator1> m_videoProcessorEnumerator1;
     CComPtr<ID3D11RenderTargetView> m_backBufferRTV;
     CComPtr<ID3D11Texture2D> m_sharedOutputTexture;
+    CComPtr<ID3D11Fence> m_sharedOutputFence;
+    UINT64 m_sharedOutputFenceValue = 0;
     UINT m_videoWidth = 0;
     UINT m_videoHeight = 0;
     D3D11_VIDEO_FRAME_FORMAT m_videoFrameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
