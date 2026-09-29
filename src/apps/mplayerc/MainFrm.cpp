@@ -6066,6 +6066,7 @@ void CMainFrame::OnFileReOpen()
 		return;
 	}
 
+	m_wndNPlayBar.SetActiveItem(0);
 	OpenCurPlaylistItem();
 }
 
@@ -10667,6 +10668,7 @@ void CMainFrame::PlayFavoriteDVD(SessionInfo fav) // use a copy of SessionInfo
 		p->path = fav.Path;
 		p->pDvdState = pDvdState;
 	}
+	m_wndNPlayBar.SetActiveItem(0);
 	OpenMedia(std::move(p));
 }
 
