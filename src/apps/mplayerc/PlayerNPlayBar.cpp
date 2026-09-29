@@ -89,43 +89,52 @@ void CPlayerNPlayBar::LayoutItems()
 void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) const
 {
     const COLORREF fg = active ? RGB(76, 201, 240) : RGB(145, 160, 176);
-    CPen pen(PS_SOLID, 2, fg);
+    const int dpiX = dc.GetDeviceCaps(LOGPIXELSX);
+    const auto scale = [dpiX](int value) { return MulDiv(value, dpiX, 96); };
+    CPen pen(PS_SOLID, max(1, scale(2)), fg);
     CBrush brush(fg);
     CPen* oldPen = dc.SelectObject(&pen);
     CBrush* oldBrush = dc.SelectObject(&brush);
 
     const int cx = r.CenterPoint().x;
     const int cy = r.CenterPoint().y;
+    const int x8 = scale(8);
+    const int x7 = scale(7);
+    const int x6 = scale(6);
+    const int x4 = scale(4);
+    const int x3 = scale(3);
+    const int x2 = scale(2);
+    const int x1 = scale(1);
 
     dc.SetBkMode(TRANSPARENT);
     switch (icon) {
         case 0: { // Home
-            CPoint roof[3] = {{cx - 8, cy - 1}, {cx, cy - 8}, {cx + 8, cy - 1}};
+            CPoint roof[3] = {{cx - x8, cy - x1}, {cx, cy - x8}, {cx + x8, cy - x1}};
             dc.Polyline(roof, 3);
-            dc.MoveTo(cx - 6, cy - 2); dc.LineTo(cx - 6, cy + 7); dc.LineTo(cx + 6, cy + 7); dc.LineTo(cx + 6, cy - 2);
-            dc.MoveTo(cx - 1, cy + 7); dc.LineTo(cx - 1, cy + 1); dc.LineTo(cx + 2, cy + 1); dc.LineTo(cx + 2, cy + 7);
+            dc.MoveTo(cx - x6, cy - x2); dc.LineTo(cx - x6, cy + x7); dc.LineTo(cx + x6, cy + x7); dc.LineTo(cx + x6, cy - x2);
+            dc.MoveTo(cx - x1, cy + x7); dc.LineTo(cx - x1, cy + x1); dc.LineTo(cx + x2, cy + x1); dc.LineTo(cx + x2, cy + x7);
             break;
         }
         case 1: // Playlist
-            dc.MoveTo(cx - 8, cy - 6); dc.LineTo(cx + 8, cy - 6);
-            dc.MoveTo(cx - 8, cy); dc.LineTo(cx + 8, cy);
-            dc.MoveTo(cx - 8, cy + 6); dc.LineTo(cx + 4, cy + 6);
+            dc.MoveTo(cx - x8, cy - x6); dc.LineTo(cx + x8, cy - x6);
+            dc.MoveTo(cx - x8, cy); dc.LineTo(cx + x8, cy);
+            dc.MoveTo(cx - x8, cy + x6); dc.LineTo(cx + x4, cy + x6);
             break;
         case 2: // Video
-            dc.RoundRect(cx - 8, cy - 7, cx + 8, cy + 7, 3, 3);
-            dc.MoveTo(cx - 2, cy - 4); dc.LineTo(cx + 4, cy); dc.LineTo(cx - 2, cy + 4);
+            dc.RoundRect(cx - x8, cy - x7, cx + x8, cy + x7, scale(3), scale(3));
+            dc.MoveTo(cx - x2, cy - x4); dc.LineTo(cx + x4, cy); dc.LineTo(cx - x2, cy + x4);
             break;
         case 3: // Audio
-            dc.MoveTo(cx - 7, cy - 3); dc.LineTo(cx - 2, cy - 3); dc.LineTo(cx + 3, cy - 8); dc.LineTo(cx + 3, cy + 8); dc.LineTo(cx - 2, cy + 3); dc.LineTo(cx - 7, cy + 3); dc.LineTo(cx - 7, cy - 3);
-            dc.Arc(cx - 2, cy - 7, cx + 11, cy + 7, cx + 5, cy + 5, cx + 5, cy - 5);
+            dc.MoveTo(cx - x7, cy - x3); dc.LineTo(cx - x2, cy - x3); dc.LineTo(cx + x3, cy - x8); dc.LineTo(cx + x3, cy + x8); dc.LineTo(cx - x2, cy + x3); dc.LineTo(cx - x7, cy + x3); dc.LineTo(cx - x7, cy - x3);
+            dc.Arc(cx - x2, cy - x7, cx + x11, cy + x7, cx + 5, cy + 5, cx + 5, cy - 5);
             break;
         default: // Favorites
             POINT heart[6] = {
-                {cx, cy + 8}, {cx - 8, cy - 1}, {cx - 6, cy - 7},
-                {cx, cy - 4}, {cx + 6, cy - 7}, {cx + 8, cy - 1}
+                {cx, cy + x8}, {cx - x8, cy - x1}, {cx - x6, cy - x7},
+                {cx, cy - x4}, {cx + x6, cy - x7}, {cx + x8, cy - x1}
             };
             dc.Polyline(heart, 6);
-            dc.LineTo(cx, cy + 8);
+            dc.LineTo(cx, cy + x8);
             break;
     }
 
@@ -170,7 +179,7 @@ void CPlayerNPlayBar::OnPaint()
     CBrush brandBrush(panel);
     dc.FillRect(brand, &brandBrush);
     dc.SelectObject(&brandBrush);
-    dc.RoundRect(brand, CPoint(12, 12));
+    dc.RoundRect(brand, CPoint(scale(12), scale(12)));
     dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
@@ -217,26 +226,27 @@ void CPlayerNPlayBar::OnPaint()
         if (active || hot) {
             CBrush itemBrush(active ? panelActive : panelHot);
             dc.SelectObject(&itemBrush);
-            dc.RoundRect(item, CPoint(9, 9));
+            dc.RoundRect(item, CPoint(scale(9), scale(9)));
             dc.SelectObject(oldBrush);
 
             CPen itemPen(PS_SOLID, 1, active ? RGB(35, 91, 116) : border);
             CPen* savedPen = dc.SelectObject(&itemPen);
             dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-            dc.RoundRect(item, CPoint(9, 9));
+            dc.RoundRect(item, CPoint(scale(9), scale(9)));
             dc.SelectObject(savedPen);
 
             CBrush accentBrush(accent);
-            CRect stripe(item.left, item.top + 9, item.left + 3, item.bottom - 9);
+            CRect stripe(item.left, item.top + scale(9), item.left + scale(3), item.bottom - scale(9));
             dc.FillRect(stripe, &accentBrush);
         }
 
-        DrawIcon(dc, CRect(item.left + 13, item.top + 8, item.left + 39, item.bottom - 8),
+        DrawIcon(dc, CRect(item.left + scale(13), item.top + scale(8),
+                           item.left + scale(39), item.bottom - scale(8)),
                  m_items[i].icon, active);
 
         CFont* old = dc.SelectObject(&m_font);
         dc.SetTextColor(active ? text : muted);
-        CRect label(item.left + 51, item.top, item.right - 10, item.bottom);
+        CRect label(item.left + scale(51), item.top, item.right - scale(10), item.bottom);
         dc.DrawTextW(m_items[i].label, label, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         dc.SelectObject(old);
     }
@@ -260,7 +270,7 @@ void CPlayerNPlayBar::OnPaint()
         dc.RoundRect(listItem, CPoint(scale(8), scale(8)));
         dc.SelectObject(oldBrush);
         dc.SelectObject(&sectionPen);
-        dc.RoundRect(listItem, CPoint(8, 8));
+        dc.RoundRect(listItem, CPoint(scale(8), scale(8)));
 
         dc.SetTextColor(text);
         CRect listLabel(listItem.left + scale(12), listItem.top, listItem.right - scale(12), listItem.bottom);
