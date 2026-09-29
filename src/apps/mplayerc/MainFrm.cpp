@@ -2209,6 +2209,7 @@ LRESULT CMainFrame::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 
 	m_wndToolBar.ScaleToolbar();
 	m_wndInfoBar.ScaleFont();
+	m_wndNPlayBar.ScaleForDpi();
 	m_wndStatsBar.ScaleFont();
 	m_wndSeekBar.ScaleFont();
 	m_wndPlaylistBar.ScaleFont();
