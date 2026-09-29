@@ -158,6 +158,7 @@ void CPlayerNPlayBar::OnPaint()
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
     CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+    dc.RoundRect(brand, CPoint(12, 12));
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
 
