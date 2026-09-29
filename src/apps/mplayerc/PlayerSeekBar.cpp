@@ -278,6 +278,7 @@ void CPlayerSeekBar::OnPaint()
 	const bool bEnabled = m_bEnabled && m_stop > 0;
 	const COLORREF repeatAB = COLORREF(RGB(242, 13, 13));
 	const CRect channelRect(GetChannelRect());
+	const int trackY = channelRect.CenterPoint().y;
 
 	if (s.bUseDarkTheme) {
 		auto funcMarkChannelTheme = [&](REFERENCE_TIME pos, CDC& memdc, CPen& pen, const CRect& rect, bool thick) {
@@ -405,7 +406,8 @@ void CPlayerSeekBar::OnPaint()
 			const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
 			CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
 			memdc.SelectObject(&playedPen);
-			memdc.RoundRect(rc.left, trackY - 2, playedRight, trackY + 2, 4, 4);
+			memdc.MoveTo(rc.left, trackY);
+			memdc.LineTo(playedRight, trackY);
 		}
 
 		CString seekbartext = m_pMainFrame->GetTextForBar(s.iSeekBarTextStyle);
