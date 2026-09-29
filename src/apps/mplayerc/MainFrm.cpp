@@ -7596,6 +7596,7 @@ void CMainFrame::OnUpdateViewSubresync(CCmdUI* pCmdUI)
 
 void CMainFrame::OnViewPlaylist()
 {
+	m_wndNPlayBar.SetActiveItem(1);
 	ShowControlBarInternal(&m_wndPlaylistBar, !m_wndPlaylistBar.IsWindowVisible());
 	if (m_wndPlaylistBar.IsWindowVisible()) {
 		m_wndPlaylistBar.SetFocus();
@@ -9279,12 +9280,14 @@ void CMainFrame::OnSelectStream(UINT nID)
 
 void CMainFrame::OnMenuNavAudio()
 {
+	m_wndNPlayBar.SetActiveItem(3);
 	SetupAudioTracksSubMenu();
 	OnMenu(&m_AudioMenu);
 }
 
 void CMainFrame::OnMenuNavVideo()
 {
+	m_wndNPlayBar.SetActiveItem(2);
 	SetupVideoStreamsSubMenu();
 	OnMenu(&m_VideoStreamsMenu);
 }
@@ -9321,6 +9324,7 @@ void CMainFrame::OnMenuRecentFiles()
 
 void CMainFrame::OnMenuFavorites()
 {
+	m_wndNPlayBar.SetActiveItem(4);
 	SetupFavoritesSubMenu();
 	OnMenu(&m_favoritesMenu);
 }
