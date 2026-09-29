@@ -44,8 +44,8 @@ BOOL CPlayerNPlayBar::Create(CWnd* pParentWnd, UINT defDockBarID)
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    m_szMinVert = CSize(220, 360);
-    m_szVert = CSize(248, 620);
+    m_szMinVert = CSize(MulDiv(220, dpiY, 96), MulDiv(360, dpiY, 96));
+    m_szVert = CSize(MulDiv(248, dpiY, 96), MulDiv(620, dpiY, 96));
     m_szMinFloat = m_szMinVert;
     m_szFloat = m_szVert;
 
