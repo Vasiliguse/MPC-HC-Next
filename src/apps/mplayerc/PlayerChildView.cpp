@@ -312,13 +312,22 @@ static void DrawNPlayHome(CDC* pDC, const CRect& rc, CMainFrame* pMainFrame)
 	for (int i = 0; i < 2; ++i) {
 		CRect card(content.left + i * (infoW + gap), infoTop, content.left + i * (infoW + gap) + infoW, infoTop + 86 * sy);
 		CBrush b(panel2);
-		pDC->FillRect(card, &b);
+		CPen cardPen(PS_SOLID, 1, dark ? RGB(31, 56, 75) : RGB(220, 228, 236));
+		CBrush* oldCardBrush = pDC->SelectObject(&b);
+		CPen* oldCardPen = pDC->SelectObject(&cardPen);
+		pDC->RoundRect(card, CPoint(12 * sx, 12 * sy));
+		pDC->SelectObject(oldCardPen);
+		pDC->SelectObject(oldCardBrush);
+
+		CBrush accentLine(accent);
+		pDC->FillRect(CRect(card.left + 14 * sx, card.top + 14 * sy, card.left + 46 * sx, card.top + 16 * sy), &accentLine);
+
 		pDC->SelectObject(&cardTitle);
 		pDC->SetTextColor(text);
-		pDC->DrawTextW(i == 0 ? L"Playlist" : L"Library", CRect(card.left + 16 * sx, card.top + 12 * sy, card.right - 12 * sx, card.top + 38 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+		pDC->DrawTextW(i == 0 ? L"Playlist" : L"Library", CRect(card.left + 16 * sx, card.top + 20 * sy, card.right - 12 * sx, card.top + 46 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 		pDC->SelectObject(&cardText);
 		pDC->SetTextColor(muted);
-		pDC->DrawTextW(i == 0 ? L"Add files to create a queue." : L"Your video and audio files will appear here.", CRect(card.left + 16 * sx, card.top + 40 * sy, card.right - 12 * sx, card.bottom - 10 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+		pDC->DrawTextW(i == 0 ? L"Add files to create a queue." : L"Your video and audio files will appear here.", CRect(card.left + 16 * sx, card.top + 48 * sy, card.right - 12 * sx, card.bottom - 10 * sy), DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 	}
 
 	pDC->SelectObject(oldFont);
