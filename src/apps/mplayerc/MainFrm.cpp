@@ -5461,6 +5461,7 @@ void CMainFrame::OnFileOpenQuick()
 	}
 
 	m_wndPlaylistBar.Open(fns, bMultipleFiles);
+	m_wndNPlayBar.SetActiveItem(0);
 
 	if (m_wndPlaylistBar.GetCount() == 1 && m_wndPlaylistBar.IsWindowVisible() && !m_wndPlaylistBar.IsFloating()) {
 		//ShowControlBarInternal(&m_wndPlaylistBar, FALSE);
