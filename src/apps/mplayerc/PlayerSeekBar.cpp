@@ -322,17 +322,6 @@ void CPlayerSeekBar::OnPaint()
 		const int nposx = GetThumbRect().right - 2;
 		const int nposy = r.top;
 
-		CPen trackPen(PS_SOLID, 2, ThemeRGB(30, 55, 76));
-		memdc.SelectObject(&trackPen);
-		memdc.MoveTo(rc.left, rc.CenterPoint().y);
-		memdc.LineTo(rc.right, rc.CenterPoint().y);
-
-		memdc.SelectObject(&m_penPlayed2);
-		const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
-		CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
-		memdc.SelectObject(&playedPen);
-		memdc.RoundRect(rc.left, trackY - 1, playedRight, trackY + 2, 2, 2);
-
 		// buffer
 		m_rLock.SetRect(-1, -1, -1, -1);
 		int Progress;
@@ -404,6 +393,19 @@ void CPlayerSeekBar::OnPaint()
 					funcMarkChannelTheme(bPos, memdc, m_penRepeatAB, rc, true);
 				}
 			}
+		}
+
+		// N Play transport track: draw after the background so it remains crisp.
+		CPen trackPen(PS_SOLID, 2, ThemeRGB(30, 55, 76));
+		memdc.SelectObject(&trackPen);
+		memdc.MoveTo(rc.left, trackY);
+		memdc.LineTo(rc.right, trackY);
+
+		if (bEnabled) {
+			const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
+			CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
+			memdc.SelectObject(&playedPen);
+			memdc.RoundRect(rc.left, trackY - 1, playedRight, trackY + 2, 2, 2);
 		}
 
 		CString seekbartext = m_pMainFrame->GetTextForBar(s.iSeekBarTextStyle);
