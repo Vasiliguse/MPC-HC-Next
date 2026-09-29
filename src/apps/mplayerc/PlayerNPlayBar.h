@@ -14,6 +14,7 @@ public:
 
     BOOL Create(CWnd* pParentWnd, UINT defDockBarID);
     virtual void ReloadTranslatableResources() override;
+    void SetActiveItem(int index);
 
 protected:
     struct NavItem {
