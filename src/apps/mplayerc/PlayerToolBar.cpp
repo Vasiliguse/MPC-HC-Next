@@ -499,7 +499,7 @@ void CPlayerToolBar::SetColor()
 		}
 
 		m_penFrHot.DeleteObject();
-		m_penFrHot.CreatePen(PS_SOLID, 0, 0x00D8F7FF);
+		m_penFrHot.CreatePen(PS_SOLID, 1, ThemeRGB(45, 125, 156));
 	}
 }
 
@@ -617,7 +617,7 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				bf.AlphaFormat         = AC_SRC_ALPHA;
 				bf.BlendFlags          = 0;
 				bf.BlendOp             = AC_SRC_OVER;
-				bf.SourceConstantAlpha = 90;
+				bf.SourceConstantAlpha = 78;
 
 				CBrush* brushSaved = (CBrush*)dc.SelectStockObject(NULL_BRUSH);
 				CPen* penSaved = dc.SelectObject(&m_penFrHot);
