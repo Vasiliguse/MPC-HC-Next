@@ -105,6 +105,7 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     const int x3 = scale(3);
     const int x2 = scale(2);
     const int x1 = scale(1);
+    const int x5 = scale(5);
 
     dc.SetBkMode(TRANSPARENT);
     switch (icon) {
@@ -126,7 +127,7 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
             break;
         case 3: // Audio
             dc.MoveTo(cx - x7, cy - x3); dc.LineTo(cx - x2, cy - x3); dc.LineTo(cx + x3, cy - x8); dc.LineTo(cx + x3, cy + x8); dc.LineTo(cx - x2, cy + x3); dc.LineTo(cx - x7, cy + x3); dc.LineTo(cx - x7, cy - x3);
-            dc.Arc(cx - x2, cy - x7, cx + x11, cy + x7, cx + 5, cy + 5, cx + 5, cy - 5);
+            dc.Arc(cx - x2, cy - x7, cx + scale(11), cy + x7, cx + x5, cy + x5, cx + x5, cy - x5);
             break;
         default: // Favorites
             POINT heart[6] = {
@@ -184,7 +185,7 @@ void CPlayerNPlayBar::OnPaint()
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
     CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-    dc.RoundRect(brand, CPoint(12, 12));
+    dc.RoundRect(brand, CPoint(scale(12), scale(12)));
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
 
