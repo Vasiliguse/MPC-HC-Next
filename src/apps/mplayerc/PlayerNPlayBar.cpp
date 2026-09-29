@@ -28,28 +28,7 @@ BOOL CPlayerNPlayBar::Create(CWnd* pParentWnd, UINT defDockBarID)
     }
 
     m_pMainFrame = static_cast<CMainFrame*>(pParentWnd);
-
-    CClientDC fontDc(this);
-    const int dpiY = fontDc.GetDeviceCaps(LOGPIXELSY);
-
-    m_font.CreateFontW(
-        -MulDiv(11, dpiY, 72),
-        0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-
-    m_smallFont.CreateFontW(
-        -MulDiv(8, dpiY, 72),
-        0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-
-    m_szMinVert = CSize(MulDiv(220, dpiY, 96), MulDiv(360, dpiY, 96));
-    m_szVert = CSize(MulDiv(248, dpiY, 96), MulDiv(620, dpiY, 96));
-    m_szMinFloat = m_szMinVert;
-    m_szFloat = m_szVert;
-
-    LayoutItems();
+    ScaleForDpi();
     return TRUE;
 }
 
