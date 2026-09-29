@@ -73,13 +73,16 @@ void CPlayerNPlayBar::LayoutItems()
     CRect rc;
     GetClientRect(&rc);
 
-    const int top = 94;
-    const int row = 42;
-    const int gap = 5;
+    CClientDC dc(this);
+    const int dpiY = dc.GetDeviceCaps(LOGPIXELSY);
+    const int top = MulDiv(94, dpiY, 96);
+    const int row = MulDiv(42, dpiY, 96);
+    const int gap = MulDiv(5, dpiY, 96);
+    const int margin = MulDiv(12, dpiY, 96);
 
     for (size_t i = 0; i < m_items.size(); ++i) {
         const int y = top + static_cast<int>(i) * (row + gap);
-        m_items[i].rect = CRect(12, y, rc.Width() - 12, y + row);
+        m_items[i].rect = CRect(margin, y, rc.Width() - margin, y + row);
     }
 }
 
