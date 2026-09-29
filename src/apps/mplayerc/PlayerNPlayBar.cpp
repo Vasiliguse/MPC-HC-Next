@@ -176,7 +176,7 @@ void CPlayerNPlayBar::OnPaint()
         { logo.right - 9, logo.CenterPoint().y }
     };
     dc.SelectObject(&logoCut);
-    dc.Polygon(tri);
+    dc.Polygon(tri, 3);
 
     CFont* oldFont = dc.SelectObject(&m_font);
     dc.SetBkMode(TRANSPARENT);
