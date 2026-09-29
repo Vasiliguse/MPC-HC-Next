@@ -152,10 +152,12 @@ void CPlayerNPlayBar::OnPaint()
     CRect brand(12, 12, rc.Width() - 12, 72);
     CBrush brandBrush(panel);
     dc.FillRect(brand, &brandBrush);
+    dc.SelectObject(&brandBrush);
+    dc.RoundRect(brand, CPoint(12, 12));
+    dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
     CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-    dc.RoundRect(brand, CPoint(12, 12));
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
 
@@ -163,8 +165,9 @@ void CPlayerNPlayBar::OnPaint()
     CRect logo(brand.left + 12, brand.CenterPoint().y - logoSize / 2,
                brand.left + 12 + logoSize, brand.CenterPoint().y + logoSize / 2);
     CBrush logoBrush(accent);
-    dc.FillRect(logo, &logoBrush);
+    dc.SelectObject(&logoBrush);
     dc.RoundRect(logo, CPoint(9, 9));
+    dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CBrush logoCut(bg);
     CPoint tri[3] = {
         { logo.left + 13, logo.top + 9 },
