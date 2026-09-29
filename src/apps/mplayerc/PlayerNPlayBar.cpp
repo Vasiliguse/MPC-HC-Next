@@ -224,36 +224,38 @@ void CPlayerNPlayBar::OnPaint()
         dc.SelectObject(old);
     }
 
-    // Playlist section.
-    const int sectionY = rc.Height() - 132;
-    CFont* old = dc.SelectObject(&m_smallFont);
-    dc.SetTextColor(muted);
-    CRect section(16, sectionY, rc.Width() - 16, sectionY + 22);
-    dc.DrawTextW(L"PLAYLISTS", section, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    // Playlist section. Hide it when the dock is too short so it never overlaps navigation.
+    if (rc.Height() >= 430) {
+        const int sectionY = rc.Height() - 132;
+        CFont* old = dc.SelectObject(&m_smallFont);
+        dc.SetTextColor(muted);
+        CRect section(16, sectionY, rc.Width() - 16, sectionY + 22);
+        dc.DrawTextW(L"PLAYLISTS", section, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-    CPen sectionPen(PS_SOLID, 1, border);
-    dc.SelectObject(&sectionPen);
-    dc.MoveTo(16, sectionY + 24);
-    dc.LineTo(rc.Width() - 16, sectionY + 24);
+        CPen sectionPen(PS_SOLID, 1, border);
+        dc.SelectObject(&sectionPen);
+        dc.MoveTo(16, sectionY + 24);
+        dc.LineTo(rc.Width() - 16, sectionY + 24);
 
-    CRect listItem(12, sectionY + 34, rc.Width() - 12, sectionY + 74);
-    CBrush listBrush(dark ? RGB(11, 22, 35) : RGB(255, 255, 255));
-    dc.SelectObject(&listBrush);
-    dc.RoundRect(listItem, CPoint(8, 8));
-    dc.SelectObject(oldBrush);
-    dc.SelectObject(&sectionPen);
-    dc.RoundRect(listItem, CPoint(8, 8));
+        CRect listItem(12, sectionY + 34, rc.Width() - 12, sectionY + 74);
+        CBrush listBrush(dark ? RGB(11, 22, 35) : RGB(255, 255, 255));
+        dc.SelectObject(&listBrush);
+        dc.RoundRect(listItem, CPoint(8, 8));
+        dc.SelectObject(oldBrush);
+        dc.SelectObject(&sectionPen);
+        dc.RoundRect(listItem, CPoint(8, 8));
 
-    dc.SetTextColor(text);
-    CRect listLabel(listItem.left + 12, listItem.top, listItem.right - 12, listItem.bottom);
-    dc.DrawTextW(L"Default Playlist", listLabel, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        dc.SetTextColor(text);
+        CRect listLabel(listItem.left + 12, listItem.top, listItem.right - 12, listItem.bottom);
+        dc.DrawTextW(L"Default Playlist", listLabel, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-    CFont* oldMain = dc.SelectObject(&m_font);
-    dc.SetTextColor(accent);
-    CRect addItem(12, sectionY + 82, rc.Width() - 12, sectionY + 122);
-    dc.DrawTextW(L"+  New Playlist", addItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    dc.SelectObject(oldMain);
-    dc.SelectObject(old);
+        CFont* oldMain = dc.SelectObject(&m_font);
+        dc.SetTextColor(accent);
+        CRect addItem(12, sectionY + 82, rc.Width() - 12, sectionY + 122);
+        dc.DrawTextW(L"+  New Playlist", addItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        dc.SelectObject(oldMain);
+        dc.SelectObject(old);
+    }
 }
 
 void CPlayerNPlayBar::OnSize(UINT nType, int cx, int cy)
