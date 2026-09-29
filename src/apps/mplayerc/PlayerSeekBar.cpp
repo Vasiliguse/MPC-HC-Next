@@ -405,7 +405,7 @@ void CPlayerSeekBar::OnPaint()
 			const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
 			CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
 			memdc.SelectObject(&playedPen);
-			memdc.RoundRect(rc.left, trackY - 1, playedRight, trackY + 2, 2, 2);
+			memdc.RoundRect(rc.left, trackY - 2, playedRight, trackY + 2, 4, 4);
 		}
 
 		CString seekbartext = m_pMainFrame->GetTextForBar(s.iSeekBarTextStyle);
@@ -787,7 +787,7 @@ void CPlayerSeekBar::ScaleFont()
 	m_font.DeleteObject();
 	m_font.CreateFontW(m_pMainFrame->ScaleY(13), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET,
 					   OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-					   L"Tahoma");
+					   L"Segoe UI");
 
 	m_scaleX1 = m_pMainFrame->ScaleFloorX(1);
 	m_scaleX4 = m_pMainFrame->ScaleFloorX(4);
