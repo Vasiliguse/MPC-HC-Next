@@ -32,6 +32,37 @@ BOOL CPlayerNPlayBar::Create(CWnd* pParentWnd, UINT defDockBarID)
     return TRUE;
 }
 
+void CPlayerNPlayBar::ScaleForDpi()
+{
+    if (!m_pMainFrame) {
+        return;
+    }
+
+    const int dpiY = m_pMainFrame->GetDPIY();
+    m_font.DeleteObject();
+    m_smallFont.DeleteObject();
+
+    m_font.CreateFontW(
+        -MulDiv(11, dpiY, 72),
+        0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+
+    m_smallFont.CreateFontW(
+        -MulDiv(8, dpiY, 72),
+        0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+
+    m_szMinVert = CSize(m_pMainFrame->ScaleX(220), m_pMainFrame->ScaleY(360));
+    m_szVert = CSize(m_pMainFrame->ScaleX(248), m_pMainFrame->ScaleY(620));
+    m_szMinFloat = m_szMinVert;
+    m_szFloat = m_szVert;
+
+    LayoutItems();
+    Invalidate(FALSE);
+}
+
 void CPlayerNPlayBar::ReloadTranslatableResources()
 {
     SetWindowTextW(L"N Play");
