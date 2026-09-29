@@ -91,7 +91,7 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     const COLORREF fg = active ? RGB(76, 201, 240) : RGB(145, 160, 176);
     const int dpiX = dc.GetDeviceCaps(LOGPIXELSX);
     const auto scale = [dpiX](int value) { return MulDiv(value, dpiX, 96); };
-    CPen pen(PS_SOLID, max(1, scale(2)), fg);
+    CPen pen(PS_SOLID, scale(2) < 1 ? 1 : scale(2), fg);
     CBrush brush(fg);
     CPen* oldPen = dc.SelectObject(&pen);
     CBrush* oldBrush = dc.SelectObject(&brush);
