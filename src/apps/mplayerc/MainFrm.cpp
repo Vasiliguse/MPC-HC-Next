@@ -5508,6 +5508,7 @@ void CMainFrame::OnFileOpenMedia()
 	}
 
 	m_wndPlaylistBar.Open(dlg.m_fns, dlg.m_bMultipleFiles);
+	m_wndNPlayBar.SetActiveItem(0);
 	OpenCurPlaylistItem();
 }
 
@@ -5942,6 +5943,7 @@ void CMainFrame::OnFileOpenDVD()
 		if (CheckDVD(path) || CheckBD(path)) {
 			s.strDVDPath = GetFolderPath(path);
 			m_wndPlaylistBar.Open(path);
+			m_wndNPlayBar.SetActiveItem(0);
 			OpenCurPlaylistItem();
 		} else {
 			if (m_eMediaLoadState == MLS_LOADED) {
@@ -5970,6 +5972,7 @@ void CMainFrame::OnFileOpenIso()
 		}
 
 		m_wndPlaylistBar.Open(fd.GetPathName());
+		m_wndNPlayBar.SetActiveItem(0);
 		OpenCurPlaylistItem();
 	}
 }
@@ -6045,6 +6048,7 @@ void CMainFrame::OnFileOpenCD(UINT nID)
 			ShowWindow(SW_SHOW);
 
 			m_wndPlaylistBar.Open(sl, true);
+			m_wndNPlayBar.SetActiveItem(0);
 			OpenCurPlaylistItem();
 
 			break;
