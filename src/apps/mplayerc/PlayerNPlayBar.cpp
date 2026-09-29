@@ -44,8 +44,13 @@ BOOL CPlayerNPlayBar::Create(CWnd* pParentWnd, UINT defDockBarID)
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    m_szMinVert = CSize(220, 360);
-    m_szVert = CSize(248, 620);
+    const int dpiX = fontDc.GetDeviceCaps(LOGPIXELSX);
+    const int dpiY = fontDc.GetDeviceCaps(LOGPIXELSY);
+    const auto sx = [dpiX](int value) { return MulDiv(value, dpiX, 96); };
+    const auto sy = [dpiY](int value) { return MulDiv(value, dpiY, 96); };
+
+    m_szMinVert = CSize(sx(220), sy(360));
+    m_szVert = CSize(sx(248), sy(620));
     m_szMinFloat = m_szMinVert;
     m_szFloat = m_szVert;
 
@@ -63,13 +68,19 @@ void CPlayerNPlayBar::LayoutItems()
     CRect rc;
     GetClientRect(&rc);
 
-    const int top = 94;
-    const int row = 42;
-    const int gap = 5;
+    CClientDC dc(this);
+    const int dpiX = dc.GetDeviceCaps(LOGPIXELSX);
+    const int dpiY = dc.GetDeviceCaps(LOGPIXELSY);
+    const auto sx = [dpiX](int value) { return MulDiv(value, dpiX, 96); };
+    const auto sy = [dpiY](int value) { return MulDiv(value, dpiY, 96); };
+
+    const int top = sy(94);
+    const int row = sy(42);
+    const int gap = sy(5);
 
     for (size_t i = 0; i < m_items.size(); ++i) {
         const int y = top + static_cast<int>(i) * (row + gap);
-        m_items[i].rect = CRect(12, y, rc.Width() - 12, y + row);
+        m_items[i].rect = CRect(sx(12), y, rc.Width() - sx(12), y + row);
     }
 }
 
@@ -83,36 +94,37 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
 
     const int cx = r.CenterPoint().x;
     const int cy = r.CenterPoint().y;
+    const int u = std::max(1, r.Height() / 26);
 
     dc.SetBkMode(TRANSPARENT);
     switch (icon) {
         case 0: { // Home
-            CPoint roof[3] = {{cx - 8, cy - 1}, {cx, cy - 8}, {cx + 8, cy - 1}};
+            CPoint roof[3] = {{cx - 8 * u, cy - 1 * u}, {cx, cy - 8 * u}, {cx + 8 * u, cy - 1 * u}};
             dc.Polyline(roof, 3);
-            dc.MoveTo(cx - 6, cy - 2); dc.LineTo(cx - 6, cy + 7); dc.LineTo(cx + 6, cy + 7); dc.LineTo(cx + 6, cy - 2);
-            dc.MoveTo(cx - 1, cy + 7); dc.LineTo(cx - 1, cy + 1); dc.LineTo(cx + 2, cy + 1); dc.LineTo(cx + 2, cy + 7);
+            dc.MoveTo(cx - 6 * u, cy - 2 * u); dc.LineTo(cx - 6 * u, cy + 7 * u); dc.LineTo(cx + 6 * u, cy + 7 * u); dc.LineTo(cx + 6 * u, cy - 2 * u);
+            dc.MoveTo(cx - 1 * u, cy + 7 * u); dc.LineTo(cx - 1 * u, cy + 1 * u); dc.LineTo(cx + 2 * u, cy + 1 * u); dc.LineTo(cx + 2 * u, cy + 7 * u);
             break;
         }
         case 1: // Playlist
-            dc.MoveTo(cx - 8, cy - 6); dc.LineTo(cx + 8, cy - 6);
-            dc.MoveTo(cx - 8, cy); dc.LineTo(cx + 8, cy);
-            dc.MoveTo(cx - 8, cy + 6); dc.LineTo(cx + 4, cy + 6);
+            dc.MoveTo(cx - 8 * u, cy - 6 * u); dc.LineTo(cx + 8 * u, cy - 6 * u);
+            dc.MoveTo(cx - 8 * u, cy); dc.LineTo(cx + 8 * u, cy);
+            dc.MoveTo(cx - 8 * u, cy + 6); dc.LineTo(cx + 4 * u, cy + 6 * u);
             break;
         case 2: // Video
-            dc.RoundRect(cx - 8, cy - 7, cx + 8, cy + 7, 3, 3);
-            dc.MoveTo(cx - 2, cy - 4); dc.LineTo(cx + 4, cy); dc.LineTo(cx - 2, cy + 4);
+            dc.RoundRect(cx - 8 * u, cy - 7, cx + 8 * u, cy + 7, 3, 3);
+            dc.MoveTo(cx - 2 * u, cy - 4 * u); dc.LineTo(cx + 4 * u, cy); dc.LineTo(cx - 2 * u, cy + 4 * u);
             break;
         case 3: // Audio
-            dc.MoveTo(cx - 7, cy - 3); dc.LineTo(cx - 2, cy - 3); dc.LineTo(cx + 3, cy - 8); dc.LineTo(cx + 3, cy + 8); dc.LineTo(cx - 2, cy + 3); dc.LineTo(cx - 7, cy + 3); dc.LineTo(cx - 7, cy - 3);
-            dc.Arc(cx - 2, cy - 7, cx + 11, cy + 7, cx + 5, cy + 5, cx + 5, cy - 5);
+            dc.MoveTo(cx - 7 * u, cy - 3 * u); dc.LineTo(cx - 2 * u, cy - 3 * u); dc.LineTo(cx + 3 * u, cy - 8 * u); dc.LineTo(cx + 3 * u, cy + 8 * u); dc.LineTo(cx - 2 * u, cy + 3 * u); dc.LineTo(cx - 7 * u, cy + 3 * u); dc.LineTo(cx - 7 * u, cy - 3 * u);
+            dc.Arc(cx - 2 * u, cy - 7 * u, cx + 11 * u, cy + 7 * u, cx + 5 * u, cy + 5 * u, cx + 5 * u, cy - 5 * u);
             break;
         default: // Favorites
             POINT heart[6] = {
-                {cx, cy + 8}, {cx - 8, cy - 1}, {cx - 6, cy - 7},
-                {cx, cy - 4}, {cx + 6, cy - 7}, {cx + 8, cy - 1}
+                {cx, cy + 8 * u}, {cx - 8 * u, cy - 1 * u}, {cx - 6 * u, cy - 7 * u},
+                {cx, cy - 4 * u}, {cx + 6 * u, cy - 7 * u}, {cx + 8 * u, cy - 1 * u}
             };
             dc.Polyline(heart, 6);
-            dc.LineTo(cx, cy + 8);
+            dc.LineTo(cx, cy + 8 * u);
             break;
     }
 
@@ -149,31 +161,37 @@ void CPlayerNPlayBar::OnPaint()
     dc.FillSolidRect(rc, bg);
 
     // Brand card.
-    CRect brand(12, 12, rc.Width() - 12, 72);
+    CClientDC dpiDc(this);
+    const int dpiX = dpiDc.GetDeviceCaps(LOGPIXELSX);
+    const int dpiY = dpiDc.GetDeviceCaps(LOGPIXELSY);
+    const auto sx = [dpiX](int value) { return MulDiv(value, dpiX, 96); };
+    const auto sy = [dpiY](int value) { return MulDiv(value, dpiY, 96); };
+
+    CRect brand(sx(12), sy(12), rc.Width() - sx(12), sy(72));
     CBrush brandBrush(panel);
     dc.FillRect(brand, &brandBrush);
     dc.SelectObject(&brandBrush);
-    dc.RoundRect(brand, CPoint(12, 12));
+    dc.RoundRect(brand, CPoint(sx(12), sy(12)));
     dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
     CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-    dc.RoundRect(brand, CPoint(12, 12));
+    dc.RoundRect(brand, CPoint(sx(12), sy(12)));
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
 
-    const int logoSize = 34;
-    CRect logo(brand.left + 12, brand.CenterPoint().y - logoSize / 2,
-               brand.left + 12 + logoSize, brand.CenterPoint().y + logoSize / 2);
+    const int logoSize = sy(34);
+    CRect logo(brand.left + sx(12), brand.CenterPoint().y - logoSize / 2,
+               brand.left + sx(12) + logoSize, brand.CenterPoint().y + logoSize / 2);
     CBrush logoBrush(accent);
     dc.SelectObject(&logoBrush);
-    dc.RoundRect(logo, CPoint(9, 9));
+    dc.RoundRect(logo, CPoint(sx(9), sy(9)));
     dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CBrush logoCut(bg);
     CPoint tri[3] = {
-        { logo.left + 13, logo.top + 9 },
-        { logo.left + 13, logo.bottom - 9 },
-        { logo.right - 9, logo.CenterPoint().y }
+        { logo.left + sx(13), logo.top + sy(9) },
+        { logo.left + sx(13), logo.bottom - sy(9) },
+        { logo.right - sx(9), logo.CenterPoint().y }
     };
     dc.SelectObject(&logoCut);
     dc.Polygon(tri, 3);
@@ -181,12 +199,12 @@ void CPlayerNPlayBar::OnPaint()
     CFont* oldFont = dc.SelectObject(&m_font);
     dc.SetBkMode(TRANSPARENT);
     dc.SetTextColor(text);
-    CRect title(brand.left + 56, brand.top + 11, brand.right - 10, brand.top + 35);
+    CRect title(brand.left + 56, brand.top + sy(11), brand.right - 10, brand.top + sy(35));
     dc.DrawTextW(L"N PLAY", title, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
     CFont* oldSmall = dc.SelectObject(&m_smallFont);
     dc.SetTextColor(accent);
-    CRect subtitle(brand.left + 57, brand.top + 35, brand.right - 10, brand.bottom - 7);
+    CRect subtitle(brand.left + 57, brand.top + sy(35), brand.right - 10, brand.bottom - sy(7));
     dc.DrawTextW(L"MEDIA PLAYER", subtitle, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     dc.SelectObject(oldSmall);
     dc.SelectObject(oldFont);
@@ -200,13 +218,13 @@ void CPlayerNPlayBar::OnPaint()
         if (active || hot) {
             CBrush itemBrush(active ? panelActive : panelHot);
             dc.SelectObject(&itemBrush);
-            dc.RoundRect(item, CPoint(9, 9));
+            dc.RoundRect(item, CPoint(sx(9), sy(9)));
             dc.SelectObject(oldBrush);
 
             CPen itemPen(PS_SOLID, 1, active ? RGB(35, 91, 116) : border);
             CPen* savedPen = dc.SelectObject(&itemPen);
             dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-            dc.RoundRect(item, CPoint(9, 9));
+            dc.RoundRect(item, CPoint(sx(9), sy(9)));
             dc.SelectObject(savedPen);
 
             CBrush accentBrush(accent);
@@ -214,30 +232,30 @@ void CPlayerNPlayBar::OnPaint()
             dc.FillRect(stripe, &accentBrush);
         }
 
-        DrawIcon(dc, CRect(item.left + 13, item.top + 8, item.left + 39, item.bottom - 8),
+        DrawIcon(dc, CRect(item.left + sx(13), item.top + sy(8), item.left + sx(39), item.bottom - sy(8)),
                  m_items[i].icon, active);
 
         CFont* old = dc.SelectObject(&m_font);
         dc.SetTextColor(active ? text : muted);
-        CRect label(item.left + 51, item.top, item.right - 10, item.bottom);
+        CRect label(item.left + sx(51), item.top, item.right - sx(10), item.bottom);
         dc.DrawTextW(m_items[i].label, label, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         dc.SelectObject(old);
     }
 
     // Playlist section. Hide it when the dock is too short so it never overlaps navigation.
-    if (rc.Height() >= 430) {
-        const int sectionY = rc.Height() - 132;
+    if (rc.Height() >= sy(430)) {
+        const int sectionY = rc.Height() - sy(132);
         CFont* old = dc.SelectObject(&m_smallFont);
         dc.SetTextColor(muted);
-        CRect section(16, sectionY, rc.Width() - 16, sectionY + 22);
+        CRect section(sx(16), sectionY, rc.Width() - sx(16), sectionY + sy(22));
         dc.DrawTextW(L"PLAYLISTS", section, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
         CPen sectionPen(PS_SOLID, 1, border);
         dc.SelectObject(&sectionPen);
-        dc.MoveTo(16, sectionY + 24);
-        dc.LineTo(rc.Width() - 16, sectionY + 24);
+        dc.MoveTo(sx(16), sectionY + sy(24));
+        dc.LineTo(rc.Width() - sx(16), sectionY + sy(24));
 
-        CRect listItem(12, sectionY + 34, rc.Width() - 12, sectionY + 74);
+        CRect listItem(sx(12), sectionY + sy(34), rc.Width() - sx(12), sectionY + sy(74));
         CBrush listBrush(dark ? RGB(11, 22, 35) : RGB(255, 255, 255));
         dc.SelectObject(&listBrush);
         dc.RoundRect(listItem, CPoint(8, 8));
@@ -246,12 +264,12 @@ void CPlayerNPlayBar::OnPaint()
         dc.RoundRect(listItem, CPoint(8, 8));
 
         dc.SetTextColor(text);
-        CRect listLabel(listItem.left + 12, listItem.top, listItem.right - 12, listItem.bottom);
+        CRect listLabel(listItem.left + sx(12), listItem.top, listItem.right - sx(12), listItem.bottom);
         dc.DrawTextW(L"Default Playlist", listLabel, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
         CFont* oldMain = dc.SelectObject(&m_font);
         dc.SetTextColor(accent);
-        CRect addItem(12, sectionY + 82, rc.Width() - 12, sectionY + 122);
+        CRect addItem(sx(12), sectionY + sy(82), rc.Width() - sx(12), sectionY + sy(122));
         dc.DrawTextW(L"+  New Playlist", addItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         dc.SelectObject(oldMain);
         dc.SelectObject(old);
