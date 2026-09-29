@@ -5634,6 +5634,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 			p->subs = s.slSubs;
 		}
 		OpenMedia(std::move(p));
+		m_wndNPlayBar.SetActiveItem(0);
 	} else if (s.nCLSwitches & CLSW_CD) {
 		SendMessageW(WM_COMMAND, ID_FILE_CLOSEMEDIA);
 		fSetForegroundWindow = true;
@@ -5652,6 +5653,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 		}
 
 		m_wndPlaylistBar.Open(sl, true);
+		m_wndNPlayBar.SetActiveItem(0);
 		applyRandomizeSwitch();
 		OpenCurPlaylistItem();
 	} else if (s.nCLSwitches & CLSW_CLIPBOARD) {
@@ -5678,6 +5680,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 					AddSimilarFiles(sl);
 
 					m_wndPlaylistBar.Open(sl, sl.size() > 1, &s.slSubs);
+					m_wndNPlayBar.SetActiveItem(0);
 					applyRandomizeSwitch();
 					OpenCurPlaylistItem();
 
@@ -5733,6 +5736,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 				}
 
 				m_wndPlaylistBar.Open(sl, fMulti, &s.slSubs);
+				m_wndNPlayBar.SetActiveItem(0);
 				applyRandomizeSwitch();
 				OpenCurPlaylistItem((s.nCLSwitches & CLSW_STARTVALID) ? s.rtStart : INVALID_TIME);
 
@@ -6150,6 +6154,7 @@ void CMainFrame::DropFiles(std::list<CString>& slFiles)
 	AddSimilarFiles(slFiles);
 
 	m_wndPlaylistBar.Open(slFiles, true);
+	m_wndNPlayBar.SetActiveItem(0);
 	OpenCurPlaylistItem();
 }
 
@@ -10593,6 +10598,7 @@ void CMainFrame::PlayFavoriteFile(SessionInfo fav) // use a copy of SessionInfo
 
 	if (!m_wndPlaylistBar.SelectFileInPlaylist(fav.Path)) {
 		m_wndPlaylistBar.Open(fav.Path);
+		m_wndNPlayBar.SetActiveItem(0);
 	}
 
 	if (GetPlaybackMode() == PM_FILE && fav.Path == m_lastOMD->title && !m_bEndOfStream) {
@@ -10619,6 +10625,7 @@ void CMainFrame::OnRecentFile(UINT nID)
 		if (!m_wndPlaylistBar.SelectFileInPlaylist(m_RecentPaths[nID])) {
 			m_wndPlaylistBar.Open(m_RecentPaths[nID]);
 		}
+		m_wndNPlayBar.SetActiveItem(0);
 		OpenCurPlaylistItem();
 	}
 }
@@ -18477,6 +18484,7 @@ void CMainFrame::ProcessAPICommand(COPYDATASTRUCT* pCDS)
 			fn.Trim();
 			if (fn.GetLength()) {
 				m_wndPlaylistBar.Open(fn);
+				m_wndNPlayBar.SetActiveItem(0);
 				OpenCurPlaylistItem();
 			}
 			break;
@@ -18487,6 +18495,7 @@ void CMainFrame::ProcessAPICommand(COPYDATASTRUCT* pCDS)
 				std::list<CString> fns;
 				Explode(fn, fns, L'|');
 				m_wndPlaylistBar.Open(fns, false);
+				m_wndNPlayBar.SetActiveItem(0);
 				OpenCurPlaylistItem();
 			}
 			break;
@@ -19159,6 +19168,7 @@ void CMainFrame::OnFileOpenDirectory()
 		}
 
 		m_wndPlaylistBar.Open(sl, true);
+		m_wndNPlayBar.SetActiveItem(0);
 		OpenCurPlaylistItem();
 	}
 }
