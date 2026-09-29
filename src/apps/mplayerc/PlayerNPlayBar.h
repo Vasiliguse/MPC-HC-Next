@@ -15,6 +15,7 @@ public:
     BOOL Create(CWnd* pParentWnd, UINT defDockBarID);
     virtual void ReloadTranslatableResources() override;
     void SetActiveItem(int index);
+    void ScaleForDpi();
 
 protected:
     struct NavItem {
