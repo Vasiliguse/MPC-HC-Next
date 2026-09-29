@@ -9283,6 +9283,12 @@ void CMainFrame::OnMenuNavAudio()
 	OnMenu(&m_AudioMenu);
 }
 
+void CMainFrame::OnMenuNavVideo()
+{
+	SetupVideoStreamsSubMenu();
+	OnMenu(&m_VideoStreamsMenu);
+}
+
 void CMainFrame::OnMenuNavSubtitle()
 {
 	SetupSubtitleTracksSubMenu();
