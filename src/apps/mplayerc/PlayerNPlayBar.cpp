@@ -87,8 +87,8 @@ void CPlayerNPlayBar::LayoutItems()
 void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) const
 {
     const COLORREF fg = active ? RGB(76, 201, 240) : RGB(145, 160, 176);
-    const int u = std::max(1, r.Height() / 26);
-    CPen pen(PS_SOLID, std::max(1, 2 * u), fg);
+    const auto v = [&r](int value) { return MulDiv(value, r.Height(), 26); };
+    CPen pen(PS_SOLID, std::max(1, v(2)), fg);
     CBrush brush(fg);
     CPen* oldPen = dc.SelectObject(&pen);
     CBrush* oldBrush = dc.SelectObject(&brush);
@@ -99,32 +99,32 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     dc.SetBkMode(TRANSPARENT);
     switch (icon) {
         case 0: { // Home
-            CPoint roof[3] = {{cx - 8 * u, cy - 1 * u}, {cx, cy - 8 * u}, {cx + 8 * u, cy - 1 * u}};
+            CPoint roof[3] = {{cx - v(8), cy - v(1)}, {cx, cy - v(8)}, {cx + v(8), cy - v(1)}};
             dc.Polyline(roof, 3);
-            dc.MoveTo(cx - 6 * u, cy - 2 * u); dc.LineTo(cx - 6 * u, cy + 7 * u); dc.LineTo(cx + 6 * u, cy + 7 * u); dc.LineTo(cx + 6 * u, cy - 2 * u);
-            dc.MoveTo(cx - 1 * u, cy + 7 * u); dc.LineTo(cx - 1 * u, cy + 1 * u); dc.LineTo(cx + 2 * u, cy + 1 * u); dc.LineTo(cx + 2 * u, cy + 7 * u);
+            dc.MoveTo(cx - v(6), cy - v(2)); dc.LineTo(cx - v(6), cy + v(7)); dc.LineTo(cx + v(6), cy + v(7)); dc.LineTo(cx + v(6), cy - v(2));
+            dc.MoveTo(cx - v(1), cy + v(7)); dc.LineTo(cx - v(1), cy + v(1)); dc.LineTo(cx + v(2), cy + v(1)); dc.LineTo(cx + v(2), cy + v(7));
             break;
         }
         case 1: // Playlist
-            dc.MoveTo(cx - 8 * u, cy - 6 * u); dc.LineTo(cx + 8 * u, cy - 6 * u);
-            dc.MoveTo(cx - 8 * u, cy); dc.LineTo(cx + 8 * u, cy);
-            dc.MoveTo(cx - 8 * u, cy + 6); dc.LineTo(cx + 4 * u, cy + 6 * u);
+            dc.MoveTo(cx - v(8), cy - v(6)); dc.LineTo(cx + v(8), cy - v(6));
+            dc.MoveTo(cx - v(8), cy); dc.LineTo(cx + v(8), cy);
+            dc.MoveTo(cx - v(8), cy + v(6)); dc.LineTo(cx + v(4), cy + v(6));
             break;
         case 2: // Video
-            dc.RoundRect(cx - 8 * u, cy - 7, cx + 8 * u, cy + 7, 3, 3);
-            dc.MoveTo(cx - 2 * u, cy - 4 * u); dc.LineTo(cx + 4 * u, cy); dc.LineTo(cx - 2 * u, cy + 4 * u);
+            dc.RoundRect(cx - v(8), cy - v(7), cx + v(8), cy + v(7), v(3), v(3));
+            dc.MoveTo(cx - v(2), cy - v(4)); dc.LineTo(cx + v(4), cy); dc.LineTo(cx - v(2), cy + v(4));
             break;
         case 3: // Audio
-            dc.MoveTo(cx - 7 * u, cy - 3 * u); dc.LineTo(cx - 2 * u, cy - 3 * u); dc.LineTo(cx + 3 * u, cy - 8 * u); dc.LineTo(cx + 3 * u, cy + 8 * u); dc.LineTo(cx - 2 * u, cy + 3 * u); dc.LineTo(cx - 7 * u, cy + 3 * u); dc.LineTo(cx - 7 * u, cy - 3 * u);
-            dc.Arc(cx - 2 * u, cy - 7 * u, cx + 11 * u, cy + 7 * u, cx + 5 * u, cy + 5 * u, cx + 5 * u, cy - 5 * u);
+            dc.MoveTo(cx - v(7), cy - v(3)); dc.LineTo(cx - v(2), cy - v(3)); dc.LineTo(cx + v(3), cy - v(8)); dc.LineTo(cx + v(3), cy + v(8)); dc.LineTo(cx - v(2), cy + v(3)); dc.LineTo(cx - v(7), cy + v(3)); dc.LineTo(cx - v(7), cy - v(3));
+            dc.Arc(cx - v(2), cy - v(7), cx + v(11), cy + v(7), cx + v(5), cy + v(5), cx + v(5), cy - v(5));
             break;
         default: // Favorites
             POINT heart[6] = {
-                {cx, cy + 8 * u}, {cx - 8 * u, cy - 1 * u}, {cx - 6 * u, cy - 7 * u},
-                {cx, cy - 4 * u}, {cx + 6 * u, cy - 7 * u}, {cx + 8 * u, cy - 1 * u}
+                {cx, cy + v(8)}, {cx - v(8), cy - v(1)}, {cx - v(6), cy - v(7)},
+                {cx, cy - v(4)}, {cx + v(6), cy - v(7)}, {cx + v(8), cy - v(1)}
             };
             dc.Polyline(heart, 6);
-            dc.LineTo(cx, cy + 8 * u);
+            dc.LineTo(cx, cy + v(8));
             break;
     }
 
