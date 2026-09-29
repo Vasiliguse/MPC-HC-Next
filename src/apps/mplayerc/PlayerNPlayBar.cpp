@@ -87,14 +87,14 @@ void CPlayerNPlayBar::LayoutItems()
 void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) const
 {
     const COLORREF fg = active ? RGB(76, 201, 240) : RGB(145, 160, 176);
-    CPen pen(PS_SOLID, 2, fg);
+    const int u = std::max(1, r.Height() / 26);
+    CPen pen(PS_SOLID, std::max(1, 2 * u), fg);
     CBrush brush(fg);
     CPen* oldPen = dc.SelectObject(&pen);
     CBrush* oldBrush = dc.SelectObject(&brush);
 
     const int cx = r.CenterPoint().x;
     const int cy = r.CenterPoint().y;
-    const int u = std::max(1, r.Height() / 26);
 
     dc.SetBkMode(TRANSPARENT);
     switch (icon) {
@@ -199,12 +199,12 @@ void CPlayerNPlayBar::OnPaint()
     CFont* oldFont = dc.SelectObject(&m_font);
     dc.SetBkMode(TRANSPARENT);
     dc.SetTextColor(text);
-    CRect title(brand.left + 56, brand.top + sy(11), brand.right - 10, brand.top + sy(35));
+    CRect title(brand.left + sx(56), brand.top + sy(11), brand.right - sx(10), brand.top + sy(35));
     dc.DrawTextW(L"N PLAY", title, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
     CFont* oldSmall = dc.SelectObject(&m_smallFont);
     dc.SetTextColor(accent);
-    CRect subtitle(brand.left + 57, brand.top + sy(35), brand.right - 10, brand.bottom - sy(7));
+    CRect subtitle(brand.left + sx(57), brand.top + sy(35), brand.right - sx(10), brand.bottom - sy(7));
     dc.DrawTextW(L"MEDIA PLAYER", subtitle, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     dc.SelectObject(oldSmall);
     dc.SelectObject(oldFont);
@@ -228,7 +228,7 @@ void CPlayerNPlayBar::OnPaint()
             dc.SelectObject(savedPen);
 
             CBrush accentBrush(accent);
-            CRect stripe(item.left, item.top + 9, item.left + 3, item.bottom - 9);
+            CRect stripe(item.left, item.top + sy(9), item.left + sx(3), item.bottom - sy(9));
             dc.FillRect(stripe, &accentBrush);
         }
 
@@ -258,10 +258,10 @@ void CPlayerNPlayBar::OnPaint()
         CRect listItem(sx(12), sectionY + sy(34), rc.Width() - sx(12), sectionY + sy(74));
         CBrush listBrush(dark ? RGB(11, 22, 35) : RGB(255, 255, 255));
         dc.SelectObject(&listBrush);
-        dc.RoundRect(listItem, CPoint(8, 8));
+        dc.RoundRect(listItem, CPoint(sx(8), sy(8)));
         dc.SelectObject(oldBrush);
         dc.SelectObject(&sectionPen);
-        dc.RoundRect(listItem, CPoint(8, 8));
+        dc.RoundRect(listItem, CPoint(sx(8), sy(8)));
 
         dc.SetTextColor(text);
         CRect listLabel(listItem.left + sx(12), listItem.top, listItem.right - sx(12), listItem.bottom);
