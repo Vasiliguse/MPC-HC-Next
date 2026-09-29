@@ -162,7 +162,11 @@ void CPlayerNPlayBar::OnPaint()
     dc.FillSolidRect(rc, bg);
 
     // Brand card.
-    CRect brand(12, 12, rc.Width() - 12, 72);
+    CClientDC scaleDc(this);
+    const int dpiY = scaleDc.GetDeviceCaps(LOGPIXELSY);
+    const auto scale = [dpiY](int value) { return MulDiv(value, dpiY, 96); };
+
+    CRect brand(scale(12), scale(12), rc.Width() - scale(12), scale(72));
     CBrush brandBrush(panel);
     dc.FillRect(brand, &brandBrush);
     dc.SelectObject(&brandBrush);
@@ -175,18 +179,18 @@ void CPlayerNPlayBar::OnPaint()
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
 
-    const int logoSize = 34;
-    CRect logo(brand.left + 12, brand.CenterPoint().y - logoSize / 2,
-               brand.left + 12 + logoSize, brand.CenterPoint().y + logoSize / 2);
+    const int logoSize = scale(34);
+    CRect logo(brand.left + scale(12), brand.CenterPoint().y - logoSize / 2,
+               brand.left + scale(12) + logoSize, brand.CenterPoint().y + logoSize / 2);
     CBrush logoBrush(accent);
     dc.SelectObject(&logoBrush);
-    dc.RoundRect(logo, CPoint(9, 9));
+    dc.RoundRect(logo, CPoint(scale(9), scale(9)));
     dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CBrush logoCut(bg);
     CPoint tri[3] = {
-        { logo.left + 13, logo.top + 9 },
-        { logo.left + 13, logo.bottom - 9 },
-        { logo.right - 9, logo.CenterPoint().y }
+        { logo.left + scale(13), logo.top + scale(9) },
+        { logo.left + scale(13), logo.bottom - scale(9) },
+        { logo.right - scale(9), logo.CenterPoint().y }
     };
     dc.SelectObject(&logoCut);
     dc.Polygon(tri, 3);
@@ -194,12 +198,12 @@ void CPlayerNPlayBar::OnPaint()
     CFont* oldFont = dc.SelectObject(&m_font);
     dc.SetBkMode(TRANSPARENT);
     dc.SetTextColor(text);
-    CRect title(brand.left + 56, brand.top + 11, brand.right - 10, brand.top + 35);
+    CRect title(brand.left + scale(56), brand.top + scale(11), brand.right - scale(10), brand.top + scale(35));
     dc.DrawTextW(L"N PLAY", title, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
     CFont* oldSmall = dc.SelectObject(&m_smallFont);
     dc.SetTextColor(accent);
-    CRect subtitle(brand.left + 57, brand.top + 35, brand.right - 10, brand.bottom - 7);
+    CRect subtitle(brand.left + scale(57), brand.top + scale(35), brand.right - scale(10), brand.bottom - scale(7));
     dc.DrawTextW(L"MEDIA PLAYER", subtitle, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     dc.SelectObject(oldSmall);
     dc.SelectObject(oldFont);
