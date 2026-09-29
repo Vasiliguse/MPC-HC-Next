@@ -574,7 +574,16 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				} else {
 					tvBackground[0].x = r.left; tvBackground[0].y = r.top;
 					tvBackground[1].x = r.right; tvBackground[1].y = r.bottom;
-					dc.FillSolidRect(r, ThemeRGB(7, 16, 28));
+					dc.FillSolidRect(r, ThemeRGB(6, 12, 22));
+				CRect surface = r;
+				surface.DeflateRect(8, 4);
+				CBrush surfaceBrush(ThemeRGB(13, 29, 45));
+				CPen surfacePen(PS_SOLID, 1, ThemeRGB(35, 65, 88));
+				CBrush* oldBrush = dc.SelectObject(&surfaceBrush);
+				CPen* oldPen = dc.SelectObject(&surfacePen);
+				dc.RoundRect(surface, CPoint(12, 12));
+				dc.SelectObject(oldPen);
+				dc.SelectObject(oldBrush);
 				}
 
 				dc.Detach();
@@ -622,7 +631,7 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				CBrush* brushSaved = (CBrush*)dc.SelectStockObject(NULL_BRUSH);
 				CPen* penSaved = dc.SelectObject(&m_penFrHot);
 
-				dc.RoundRect(r.left + 1, r.top + 1, r.right - 2, r.bottom - 1, 6, 4);
+				dc.RoundRect(r.left + 1, r.top + 1, r.right - 2, r.bottom - 1, 10, 10);
 				AlphaBlend(dc.m_hDC, r.left + 2, r.top + 2, r.Width() - 4, 0.7 * r.Height() - 2, memdc, 0, 0, gWidth, gHeight, bf);
 
 				dc.SelectObject(&penSaved);
@@ -683,6 +692,15 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				CRect r;
 				GetClientRect(&r);
 				dc.FillSolidRect(r, GetSysColor(COLOR_BTNFACE));
+				CRect surface = r;
+				surface.DeflateRect(8, 4);
+				CBrush surfaceBrush(RGB(255, 255, 255));
+				CPen surfacePen(PS_SOLID, 1, RGB(218, 227, 235));
+				CBrush* oldBrush = dc.SelectObject(&surfaceBrush);
+				CPen* oldPen = dc.SelectObject(&surfacePen);
+				dc.RoundRect(surface, CPoint(12, 12));
+				dc.SelectObject(oldPen);
+				dc.SelectObject(oldBrush);
 				dc.Detach();
 			}
 			lr |= CDRF_NOTIFYITEMDRAW;
