@@ -4242,121 +4242,149 @@ void CPlayerPlaylistBar::TIndexHighighted()
 void CPlayerPlaylistBar::TDrawBar()
 {
 	CClientDC dc(this);
-	if (IsWindowVisible()) {
-		TIndexHighighted();
-
-		CDC mdc;
-		mdc.CreateCompatibleDC(&dc);
-		mdc.SelectObject(&m_font);
-
-		CRect rcTabBar;
-		GetClientRect(&rcTabBar);
-		rcTabBar.bottom = rcTabBar.top + m_rcTPage.Height() + 2;
-
-		CBitmap bm;
-		bm.CreateCompatibleBitmap(&dc, rcTabBar.Width(), rcTabBar.Height());
-		CBitmap* pOldBm = mdc.SelectObject(&bm);
-		mdc.SetBkMode(TRANSPARENT);
-
-		// background Tab bar
-		mdc.FillSolidRect(rcTabBar, m_crBkBar);
-		if (AfxGetAppSettings().bUseDarkTheme) {
-			mdc.FillSolidRect(rcTabBar.left, rcTabBar.bottom - 2, rcTabBar.right, rcTabBar.bottom, ThemeRGB(24, 45, 65));
-		}
-
-		for (size_t i = 0; i < std::size(m_tab_buttons); i++) {
-			auto& button = m_tab_buttons[i];
-			if (button.bVisible) {
-				// Buttons
-				mdc.Draw3dRect(button.r, m_crBNL, m_crBND);
-				mdc.SetTextColor(m_crTN);
-				mdc.DrawText(button.name, button.name.GetLength(), &button.r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				// Highlighted Buttons
-				if (i == m_button_idx) {
-					mdc.SetTextColor(m_crTH);
-					mdc.FillSolidRect(button.r, m_crBH);
-					mdc.Draw3dRect(button.r, m_crBHL, m_crBHD);
-					mdc.DrawText(button.name, button.name.GetLength(), &button.r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-				}
-			}
-		}
-		//HRGN hrgn;
-		//GetClipRgn(mdc, hrgn);
-
-		HRGN hRgnExclude = ::CreateRectRgnIndirect(&m_rcTPage);
-		SelectClipRgn(mdc, hRgnExclude);
-		for (size_t i = 0; i < m_tabs.size(); i++) {
-			auto& tab = m_tabs[i];
-			CRect rcText = tab.r;
-			rcText.DeflateRect(2, 2, 2, 2);
-			// tab
-			mdc.SetTextColor(m_crTN);
-			mdc.DrawText(tab.name.GetString(), tab.name.GetLength(), &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			// higjlighted tab
-			if (i == m_tab_idx && m_tab_idx != m_nCurPlayListIndex) {
-				mdc.SetTextColor(m_crTH);
-				mdc.FillSolidRect(tab.r, m_crBH);
-				mdc.Draw3dRect(tab.r, m_crBHL, m_crBHL);
-				mdc.DrawText(tab.name.GetString(), tab.name.GetLength(), &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			// current activetab
-			if (i == m_nCurPlayListIndex) {
-				if (i == m_tab_idx) { // selected and highlighted
-					mdc.SetTextColor(m_crTS);
-					mdc.FillSolidRect(tab.r, m_crBSH);
-					mdc.Draw3dRect(tab.r, m_crBSHL, m_crBSHL);
-					mdc.DrawText(tab.name.GetString(), tab.name.GetLength(), &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-				}
-				else { // selected
-					mdc.FillSolidRect(tab.r, m_crBS);
-					mdc.SetTextColor(m_crTS);
-					mdc.Draw3dRect(tab.r, m_crBSL, m_crBSL);
-					mdc.DrawText(tab.name.GetString(), tab.name.GetLength(), &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-				}
-			}
-		}
-		//SelectClipRgn(mdc, hrgn);
-
-		dc.BitBlt(0, 0, rcTabBar.Width(), rcTabBar.Height(), &mdc, 0, 0, SRCCOPY);
-
-		mdc.SelectObject(pOldBm);
-		bm.DeleteObject();
-		mdc.DeleteDC();
-		DeleteObject(hRgnExclude);
+	if (!IsWindowVisible()) {
+		return;
 	}
+
+	TIndexHighighted();
+
+	CDC mdc;
+	mdc.CreateCompatibleDC(&dc);
+	mdc.SelectObject(&m_font);
+	mdc.SetBkMode(TRANSPARENT);
+
+	CRect rcTabBar;
+	GetClientRect(&rcTabBar);
+	rcTabBar.bottom = rcTabBar.top + m_rcTPage.Height() + 2;
+
+	CBitmap bm;
+	bm.CreateCompatibleBitmap(&dc, rcTabBar.Width(), rcTabBar.Height());
+	CBitmap* pOldBm = mdc.SelectObject(&bm);
+
+	const bool dark = AfxGetAppSettings().bUseDarkTheme;
+	const COLORREF bg = dark ? ThemeRGB(7, 16, 28) : RGB(247, 249, 252);
+	const COLORREF surface = dark ? ThemeRGB(11, 22, 35) : RGB(255, 255, 255);
+	const COLORREF hover = dark ? ThemeRGB(17, 35, 52) : RGB(238, 244, 248);
+	const COLORREF active = dark ? ThemeRGB(17, 49, 66) : RGB(229, 241, 247);
+	const COLORREF border = dark ? ThemeRGB(29, 53, 71) : RGB(220, 228, 236);
+	const COLORREF text = dark ? ThemeRGB(190, 205, 218) : RGB(65, 78, 92);
+	const COLORREF selectedText = dark ? ThemeRGB(239, 248, 253) : RGB(30, 48, 63);
+	const COLORREF accent = ThemeRGB(0, 196, 255);
+
+	mdc.FillSolidRect(rcTabBar, bg);
+
+	// Toolbar/menu pills.
+	for (size_t i = 0; i < std::size(m_tab_buttons); i++) {
+		auto& button = m_tab_buttons[i];
+		if (!button.bVisible) {
+			continue;
+		}
+
+		const bool hot = static_cast<int>(i) == m_button_idx;
+		CRect pill = button.r;
+		pill.DeflateRect(2, 2);
+
+		CBrush pillBrush(hot ? hover : surface);
+		CBrush* oldBrush = mdc.SelectObject(&pillBrush);
+		CPen pillPen(PS_SOLID, 1, hot ? accent : border);
+		CPen* oldPen = mdc.SelectObject(&pillPen);
+		mdc.RoundRect(pill, CPoint(7, 7));
+		mdc.SelectObject(oldPen);
+		mdc.SelectObject(oldBrush);
+
+		mdc.SetTextColor(hot ? selectedText : text);
+		CRect label = pill;
+		label.DeflateRect(6, 1);
+		mdc.DrawText(button.name.GetString(), button.name.GetLength(), &label,
+			DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+	}
+
+	// Playlist tabs.
+	HRGN hRgnExclude = ::CreateRectRgnIndirect(&m_rcTPage);
+	SelectClipRgn(mdc, hRgnExclude);
+
+	for (size_t i = 0; i < m_tabs.size(); i++) {
+		auto& tab = m_tabs[i];
+		CRect pill = tab.r;
+		pill.DeflateRect(3, 2);
+
+		const bool hot = static_cast<int>(i) == m_tab_idx;
+		const bool selected = static_cast<int>(i) == m_nCurPlayListIndex;
+
+		if (selected || hot) {
+			CBrush tabBrush(selected ? active : hover);
+			CBrush* oldBrush = mdc.SelectObject(&tabBrush);
+			CPen tabPen(PS_SOLID, 1, selected ? ThemeRGB(37, 92, 116) : border);
+			CPen* oldPen = mdc.SelectObject(&tabPen);
+			mdc.RoundRect(pill, CPoint(7, 7));
+			mdc.SelectObject(oldPen);
+			mdc.SelectObject(oldBrush);
+		}
+
+		mdc.SetTextColor(selected ? selectedText : text);
+		CRect label = pill;
+		label.DeflateRect(7, 1);
+		mdc.DrawText(tab.name.GetString(), tab.name.GetLength(), &label,
+			DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+
+		if (selected) {
+			CBrush accentBrush(accent);
+			CRect accentRect(pill.left + 10, pill.bottom - 3, pill.right - 10, pill.bottom);
+			mdc.FillRect(accentRect, &accentBrush);
+		}
+	}
+
+	SelectClipRgn(mdc, nullptr);
+
+	CBrush dividerBrush(dark ? ThemeRGB(24, 45, 65) : RGB(221, 228, 235));
+	CRect divider(rcTabBar.left, rcTabBar.bottom - 1, rcTabBar.right, rcTabBar.bottom);
+	mdc.FillRect(divider, &dividerBrush);
+
+	dc.BitBlt(0, 0, rcTabBar.Width(), rcTabBar.Height(), &mdc, 0, 0, SRCCOPY);
+
+	mdc.SelectObject(pOldBm);
+	bm.DeleteObject();
+	mdc.DeleteDC();
+	DeleteObject(hRgnExclude);
 }
 
 void CPlayerPlaylistBar::TDrawSearchBar()
- {
+{
 	CClientDC dc(this);
-	if (IsWindowVisible() && AfxGetAppSettings().bShowPlaylistSearchBar) {
-		CRect rc;
-		GetClientRect(&rc);
-		rc.DeflateRect(2, 0);
-		rc.top = rc.bottom - m_nSearchBarHeight;
-
-		CDC mdc;
-		mdc.CreateCompatibleDC(&dc);
-		CBitmap bm;
-		bm.CreateCompatibleBitmap(&dc, rc.Width(), rc.Height());
-
-		CBitmap* pOldBm = mdc.SelectObject(&bm);
-		mdc.SetBkMode(TRANSPARENT);
-
-		//mdc.FillSolidRect(0, 0, rc.Width(), rc.Height(), m_crBND);
-		if (AfxGetAppSettings().bUseDarkTheme) {
-			mdc.FillSolidRect(rc, ThemeRGB(10, 21, 35));
-			mdc.Draw3dRect(0, 0, rc.Width(), rc.Height(), ThemeRGB(34, 61, 83), ThemeRGB(34, 61, 83));
-		} else {
-			mdc.Draw3dRect(0, 0, rc.Width(), rc.Height(), m_crBNL, m_crBNL);
-		}
-		dc.BitBlt(rc.left, rc.top, rc.Width(), rc.Height(), &mdc, 0, 0, SRCCOPY);
-
-		mdc.SelectObject(pOldBm);
-		bm.DeleteObject();
-		mdc.DeleteDC();
+	if (!IsWindowVisible() || !AfxGetAppSettings().bShowPlaylistSearchBar) {
+		return;
 	}
+
+	CRect rc;
+	GetClientRect(&rc);
+	rc.DeflateRect(8, 3, 8, 4);
+	rc.top = rc.bottom - m_nSearchBarHeight;
+
+	const bool dark = AfxGetAppSettings().bUseDarkTheme;
+	const COLORREF bg = dark ? ThemeRGB(9, 19, 31) : RGB(255, 255, 255);
+	const COLORREF border = dark ? ThemeRGB(31, 59, 78) : RGB(220, 228, 236);
+	const COLORREF accent = ThemeRGB(0, 196, 255);
+
+	CBrush brush(bg);
+	CPen pen(PS_SOLID, 1, border);
+	CBrush* oldBrush = dc.SelectObject(&brush);
+	CPen* oldPen = dc.SelectObject(&pen);
+	dc.RoundRect(rc, CPoint(8, 8));
+	dc.SelectObject(oldPen);
+	dc.SelectObject(oldBrush);
+
+	CPen iconPen(PS_SOLID, 2, dark ? ThemeRGB(115, 145, 164) : RGB(110, 125, 140));
+	CPen* oldIconPen = dc.SelectObject(&iconPen);
+	const int cx = rc.left + 16;
+	const int cy = rc.CenterPoint().y;
+	dc.Ellipse(cx - 5, cy - 5, cx + 5, cy + 5);
+	dc.MoveTo(cx + 3, cy + 3);
+	dc.LineTo(cx + 8, cy + 8);
+	dc.SelectObject(oldIconPen);
+
+	CBrush accentBrush(accent);
+	CRect accentRect(rc.left + 10, rc.top + 5, rc.left + 12, rc.bottom - 5);
+	dc.FillRect(accentRect, &accentBrush);
 }
 
 void CPlayerPlaylistBar::TOnMenu(bool bUnderCursor)
