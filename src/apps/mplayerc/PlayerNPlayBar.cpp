@@ -305,6 +305,9 @@ void CPlayerNPlayBar::OnLButtonUp(UINT nFlags, CPoint point)
             case 1:
                 m_pMainFrame->SendMessageW(WM_COMMAND, ID_VIEW_PLAYLIST);
                 break;
+            case 2:
+                m_pMainFrame->OnMenuNavVideo();
+                break;
             case 3:
                 m_pMainFrame->SendMessageW(WM_COMMAND, ID_NAVIGATE_AUDIO);
                 break;
