@@ -10598,8 +10598,8 @@ void CMainFrame::PlayFavoriteFile(SessionInfo fav) // use a copy of SessionInfo
 
 	if (!m_wndPlaylistBar.SelectFileInPlaylist(fav.Path)) {
 		m_wndPlaylistBar.Open(fav.Path);
-		m_wndNPlayBar.SetActiveItem(0);
 	}
+	m_wndNPlayBar.SetActiveItem(0);
 
 	if (GetPlaybackMode() == PM_FILE && fav.Path == m_lastOMD->title && !m_bEndOfStream) {
 		if (m_nAudioTrackStored != -1) {
@@ -20582,6 +20582,7 @@ BOOL CMainFrame::OpenYoutubePlaylist(const CString& url, BOOL bOnlyParse/* = FAL
 			m_wndPlaylistBar.Append(playlist);
 
 			if (!bOnlyParse) {
+				m_wndNPlayBar.SetActiveItem(0);
 				m_wndPlaylistBar.SetSelIdx(idx_CurrentPlay, true);
 				OpenCurPlaylistItem();
 			}
