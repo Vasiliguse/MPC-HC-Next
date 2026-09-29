@@ -58,6 +58,16 @@ void CPlayerNPlayBar::ReloadTranslatableResources()
     SetWindowTextW(L"N Play");
 }
 
+void CPlayerNPlayBar::SetActiveItem(int index)
+{
+    if (index < 0 || index >= static_cast<int>(m_items.size()) || m_activeItem == index) {
+        return;
+    }
+
+    m_activeItem = index;
+    Invalidate(FALSE);
+}
+
 void CPlayerNPlayBar::LayoutItems()
 {
     CRect rc;
