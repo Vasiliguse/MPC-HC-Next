@@ -356,13 +356,29 @@ void COSD::DrawSeekbar()
 	m_rectCursor.top    = m_rectSeekBar.top + (m_rectSeekBar.Height() - SliderCursorHeight) / 2;
 	m_rectCursor.bottom = m_rectCursor.top + SliderCursorHeight;
 
-	DrawRect(m_rectSeekBar, &m_brushBack, &m_penBorder);
-	CRect rect(m_rectSlider);
-	rect.right = m_rectCursor.left+1;
-	DrawRect(rect, &m_brushBar2);
-	rect.left = m_rectCursor.right-1;
-	rect.right = m_rectSlider.right;
-	DrawRect(rect, &m_brushBar);
+	// N Play: floating rounded seekbar surface.
+	CRect surface = m_rectSeekBar;
+	CBrush surfaceBrush(OSD_COLOR_BACKGROUND);
+	CPen surfacePen(PS_SOLID, 1, OSD_COLOR_BORDER);
+	CBrush* oldSurfaceBrush = m_MemDC.SelectObject(&surfaceBrush);
+	CPen* oldSurfacePen = m_MemDC.SelectObject(&surfacePen);
+	m_MemDC.RoundRect(surface, CPoint(14, 14));
+	m_MemDC.SelectObject(oldSurfacePen);
+	m_MemDC.SelectObject(oldSurfaceBrush);
+
+	const int trackHeight = 8;
+	const int trackY = m_rectSlider.CenterPoint().y;
+	CRect track(m_rectSlider.left, trackY - trackHeight / 2, m_rectSlider.right, trackY + trackHeight / 2);
+	CBrush trackBrush(OSD_COLOR_BAR);
+	m_MemDC.SelectObject(&trackBrush);
+	m_MemDC.RoundRect(track, CPoint(trackHeight, trackHeight));
+
+	CRect played(track.left, track.top, m_rectCursor.left + SliderCursorWidth / 2, track.bottom);
+	if (played.right > played.left) {
+		CBrush playedBrush(OSD_COLOR_BAR2);
+		m_MemDC.SelectObject(&playedBrush);
+		m_MemDC.RoundRect(played, CPoint(trackHeight, trackHeight));
+	}
 
 	if (m_SeekbarFont.GetSafeHandle()) {
 		CStringW text = ReftimeToString2(m_llSeekPos, false);
@@ -400,7 +416,14 @@ void COSD::DrawSeekbar()
 		}
 	}
 
-	DrawRect(m_rectCursor, &m_brushCursor);
+	CRect cursor = m_rectCursor;
+	CBrush cursorBrush(OSD_COLOR_CURSOR);
+	CPen cursorPen(PS_SOLID, 1, OSD_COLOR_BAR2);
+	CBrush* oldCursorBrush = m_MemDC.SelectObject(&cursorBrush);
+	CPen* oldCursorPen = m_MemDC.SelectObject(&cursorPen);
+	m_MemDC.Ellipse(cursor);
+	m_MemDC.SelectObject(oldCursorPen);
+	m_MemDC.SelectObject(oldCursorBrush);
 }
 
 void COSD::DrawFlybar()
