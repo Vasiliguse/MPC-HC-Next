@@ -903,6 +903,7 @@ public:
 	afx_msg void OnMenuFilters();
 
 	afx_msg void OnMenuNavAudio();
+	afx_msg void OnMenuNavVideo();
 	afx_msg void OnMenuNavSubtitle();
 	afx_msg void OnMenuNavAudioOptions();
 	afx_msg void OnMenuNavSubtitleOptions();
