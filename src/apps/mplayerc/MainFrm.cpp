@@ -5703,6 +5703,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 				p->subs = s.slSubs;
 			}
 
+			m_wndNPlayBar.SetActiveItem(0);
 			OpenMedia(std::move(p));
 		} else {
 			std::list<CString> sl;
