@@ -263,7 +263,7 @@ void CPlayerNPlayBar::OnPaint()
     }
 
     // Playlist section. Hide it when the dock is too short so it never overlaps navigation.
-    if (rc.Height() >= scale(430)) {
+    if (rc.Height() >= scale(468)) {
         const int sectionY = rc.Height() - scale(132);
         CFont* old = dc.SelectObject(&m_smallFont);
         dc.SetTextColor(muted);
@@ -326,8 +326,7 @@ void CPlayerNPlayBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
     const int hit = HitTest(point);
     if (hit >= 0) {
-        m_activeItem = hit;
-        Invalidate(FALSE);
+        SetActiveItem(hit);
     }
     __super::OnLButtonDown(nFlags, point);
 }
