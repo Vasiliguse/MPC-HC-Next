@@ -324,9 +324,9 @@ void CPlayerNPlayBar::OnMouseLeave()
 
 void CPlayerNPlayBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
-    const int hit = HitTest(point);
-    if (hit >= 0) {
-        SetActiveItem(hit);
+    m_pressedItem = HitTest(point);
+    if (m_pressedItem >= 0) {
+        SetActiveItem(m_pressedItem);
     }
     __super::OnLButtonDown(nFlags, point);
 }
@@ -334,7 +334,10 @@ void CPlayerNPlayBar::OnLButtonDown(UINT nFlags, CPoint point)
 void CPlayerNPlayBar::OnLButtonUp(UINT nFlags, CPoint point)
 {
     const int hit = HitTest(point);
-    if (hit >= 0 && m_pMainFrame) {
+    const int pressed = m_pressedItem;
+    m_pressedItem = -1;
+
+    if (hit >= 0 && hit == pressed && m_pMainFrame) {
         switch (hit) {
             case 0:
                 m_pMainFrame->SendMessageW(WM_COMMAND, ID_FILE_OPENFILE);
