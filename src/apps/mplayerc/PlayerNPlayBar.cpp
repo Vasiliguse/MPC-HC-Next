@@ -331,6 +331,7 @@ void CPlayerNPlayBar::OnLButtonDown(UINT nFlags, CPoint point)
     m_pressedItem = HitTest(point);
     if (m_pressedItem >= 0) {
         SetActiveItem(m_pressedItem);
+        SetCapture();
     }
     __super::OnLButtonDown(nFlags, point);
 }
@@ -340,6 +341,10 @@ void CPlayerNPlayBar::OnLButtonUp(UINT nFlags, CPoint point)
     const int hit = HitTest(point);
     const int pressed = m_pressedItem;
     m_pressedItem = -1;
+
+    if (GetCapture() == this) {
+        ReleaseCapture();
+    }
 
     if (hit >= 0 && hit == pressed && m_pMainFrame) {
         switch (hit) {
