@@ -59,6 +59,8 @@ void CPlayerNPlayBar::ScaleForDpi()
     m_szMinFloat = m_szMinVert;
     m_szFloat = m_szVert;
 
+    m_hotItem = -1;
+    m_pressedItem = -1;
     LayoutItems();
     Invalidate(FALSE);
 }
@@ -299,6 +301,8 @@ void CPlayerNPlayBar::OnPaint()
 void CPlayerNPlayBar::OnSize(UINT nType, int cx, int cy)
 {
     __super::OnSize(nType, cx, cy);
+    m_hotItem = -1;
+    m_pressedItem = -1;
     LayoutItems();
     Invalidate(FALSE);
 }
