@@ -7609,10 +7609,12 @@ void CMainFrame::OnUpdateViewSubresync(CCmdUI* pCmdUI)
 
 void CMainFrame::OnViewPlaylist()
 {
-	m_wndNPlayBar.SetActiveItem(1);
 	ShowControlBarInternal(&m_wndPlaylistBar, !m_wndPlaylistBar.IsWindowVisible());
 	if (m_wndPlaylistBar.IsWindowVisible()) {
+		m_wndNPlayBar.SetActiveItem(1);
 		m_wndPlaylistBar.SetFocus();
+	} else {
+		m_wndNPlayBar.SetActiveItem(0);
 	}
 }
 
