@@ -100,69 +100,107 @@ void CPlayerNPlayBar::LayoutItems()
 
 void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) const
 {
-    const COLORREF fg = active ? RGB(76, 201, 240) : RGB(145, 160, 176);
-    const int dpiX = dc.GetDeviceCaps(LOGPIXELSX);
-    const auto scale = [dpiX](int value) { return MulDiv(value, dpiX, 96); };
-    CPen pen(PS_SOLID, scale(2) < 1 ? 1 : scale(2), fg);
-    CBrush brush(fg);
+    const COLORREF fg = active ? RGB(45, 226, 197)
+                                : (AfxGetAppSettings().bUseDarkTheme ? RGB(139, 160, 179) : RGB(103, 118, 133));
+
+    int size = std::min(r.Width(), r.Height());
+    size = std::max(16, size);
+    int x = r.CenterPoint().x - size / 2;
+    int y = r.CenterPoint().y - size / 2;
+
+    // Reuse the existing resource-backed SVG strip used by the main toolbar so the sidebar
+    // follows the same icon family without introducing a second icon asset pipeline.
+    CSvgImage svg;
+    if (svg.Load(IDF_SVG_TOOLBAR)) {
+        int fullW = 0;
+        int fullH = 0;
+        if (svg.GetOriginalSize(fullW, fullH) && fullW >= 16 && fullH > 0) {
+            const int slotW = fullW / 16;
+            const int slot = std::clamp(icon, 0, 15);
+            int rasterW = slotW;
+            int rasterH = fullH;
+            if (HBITMAP bitmap = svg.Rasterize(rasterW, rasterH)) {
+                CBitmap source;
+                source.Attach(bitmap);
+
+                CDC memdc;
+                if (memdc.CreateCompatibleDC(&dc)) {
+                    CBitmap* oldBitmap = memdc.SelectObject(&source);
+
+                    // Keep inactive SVG artwork neutral while preserving alpha; active items get
+                    // a cyan accent by drawing a second, low-cost vector cue at the hit target.
+                    BLENDFUNCTION blend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+                    const int side = std::min(size, slotW);
+                    const int drawX = x + (size - side) / 2;
+                    const int drawY = y + (size - side) / 2;
+                    AlphaBlend(dc.m_hDC, drawX, drawY, side, side,
+                               memdc.m_hDC, slot * slotW, 0, slotW, slotW, blend);
+
+                    if (active) {
+                        CPen accentPen(PS_SOLID, std::max(1, dc.GetDeviceCaps(LOGPIXELSX) / 96), fg);
+                        CPen* oldPen = dc.SelectObject(&accentPen);
+                        CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+                        dc.RoundRect(drawX - 2, drawY - 2, drawX + side + 2, drawY + side + 2, 6, 6);
+                        dc.SelectObject(oldBrush);
+                        dc.SelectObject(oldPen);
+                    }
+
+                    memdc.SelectObject(oldBitmap);
+                }
+
+                source.DeleteObject();
+                return;
+            }
+        }
+    }
+
+    // Deterministic vector fallback if the shared SVG resource is unavailable.
+    CPen pen(PS_SOLID, std::max(1, dc.GetDeviceCaps(LOGPIXELSX) / 48), fg);
     CPen* oldPen = dc.SelectObject(&pen);
-    CBrush* oldBrush = dc.SelectObject(&brush);
+    CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 
     const int cx = r.CenterPoint().x;
     const int cy = r.CenterPoint().y;
-    const int x8 = scale(8);
-    const int x7 = scale(7);
-    const int x6 = scale(6);
-    const int x4 = scale(4);
-    const int x3 = scale(3);
-    const int x2 = scale(2);
-    const int x1 = scale(1);
-    const int x5 = scale(5);
+    const int s = std::max(5, std::min(r.Width(), r.Height()) / 4);
 
-    dc.SetBkMode(TRANSPARENT);
     switch (icon) {
-        case 0: { // Home
-            CPoint roof[3] = {{cx - x8, cy - x1}, {cx, cy - x8}, {cx + x8, cy - x1}};
-            dc.Polyline(roof, 3);
-            dc.MoveTo(cx - x6, cy - x2); dc.LineTo(cx - x6, cy + x7); dc.LineTo(cx + x6, cy + x7); dc.LineTo(cx + x6, cy - x2);
-            dc.MoveTo(cx - x1, cy + x7); dc.LineTo(cx - x1, cy + x1); dc.LineTo(cx + x2, cy + x1); dc.LineTo(cx + x2, cy + x7);
+        case 0: // home
+            dc.MoveTo(cx - s, cy + s / 2);
+            dc.LineTo(cx, cy - s);
+            dc.LineTo(cx + s, cy + s / 2);
+            dc.MoveTo(cx - s * 3 / 4, cy);
+            dc.LineTo(cx - s * 3 / 4, cy + s);
+            dc.LineTo(cx + s * 3 / 4, cy + s);
+            dc.LineTo(cx + s * 3 / 4, cy);
             break;
-        }
-        case 1: // Playlist
-            dc.MoveTo(cx - x8, cy - x6); dc.LineTo(cx + x8, cy - x6);
-            dc.MoveTo(cx - x8, cy); dc.LineTo(cx + x8, cy);
-            dc.MoveTo(cx - x8, cy + x6); dc.LineTo(cx + x4, cy + x6);
+        case 2: // video
+            dc.RoundRect(cx - s, cy - s * 3 / 4, cx + s, cy + s * 3 / 4, s / 3, s / 3);
+            dc.MoveTo(cx - s / 4, cy - s / 3);
+            dc.LineTo(cx + s / 3, cy);
+            dc.LineTo(cx - s / 4, cy + s / 3);
             break;
-        case 2: // Video
-            dc.RoundRect(cx - x8, cy - x7, cx + x8, cy + x7, scale(3), scale(3));
-            dc.MoveTo(cx - x2, cy - x4); dc.LineTo(cx + x4, cy); dc.LineTo(cx - x2, cy + x4);
+        case 9: // audio
+            dc.MoveTo(cx - s, cy - s / 3);
+            dc.LineTo(cx - s / 3, cy - s / 3);
+            dc.LineTo(cx + s / 3, cy - s);
+            dc.LineTo(cx + s / 3, cy + s);
+            dc.LineTo(cx - s / 3, cy + s / 3);
+            dc.LineTo(cx - s, cy + s / 3);
+            dc.LineTo(cx - s, cy - s / 3);
+            dc.Arc(cx - s / 4, cy - s, cx + s + 2, cy + s, cx + s / 2, cy + s / 2, cx + s / 2, cy - s / 2);
             break;
-        case 3: // Audio
-            dc.MoveTo(cx - x7, cy - x3); dc.LineTo(cx - x2, cy - x3); dc.LineTo(cx + x3, cy - x8); dc.LineTo(cx + x3, cy + x8); dc.LineTo(cx - x2, cy + x3); dc.LineTo(cx - x7, cy + x3); dc.LineTo(cx - x7, cy - x3);
-            dc.Arc(cx - x2, cy - x7, cx + scale(11), cy + x7, cx + x5, cy + x5, cx + x5, cy - x5);
-            break;
-        default: // Favorites
-            POINT heart[6] = {
-                {cx, cy + x8}, {cx - x8, cy - x1}, {cx - x6, cy - x7},
-                {cx, cy - x4}, {cx + x6, cy - x7}, {cx + x8, cy - x1}
-            };
-            dc.Polyline(heart, 6);
-            dc.LineTo(cx, cy + x8);
+        default:
+            dc.MoveTo(cx - s, cy - s);
+            dc.LineTo(cx + s, cy - s);
+            dc.MoveTo(cx - s, cy);
+            dc.LineTo(cx + s / 2, cy);
+            dc.MoveTo(cx - s, cy + s);
+            dc.LineTo(cx + s, cy + s);
             break;
     }
 
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
-}
-
-int CPlayerNPlayBar::HitTest(CPoint point) const
-{
-    for (size_t i = 0; i < m_items.size(); ++i) {
-        if (m_items[i].rect.PtInRect(point)) {
-            return static_cast<int>(i);
-        }
-    }
-    return -1;
 }
 
 void CPlayerNPlayBar::OnPaint()
