@@ -116,8 +116,8 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
         int fullW = 0;
         int fullH = 0;
         if (svg.GetOriginalSize(fullW, fullH) && fullW >= 16 && fullH > 0) {
-            const int slotW = fullW / 16;
-            const int slot = std::clamp(icon, 0, 15);
+            const int slotW = fullW / 5;
+            const int slot = std::clamp(icon, 0, 4);
             int rasterW = slotW;
             int rasterH = fullH;
             if (HBITMAP bitmap = svg.Rasterize(rasterW, rasterH)) {
