@@ -28,6 +28,7 @@ protected:
     CFont m_font;
     CFont m_smallFont;
     int m_hotItem = -1;
+    int m_pressedItem = -1;
     int m_activeItem = 0;
     std::vector<NavItem> m_items;
 
