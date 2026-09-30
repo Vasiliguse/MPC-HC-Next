@@ -370,6 +370,12 @@ void CPlayerNPlayBar::OnLButtonUp(UINT nFlags, CPoint point)
     __super::OnLButtonUp(nFlags, point);
 }
 
+void CPlayerNPlayBar::OnCaptureChanged(CWnd* pWnd)
+{
+    m_pressedItem = -1;
+    __super::OnCaptureChanged(pWnd);
+}
+
 BEGIN_MESSAGE_MAP(CPlayerNPlayBar, CPlayerBar)
     ON_WM_PAINT()
     ON_WM_SIZE()
@@ -377,4 +383,5 @@ BEGIN_MESSAGE_MAP(CPlayerNPlayBar, CPlayerBar)
     ON_WM_MOUSELEAVE()
     ON_WM_LBUTTONDOWN()
     ON_WM_LBUTTONUP()
+    ON_WM_CAPTURECHANGED()
 END_MESSAGE_MAP()
