@@ -18461,6 +18461,7 @@ afx_msg void CMainFrame::OnLanguage(UINT nID)
 	m_wndSubresyncBar.ReloadTranslatableResources();
 	m_wndCaptureBar.ReloadTranslatableResources();
 	m_wndNavigationBar.ReloadTranslatableResources();
+	m_wndNPlayBar.ReloadTranslatableResources();
 	m_wndShaderEditorBar.ReloadTranslatableResources();
 	m_wndPlaylistBar.ReloadTranslatableResources();
 
