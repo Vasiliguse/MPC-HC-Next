@@ -204,6 +204,16 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     dc.SelectObject(oldPen);
 }
 
+int CPlayerNPlayBar::HitTest(CPoint point) const
+{
+    for (size_t i = 0; i < m_items.size(); ++i) {
+        if (m_items[i].rect.PtInRect(point)) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
 void CPlayerNPlayBar::OnPaint()
 {
     CPaintDC dc(this);
