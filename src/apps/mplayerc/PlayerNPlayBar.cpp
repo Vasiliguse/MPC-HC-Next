@@ -2,6 +2,7 @@
 #include "MainFrm.h"
 #include "PlayerNPlayBar.h"
 #include "resource.h"
+#include "SvgHelper.h"
 
 IMPLEMENT_DYNAMIC(CPlayerNPlayBar, CPlayerBar)
 
@@ -111,7 +112,7 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     // Reuse the existing resource-backed SVG strip used by the main toolbar so the sidebar
     // follows the same icon family without introducing a second icon asset pipeline.
     CSvgImage svg;
-    if (svg.Load(IDF_SVG_TOOLBAR)) {
+    if (svg.Load(IDF_SVG_NPLAY_NAV)) {
         int fullW = 0;
         int fullH = 0;
         if (svg.GetOriginalSize(fullW, fullH) && fullW >= 16 && fullH > 0) {
