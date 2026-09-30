@@ -831,6 +831,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	GetDesktopWindow()->GetWindowRect(&m_rcDesktop);
 
+	// Restore persisted docking/floating state after all dockable bars have been created.
+	RestoreControlBars();
+
 	ShowControls(s.nCS);
 	// Keep the N Play navigation and playlist visible as the primary library layout.
 	ShowControlBarInternal(&m_wndNPlayBar, TRUE);
