@@ -27,6 +27,7 @@
 #define IDF_SVG_FLYBAR                  223
 #define IDF_SVG_TASKBAR_BUTTONS         224
 #define IDF_SVG_TASKBAR_STATE_ICONS     225
+#define IDF_SVG_NPLAY_NAV              226
 
 #define IDI_DVD                         302
 #define IDI_AUDIOCD                     303
