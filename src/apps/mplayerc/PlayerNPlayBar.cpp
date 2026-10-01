@@ -274,15 +274,19 @@ void CPlayerNPlayBar::OnPaint()
     for (size_t i = 0; i < m_items.size(); ++i) {
         const bool active = static_cast<int>(i) == m_activeItem;
         const bool hot = static_cast<int>(i) == m_hotItem;
+        const bool pressed = static_cast<int>(i) == m_pressedItem;
         CRect item = m_items[i].rect;
 
-        if (active || hot) {
-            CBrush itemBrush(active ? panelActive : panelHot);
+        if (active || hot || pressed) {
+            const COLORREF itemColor = pressed
+                ? (dark ? RGB(19, 61, 78) : RGB(216, 235, 242))
+                : (active ? panelActive : panelHot);
+            CBrush itemBrush(itemColor);
             dc.SelectObject(&itemBrush);
             dc.RoundRect(item, CPoint(scale(9), scale(9)));
             dc.SelectObject(oldBrush);
 
-            CPen itemPen(PS_SOLID, 1, active ? RGB(35, 91, 116) : border);
+            CPen itemPen(PS_SOLID, 1, pressed ? accent : (active ? RGB(35, 91, 116) : border));
             CPen* savedPen = dc.SelectObject(&itemPen);
             dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
             dc.RoundRect(item, CPoint(scale(9), scale(9)));
