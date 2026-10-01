@@ -395,6 +395,9 @@ void CPlayerNPlayBar::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             break;
         case VK_RETURN:
         case VK_SPACE:
+            if (!m_pMainFrame) {
+                return;
+            }
             switch (m_activeItem) {
                 case 0:
                     m_pMainFrame->SendMessageW(WM_COMMAND, ID_FILE_OPENFILE);
