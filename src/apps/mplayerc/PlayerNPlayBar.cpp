@@ -224,11 +224,11 @@ void CPlayerNPlayBar::OnPaint()
     const auto scaleX = [this](int value) { return m_pMainFrame->ScaleX(value); };
     const auto scaleY = [this](int value) { return m_pMainFrame->ScaleY(value); };
 
-    CRect brand(scaleX(12), scaleX(12), rc.Width() - scaleX(12), scaleY(72));
+    CRect brand(scaleX(12), scaleY(12), rc.Width() - scaleX(12), scaleY(72));
     CBrush brandBrush(panel);
     dc.FillRect(brand, &brandBrush);
     dc.SelectObject(&brandBrush);
-    dc.RoundRect(brand, CPoint(scaleX(12), scaleX(12)));
+    dc.RoundRect(brand, CPoint(std::min(scaleX(12), scaleY(12)), std::min(scaleX(12), scaleY(12))));
     dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
@@ -242,12 +242,12 @@ void CPlayerNPlayBar::OnPaint()
                brand.left + scaleX(12) + logoSize, brand.CenterPoint().y + logoSize / 2);
     CBrush logoBrush(accent);
     dc.SelectObject(&logoBrush);
-    dc.RoundRect(logo, CPoint(scaleX(9), scaleX(9)));
+    dc.RoundRect(logo, CPoint(std::min(scaleX(9), scaleY(9)), std::min(scaleX(9), scaleY(9))));
     dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
     CBrush logoCut(bg);
     CPoint tri[3] = {
-        { logo.left + scaleX(13), logo.top + scaleX(9) },
-        { logo.left + scaleX(13), logo.bottom - scaleX(9) },
+        { logo.left + scaleX(13), logo.top + scaleY(9) },
+        { logo.left + scaleX(13), logo.bottom - scaleY(9) },
         { logo.right - scaleX(9), logo.CenterPoint().y }
     };
     dc.SelectObject(&logoCut);
@@ -279,7 +279,7 @@ void CPlayerNPlayBar::OnPaint()
                 : (active ? panelActive : panelHot);
             CBrush itemBrush(itemColor);
             dc.SelectObject(&itemBrush);
-            dc.RoundRect(item, CPoint(scaleX(9), scaleX(9)));
+            dc.RoundRect(item, CPoint(std::min(scaleX(9), scaleY(9)), std::min(scaleX(9), scaleY(9))));
             dc.SelectObject(oldBrush);
 
             CPen itemPen(PS_SOLID, 1, pressed ? accent : (active ? RGB(35, 91, 116) : border));
@@ -289,7 +289,7 @@ void CPlayerNPlayBar::OnPaint()
             dc.SelectObject(savedPen);
 
             CBrush accentBrush(accent);
-            CRect stripe(item.left, item.top + scaleX(9), item.left + scaleX(3), item.bottom - scaleX(9));
+            CRect stripe(item.left, item.top + scaleY(9), item.left + scaleX(3), item.bottom - scaleY(9));
             dc.FillRect(stripe, &accentBrush);
         }
 
@@ -320,7 +320,7 @@ void CPlayerNPlayBar::OnPaint()
         CRect listItem(scaleX(12), sectionY + scaleY(34), rc.Width() - scaleX(12), sectionY + scaleY(74));
         CBrush listBrush(dark ? RGB(11, 22, 35) : RGB(255, 255, 255));
         dc.SelectObject(&listBrush);
-        dc.RoundRect(listItem, CPoint(scaleY(8), scaleY(8)));
+        dc.RoundRect(listItem, CPoint(std::min(scaleX(8), scaleY(8)), std::min(scaleX(8), scaleY(8))));
         dc.SelectObject(oldBrush);
         dc.SelectObject(&sectionPen);
         dc.RoundRect(listItem, CPoint(scaleY(8), scaleY(8)));
