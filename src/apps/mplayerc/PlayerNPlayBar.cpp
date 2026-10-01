@@ -116,7 +116,7 @@ void CPlayerNPlayBar::LayoutItems()
     }
 }
 
-void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) const
+void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active)
 {
     const COLORREF fg = active ? RGB(45, 226, 197)
                                 : (AfxGetAppSettings().bUseDarkTheme ? RGB(139, 160, 179) : RGB(103, 118, 133));
