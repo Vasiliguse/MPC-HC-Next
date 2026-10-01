@@ -405,7 +405,7 @@ void CPlayerSeekBar::OnPaint()
 		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 
 		if (bEnabled) {
-			const int playedRight = std::min(std::max(nposx, rc.left), rc.right);
+			const LONG playedRight = nposx < rc.left ? rc.left : (nposx > rc.right ? rc.right : nposx);
 			if (playedRight > rc.left) {
 				CRect playedRect(rc.left, trackRect.top, playedRight, trackRect.bottom);
 				CBrush playedBrush(ThemeRGB(0, 196, 255));
