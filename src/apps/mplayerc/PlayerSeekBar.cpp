@@ -363,9 +363,26 @@ void CPlayerSeekBar::OnPaint()
 				memdc.GradientFill(tvBackgroundEnabledRight, 2, &gr, 1, GRADIENT_FILL_RECT_V);
 			}
 
-			memdc.SelectObject(&m_penPlayed2);
-			memdc.MoveTo(rc.left, rc.top);
-			memdc.LineTo(nposx, rc.top);
+		// N Play transport track: draw the capsule before buffering/chapter overlays.
+		// This keeps buffering progress and chapter markers visible above the base track.
+		const int trackHeight = std::max(4, m_scaleY5);
+		CRect trackRect(rc.left, trackY - trackHeight / 2, rc.right, trackY + (trackHeight + 1) / 2);
+		CBrush trackBrush(ThemeRGB(25, 49, 68));
+		memdc.SelectObject(&trackBrush);
+		memdc.RoundRect(trackRect, CPoint(trackHeight, trackHeight));
+		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+
+		if (bEnabled) {
+			const LONG playedRight = nposx < rc.left ? rc.left : (nposx > rc.right ? rc.right : nposx);
+			if (playedRight > rc.left) {
+				CRect playedRect(rc.left, trackRect.top, playedRight, trackRect.bottom);
+				CBrush playedBrush(ThemeRGB(0, 196, 255));
+				memdc.SelectObject(&playedBrush);
+				memdc.RoundRect(playedRect, CPoint(trackHeight, trackHeight));
+				memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+			}
+		}
+
 
 			// draw chapter markers
 			if (s.fChapterMarker) {
@@ -393,26 +410,6 @@ void CPlayerSeekBar::OnPaint()
 				if (bEnabled) {
 					funcMarkChannelTheme(bPos, memdc, m_penRepeatAB, rc, true);
 				}
-			}
-		}
-
-		// N Play transport track: draw the capsule before buffering/chapter overlays.
-		// This keeps buffering progress and chapter markers visible above the base track.
-		const int trackHeight = std::max(4, m_scaleY5);
-		CRect trackRect(rc.left, trackY - trackHeight / 2, rc.right, trackY + (trackHeight + 1) / 2);
-		CBrush trackBrush(ThemeRGB(25, 49, 68));
-		memdc.SelectObject(&trackBrush);
-		memdc.RoundRect(trackRect, CPoint(trackHeight, trackHeight));
-		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-
-		if (bEnabled) {
-			const LONG playedRight = nposx < rc.left ? rc.left : (nposx > rc.right ? rc.right : nposx);
-			if (playedRight > rc.left) {
-				CRect playedRect(rc.left, trackRect.top, playedRight, trackRect.bottom);
-				CBrush playedBrush(ThemeRGB(0, 196, 255));
-				memdc.SelectObject(&playedBrush);
-				memdc.RoundRect(playedRect, CPoint(trackHeight, trackHeight));
-				memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 			}
 		}
 
