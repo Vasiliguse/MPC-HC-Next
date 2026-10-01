@@ -397,7 +397,7 @@ void CPlayerSeekBar::OnPaint()
 		}
 
 		// N Play transport track: rounded capsule track + accent progress + circular thumb.
-		const int trackHeight = std::max(4, m_scaleY4);
+		const int trackHeight = std::max(4, m_scaleY5);
 		CRect trackRect(rc.left, trackY - trackHeight / 2, rc.right, trackY + (trackHeight + 1) / 2);
 		CBrush trackBrush(ThemeRGB(25, 49, 68));
 		memdc.SelectObject(&trackBrush);
@@ -405,7 +405,7 @@ void CPlayerSeekBar::OnPaint()
 		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 
 		if (bEnabled) {
-			const int playedRight = std::clamp(nposx, rc.left, rc.right);
+			const int playedRight = std::min(std::max(nposx, rc.left), rc.right);
 			if (playedRight > rc.left) {
 				CRect playedRect(rc.left, trackRect.top, playedRight, trackRect.bottom);
 				CBrush playedBrush(ThemeRGB(0, 196, 255));
@@ -414,11 +414,11 @@ void CPlayerSeekBar::OnPaint()
 				memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 			}
 
-			const int thumbRadius = std::max(5, m_scaleY6);
+			const int thumbRadius = std::max(5, m_scaleY7);
 			CRect thumb(playedRight - thumbRadius, trackY - thumbRadius,
 						playedRight + thumbRadius, trackY + thumbRadius);
 			CBrush thumbBrush(ThemeRGB(0, 196, 255));
-			CPen thumbPen(PS_SOLID, std::max(1, m_scaleY1), ThemeRGB(185, 241, 255));
+			CPen thumbPen(PS_SOLID, 1, ThemeRGB(185, 241, 255));
 			CBrush* oldThumbBrush = memdc.SelectObject(&thumbBrush);
 			CPen* oldThumbPen = memdc.SelectObject(&thumbPen);
 			memdc.Ellipse(thumb);
