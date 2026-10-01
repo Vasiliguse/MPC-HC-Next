@@ -27,6 +27,9 @@ protected:
     CMainFrame* m_pMainFrame = nullptr;
     CFont m_font;
     CFont m_smallFont;
+    CBitmap m_navBitmap;
+    int m_navBitmapWidth = 0;
+    int m_navBitmapHeight = 0;
     int m_hotItem = -1;
     int m_pressedItem = -1;
     int m_activeItem = 0;
