@@ -233,7 +233,7 @@ void CPlayerNPlayBar::OnPaint()
     CPen brandPen(PS_SOLID, 1, border);
     CPen* oldPen = dc.SelectObject(&brandPen);
     CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-    dc.RoundRect(brand, CPoint(scaleX(12), scaleX(12)));
+    dc.RoundRect(brand, CPoint(std::min(scaleX(12), scaleY(12)), std::min(scaleX(12), scaleY(12))));
     dc.SelectObject(oldBrush);
     dc.SelectObject(oldPen);
 
@@ -285,7 +285,7 @@ void CPlayerNPlayBar::OnPaint()
             CPen itemPen(PS_SOLID, 1, pressed ? accent : (active ? RGB(35, 91, 116) : border));
             CPen* savedPen = dc.SelectObject(&itemPen);
             dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-            dc.RoundRect(item, CPoint(scaleX(9), scaleX(9)));
+            dc.RoundRect(item, CPoint(std::min(scaleX(9), scaleY(9)), std::min(scaleX(9), scaleY(9))));
             dc.SelectObject(savedPen);
 
             CBrush accentBrush(accent);
