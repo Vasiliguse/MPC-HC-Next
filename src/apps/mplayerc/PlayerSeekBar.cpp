@@ -396,7 +396,8 @@ void CPlayerSeekBar::OnPaint()
 			}
 		}
 
-		// N Play transport track: rounded capsule track + accent progress + circular thumb.
+		// N Play transport track: draw the capsule before buffering/chapter overlays.
+		// This keeps buffering progress and chapter markers visible above the base track.
 		const int trackHeight = std::max(4, m_scaleY5);
 		CRect trackRect(rc.left, trackY - trackHeight / 2, rc.right, trackY + (trackHeight + 1) / 2);
 		CBrush trackBrush(ThemeRGB(25, 49, 68));
@@ -413,8 +414,11 @@ void CPlayerSeekBar::OnPaint()
 				memdc.RoundRect(playedRect, CPoint(trackHeight, trackHeight));
 				memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 			}
+		}
 
+		if (bEnabled) {
 			const int thumbRadius = std::max(5, m_scaleY7);
+			const LONG playedRight = nposx < rc.left ? rc.left : (nposx > rc.right ? rc.right : nposx);
 			CRect thumb(playedRight - thumbRadius, trackY - thumbRadius,
 						playedRight + thumbRadius, trackY + thumbRadius);
 			CBrush thumbBrush(ThemeRGB(0, 196, 255));
