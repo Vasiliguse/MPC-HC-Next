@@ -323,7 +323,7 @@ void CPlayerNPlayBar::OnPaint()
         dc.RoundRect(listItem, CPoint(std::min(scaleX(8), scaleY(8)), std::min(scaleX(8), scaleY(8))));
         dc.SelectObject(oldBrush);
         dc.SelectObject(&sectionPen);
-        dc.RoundRect(listItem, CPoint(scaleY(8), scaleY(8)));
+        dc.RoundRect(listItem, CPoint(std::min(scaleX(8), scaleY(8)), std::min(scaleX(8), scaleY(8))));
 
         dc.SetTextColor(text);
         CRect listLabel(listItem.left + scaleX(12), listItem.top, listItem.right - scaleX(12), listItem.bottom);
