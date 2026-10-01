@@ -5531,6 +5531,10 @@ LRESULT CMainFrame::OnMPCVRSwitchFullscreen(WPARAM wParam, LPARAM lParam)
 
 	m_OSD.Stop();
 	if (m_bIsMPCVRExclusiveMode) {
+		if (m_wndNPlayBar.IsVisible()) {
+			m_bNPlayBarHiddenDueToFullscreen = true;
+			ShowControlBarInternal(&m_wndNPlayBar, FALSE);
+		}
 		if (m_wndPlaylistBar.IsVisible()) {
 			m_wndPlaylistBar.SetHiddenDueToFullscreen(true);
 			ShowControlBarInternal(&m_wndPlaylistBar, FALSE);
@@ -5548,6 +5552,10 @@ LRESULT CMainFrame::OnMPCVRSwitchFullscreen(WPARAM wParam, LPARAM lParam)
 		if (m_wndPlaylistBar.IsHiddenDueToFullscreen()) {
 			m_wndPlaylistBar.SetHiddenDueToFullscreen(false);
 			ShowControlBarInternal(&m_wndPlaylistBar, TRUE);
+		}
+		if (!m_bFullScreen && m_bNPlayBarHiddenDueToFullscreen) {
+			ShowControlBarInternal(&m_wndNPlayBar, TRUE);
+			m_bNPlayBarHiddenDueToFullscreen = false;
 		}
 	}
 
