@@ -396,18 +396,34 @@ void CPlayerSeekBar::OnPaint()
 			}
 		}
 
-		// N Play transport track: draw after the background so it remains crisp.
-		CPen trackPen(PS_SOLID, 2, ThemeRGB(30, 55, 76));
-		memdc.SelectObject(&trackPen);
-		memdc.MoveTo(rc.left, trackY);
-		memdc.LineTo(rc.right, trackY);
+		// N Play transport track: rounded capsule track + accent progress + circular thumb.
+		const int trackHeight = std::max(4, m_scaleY4);
+		CRect trackRect(rc.left, trackY - trackHeight / 2, rc.right, trackY + (trackHeight + 1) / 2);
+		CBrush trackBrush(ThemeRGB(25, 49, 68));
+		memdc.SelectObject(&trackBrush);
+		memdc.RoundRect(trackRect, CPoint(trackHeight, trackHeight));
+		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 
 		if (bEnabled) {
-			const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
-			CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
-			memdc.SelectObject(&playedPen);
-			memdc.MoveTo(rc.left, trackY);
-			memdc.LineTo(playedRight, trackY);
+			const int playedRight = std::clamp(nposx, rc.left, rc.right);
+			if (playedRight > rc.left) {
+				CRect playedRect(rc.left, trackRect.top, playedRight, trackRect.bottom);
+				CBrush playedBrush(ThemeRGB(0, 196, 255));
+				memdc.SelectObject(&playedBrush);
+				memdc.RoundRect(playedRect, CPoint(trackHeight, trackHeight));
+				memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+			}
+
+			const int thumbRadius = std::max(5, m_scaleY6);
+			CRect thumb(playedRight - thumbRadius, trackY - thumbRadius,
+						playedRight + thumbRadius, trackY + thumbRadius);
+			CBrush thumbBrush(ThemeRGB(0, 196, 255));
+			CPen thumbPen(PS_SOLID, std::max(1, m_scaleY1), ThemeRGB(185, 241, 255));
+			CBrush* oldThumbBrush = memdc.SelectObject(&thumbBrush);
+			CPen* oldThumbPen = memdc.SelectObject(&thumbPen);
+			memdc.Ellipse(thumb);
+			memdc.SelectObject(oldThumbPen);
+			memdc.SelectObject(oldThumbBrush);
 		}
 
 		CString seekbartext = m_pMainFrame->GetTextForBar(s.iSeekBarTextStyle);
