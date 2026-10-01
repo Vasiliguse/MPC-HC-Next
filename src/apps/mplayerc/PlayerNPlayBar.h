@@ -36,7 +36,7 @@ protected:
     std::vector<NavItem> m_items;
 
     void LayoutItems();
-    void DrawIcon(CDC& dc, const CRect& r, int icon, bool active) const;
+    void DrawIcon(CDC& dc, const CRect& r, int icon, bool active);
     int HitTest(CPoint point) const;
 
     afx_msg void OnPaint();
