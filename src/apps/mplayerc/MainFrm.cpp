@@ -11086,6 +11086,13 @@ void CMainFrame::ToggleFullscreen(bool fToNearest, bool fSwitchScreenResWhenHasT
 	const CWnd* pInsertAfter = nullptr;
 
 	if (!m_bFullScreen) {
+		if (m_wndNPlayBar.IsVisible()) {
+			m_bNPlayBarHiddenDueToFullscreen = true;
+			ShowControlBarInternal(&m_wndNPlayBar, FALSE);
+		} else {
+			m_bNPlayBarHiddenDueToFullscreen = false;
+		}
+
 		if (s.bHidePlaylistFullScreen && m_wndPlaylistBar.IsVisible()) {
 			m_wndPlaylistBar.SetHiddenDueToFullscreen(true);
 			ShowControlBarInternal(&m_wndPlaylistBar, FALSE);
@@ -11155,6 +11162,11 @@ void CMainFrame::ToggleFullscreen(bool fToNearest, bool fSwitchScreenResWhenHasT
 		if (s.bHidePlaylistFullScreen && m_wndPlaylistBar.IsHiddenDueToFullscreen() && !m_bIsMPCVRExclusiveMode) {
 			m_wndPlaylistBar.SetHiddenDueToFullscreen(false);
 			ShowControlBarInternal(&m_wndPlaylistBar, TRUE);
+		}
+
+		if (m_bNPlayBarHiddenDueToFullscreen) {
+			ShowControlBarInternal(&m_wndNPlayBar, TRUE);
+			m_bNPlayBarHiddenDueToFullscreen = false;
 		}
 
 		pInsertAfter = &wndNoTopMost;
