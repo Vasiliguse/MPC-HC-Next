@@ -432,6 +432,7 @@ public:
 	bool m_bFirstFSAfterLaunchOnFullScreen;
 	bool m_bStartInD3DFullscreen;
 	bool m_bHideCursor;
+	bool m_bNPlayBarHiddenDueToFullscreen = false;
 
 	CComPtr<IBaseFilter> m_pRefClock; // Adjustable reference clock. GothSync
 	CComPtr<ISyncClock> m_pSyncClock;
