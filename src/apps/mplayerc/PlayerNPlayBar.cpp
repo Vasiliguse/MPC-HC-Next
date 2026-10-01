@@ -369,8 +369,65 @@ void CPlayerNPlayBar::OnMouseLeave()
     __super::OnMouseLeave();
 }
 
+void CPlayerNPlayBar::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+    const int count = static_cast<int>(m_items.size());
+    if (count <= 0) {
+        __super::OnKeyDown(nChar, nRepCnt, nFlags);
+        return;
+    }
+
+    int next = m_activeItem;
+    switch (nChar) {
+        case VK_UP:
+        case VK_LEFT:
+            next = (m_activeItem + count - 1) % count;
+            break;
+        case VK_DOWN:
+        case VK_RIGHT:
+            next = (m_activeItem + 1) % count;
+            break;
+        case VK_HOME:
+            next = 0;
+            break;
+        case VK_END:
+            next = count - 1;
+            break;
+        case VK_RETURN:
+        case VK_SPACE:
+            switch (m_activeItem) {
+                case 0:
+                    m_pMainFrame->SendMessageW(WM_COMMAND, ID_FILE_OPENFILE);
+                    break;
+                case 1:
+                    m_pMainFrame->SendMessageW(WM_COMMAND, ID_VIEW_PLAYLIST);
+                    break;
+                case 2:
+                    m_pMainFrame->OnMenuNavVideo();
+                    break;
+                case 3:
+                    m_pMainFrame->SendMessageW(WM_COMMAND, ID_NAVIGATE_AUDIO);
+                    break;
+                case 4:
+                    m_pMainFrame->SendMessageW(WM_COMMAND, ID_FAVORITES_ORGANIZE);
+                    break;
+                default:
+                    break;
+            }
+            return;
+        default:
+            __super::OnKeyDown(nChar, nRepCnt, nFlags);
+            return;
+    }
+
+    if (next != m_activeItem) {
+        SetActiveItem(next);
+    }
+}
+
 void CPlayerNPlayBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
+    SetFocus();
     m_pressedItem = HitTest(point);
     if (m_pressedItem >= 0) {
         SetActiveItem(m_pressedItem);
@@ -427,4 +484,5 @@ BEGIN_MESSAGE_MAP(CPlayerNPlayBar, CPlayerBar)
     ON_WM_LBUTTONDOWN()
     ON_WM_LBUTTONUP()
     ON_WM_CAPTURECHANGED()
+    ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
