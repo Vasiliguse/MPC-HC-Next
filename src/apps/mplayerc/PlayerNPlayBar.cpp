@@ -116,8 +116,8 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
         int fullW = 0;
         int fullH = 0;
         if (svg.GetOriginalSize(fullW, fullH) && fullW >= 16 && fullH > 0) {
-            const int slotW = fullW / 5;
-            const int slot = std::clamp(icon, 0, 4);
+            const int slotW = fullW / 10;
+            const int slot = std::clamp(icon, 0, 4) + (active ? 5 : 0);
             int rasterW = slotW;
             int rasterH = fullH;
             if (HBITMAP bitmap = svg.Rasterize(rasterW, rasterH)) {
@@ -136,15 +136,6 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
                     const int drawY = y + (size - side) / 2;
                     AlphaBlend(dc.m_hDC, drawX, drawY, side, side,
                                memdc.m_hDC, slot * slotW, 0, slotW, slotW, blend);
-
-                    if (active) {
-                        CPen accentPen(PS_SOLID, std::max(1, dc.GetDeviceCaps(LOGPIXELSX) / 96), fg);
-                        CPen* oldPen = dc.SelectObject(&accentPen);
-                        CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
-                        dc.RoundRect(drawX - 2, drawY - 2, drawX + side + 2, drawY + side + 2, 6, 6);
-                        dc.SelectObject(oldBrush);
-                        dc.SelectObject(oldPen);
-                    }
 
                     memdc.SelectObject(oldBitmap);
                 }
@@ -180,7 +171,7 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
             dc.LineTo(cx + s / 3, cy);
             dc.LineTo(cx - s / 4, cy + s / 3);
             break;
-        case 9: // audio
+        case 3: // audio
             dc.MoveTo(cx - s, cy - s / 3);
             dc.LineTo(cx - s / 3, cy - s / 3);
             dc.LineTo(cx + s / 3, cy - s);
