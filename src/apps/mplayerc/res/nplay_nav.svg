@@ -1,13 +1,18 @@
-<svg width="500" height="100" viewBox="0 0 500 100" xmlns="http://www.w3.org/2000/svg">
-<defs>
- <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2DE2C5"/><stop offset="1" stop-color="#3B8DFF"/></linearGradient>
-</defs>
-<g fill="none" stroke="#DCEAF5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
- <path d="M16 52L50 20L84 52M26 45V82H74V45M47 82V61H58V82"/>
- <path d="M116 28H184M116 50H184M116 72H166"/>
- <rect x="216" y="25" width="68" height="50" rx="9"/><path d="M245 40L264 50L245 60Z"/>
- <path d="M315 43H328L346 29V71L328 57H315Z"/><path d="M359 40C371 48 371 52 359 60M369 31C387 43 387 57 369 69"/>
- <path d="M426 40C430 29 445 27 452 36C459 27 474 29 478 40C482 53 467 67 452 77C437 67 422 53 426 40Z"/>
+<svg width="1000" height="100" viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg">
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#8B9FB3" stroke-width="7">
+<path d="M16 52L50 20L84 52M26 45V82H74V45M47 82V61H58V82"/>
+<path d="M116 28H184M116 50H184M116 72H166"/>
+<rect x="216" y="25" width="68" height="50" rx="9"/><path d="M245 40L264 50L245 60Z"/>
+<path d="M315 43H328L346 29V71L328 57H315Z"/><path d="M359 40C371 48 371 52 359 60M369 31C387 43 387 57 369 69"/>
+<path d="M426 40C430 29 445 27 452 36C459 27 474 29 478 40C482 53 467 67 452 77C437 67 422 53 426 40Z"/>
 </g>
-<circle cx="50" cy="90" r="3" fill="url(#a)"/><circle cx="150" cy="90" r="3" fill="url(#a)"/><circle cx="250" cy="90" r="3" fill="url(#a)"/><circle cx="350" cy="90" r="3" fill="url(#a)"/><circle cx="450" cy="90" r="3" fill="url(#a)"/>
+<g transform="translate(500 0)" stroke="#2DE2C5" stroke-width="7">
+<path d="M16 52L50 20L84 52M26 45V82H74V45M47 82V61H58V82"/>
+<path d="M116 28H184M116 50H184M116 72H166"/>
+<rect x="216" y="25" width="68" height="50" rx="9"/><path d="M245 40L264 50L245 60Z"/>
+<path d="M315 43H328L346 29V71L328 57H315Z"/><path d="M359 40C371 48 371 52 359 60M369 31C387 43 387 57 369 69"/>
+<path d="M426 40C430 29 445 27 452 36C459 27 474 29 478 40C482 53 467 67 452 77C437 67 422 53 426 40Z"/>
+</g>
+</g>
 </svg>
