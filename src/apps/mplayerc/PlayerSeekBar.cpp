@@ -362,9 +362,9 @@ void CPlayerSeekBar::OnPaint()
 				tvBackgroundEnabledRight[1].x = rc2.right; tvBackgroundEnabledRight[1].y = rc.bottom - 3;
 				memdc.GradientFill(tvBackgroundEnabledRight, 2, &gr, 1, GRADIENT_FILL_RECT_V);
 			}
+		}
 
-		// N Play transport track: draw the capsule before buffering/chapter overlays.
-		// This keeps buffering progress and chapter markers visible above the base track.
+		// N Play transport track: keep the capsule below buffering/chapter overlays.
 		const int trackHeight = std::max(4, m_scaleY5);
 		CRect trackRect(rc.left, trackY - trackHeight / 2, rc.right, trackY + (trackHeight + 1) / 2);
 		CBrush trackBrush(ThemeRGB(25, 49, 68));
@@ -383,14 +383,13 @@ void CPlayerSeekBar::OnPaint()
 			}
 		}
 
-
+		if (bEnabled) {
 			// draw chapter markers
 			if (s.fChapterMarker) {
 				CAutoLock lock(&m_CBLock);
 				const REFERENCE_TIME stop = m_stop;
 
 				if (stop > 0 && m_pChapterBag && m_pChapterBag->ChapGetCount()) {
-
 					for (DWORD idx = 0; idx < m_pChapterBag->ChapGetCount(); idx++) {
 						REFERENCE_TIME rt;
 						if (FAILED(m_pChapterBag->ChapGet(idx, &rt, nullptr))) {
