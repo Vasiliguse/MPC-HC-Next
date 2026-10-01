@@ -42,6 +42,9 @@ void CPlayerNPlayBar::ScaleForDpi()
     const int dpiY = m_pMainFrame->GetDPIY();
     m_font.DeleteObject();
     m_smallFont.DeleteObject();
+    m_navBitmap.DeleteObject();
+    m_navBitmapWidth = 0;
+    m_navBitmapHeight = 0;
 
     m_font.CreateFontW(
         -MulDiv(11, dpiY, 72),
@@ -63,6 +66,20 @@ void CPlayerNPlayBar::ScaleForDpi()
     m_hotItem = -1;
     m_pressedItem = -1;
     LayoutItems();
+
+    CSvgImage svg;
+    if (svg.Load(IDF_SVG_NPLAY_NAV)) {
+        int width = 0;
+        int height = 0;
+        if (svg.GetOriginalSize(width, height) && width >= 16 && height > 0) {
+            if (HBITMAP bitmap = svg.Rasterize(width, height)) {
+                m_navBitmap.Attach(bitmap);
+                m_navBitmapWidth = width;
+                m_navBitmapHeight = height;
+            }
+        }
+    }
+
     Invalidate(FALSE);
 }
 
@@ -109,38 +126,20 @@ void CPlayerNPlayBar::DrawIcon(CDC& dc, const CRect& r, int icon, bool active) c
     int x = r.CenterPoint().x - size / 2;
     int y = r.CenterPoint().y - size / 2;
 
-    // Reuse the existing resource-backed SVG strip used by the main toolbar so the sidebar
-    // follows the same icon family without introducing a second icon asset pipeline.
-    CSvgImage svg;
-    if (svg.Load(IDF_SVG_NPLAY_NAV)) {
-        int fullW = 0;
-        int fullH = 0;
-        if (svg.GetOriginalSize(fullW, fullH) && fullW >= 16 && fullH > 0) {
-            const int slotW = fullW / 10;
-            const int slot = std::clamp(icon, 0, 4) + (active ? 5 : 0);
-            int rasterW = fullW;
-            int rasterH = fullH;
-            if (HBITMAP bitmap = svg.Rasterize(rasterW, rasterH)) {
-                CBitmap source;
-                source.Attach(bitmap);
-
-                CDC memdc;
-                if (memdc.CreateCompatibleDC(&dc)) {
-                    CBitmap* oldBitmap = memdc.SelectObject(&source);
-
-                    // Keep inactive SVG artwork neutral while preserving alpha; active items get
-                    // a cyan accent by drawing a second, low-cost vector cue at the hit target.
-                    BLENDFUNCTION blend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-                    const int side = std::min(size, slotW);
-                    const int drawX = x + (size - side) / 2;
-                    const int drawY = y + (size - side) / 2;
-                    AlphaBlend(dc.m_hDC, drawX, drawY, side, side,
-                               memdc.m_hDC, slot * slotW, 0, slotW, slotW, blend);
-
-                    memdc.SelectObject(oldBitmap);
-                }
-
-                source.DeleteObject();
+    if (m_navBitmap.GetSafeHandle() && m_navBitmapWidth >= 16 && m_navBitmapHeight > 0) {
+        const int slotW = m_navBitmapWidth / 10;
+        const int slot = std::clamp(icon, 0, 4) + (active ? 5 : 0);
+        if (slotW > 0 && slotW <= m_navBitmapHeight) {
+            CDC memdc;
+            if (memdc.CreateCompatibleDC(&dc)) {
+                CBitmap* oldBitmap = memdc.SelectObject(&m_navBitmap);
+                BLENDFUNCTION blend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+                const int side = std::min(size, slotW);
+                const int drawX = x + (size - side) / 2;
+                const int drawY = y + (size - side) / 2;
+                AlphaBlend(dc.m_hDC, drawX, drawY, side, side,
+                           memdc.m_hDC, slot * slotW, 0, slotW, slotW, blend);
+                memdc.SelectObject(oldBitmap);
                 return;
             }
         }
