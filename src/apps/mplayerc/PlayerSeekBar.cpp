@@ -323,18 +323,14 @@ void CPlayerSeekBar::OnPaint()
 		const int nposx = GetThumbRect().right - 2;
 		const int nposy = r.top;
 
-		// buffer
+		// Buffering is rendered inside the N Play capsule below, while m_rLock
+		// keeps the existing mouse/cursor protection for the buffered region.
 		m_rLock.SetRect(-1, -1, -1, -1);
-		int Progress;
-		if (m_pMainFrame->GetBufferingProgress(&Progress)) {
+		int Progress = 0;
+		const bool bBuffering = m_pMainFrame->GetBufferingProgress(&Progress);
+		if (bBuffering) {
 			m_rLock = r;
-			const int r_right = r.Width() / 100 * Progress;
-
-			tvBufferingProgress[0].x = r.left; tvBufferingProgress[0].y = r.top;
-			tvBufferingProgress[1].x = r_right; tvBufferingProgress[1].y = r.bottom;
-			memdc.GradientFill(tvBufferingProgress, 2, &gr, 1, GRADIENT_FILL_RECT_V);
-
-			m_rLock.left = r_right;
+			m_rLock.left = r.left + r.Width() / 100 * Progress;
 		}
 
 		if (bEnabled) {
@@ -371,6 +367,17 @@ void CPlayerSeekBar::OnPaint()
 		memdc.SelectObject(&trackBrush);
 		memdc.RoundRect(trackRect, CPoint(trackHeight, trackHeight));
 		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+
+		if (bBuffering) {
+			const LONG bufferedRight = rc.left + rc.Width() * std::clamp(Progress, 0, 100) / 100;
+			if (bufferedRight > rc.left) {
+				CRect bufferedRect(rc.left, trackRect.top, bufferedRight, trackRect.bottom);
+				CBrush bufferedBrush(ThemeRGB(45, 76, 98));
+				memdc.SelectObject(&bufferedBrush);
+				memdc.RoundRect(bufferedRect, CPoint(trackHeight, trackHeight));
+				memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+			}
+		}
 
 		if (bEnabled) {
 			const LONG playedRight = nposx < rc.left ? rc.left : (nposx > rc.right ? rc.right : nposx);
