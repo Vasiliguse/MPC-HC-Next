@@ -328,9 +328,10 @@ void CPlayerSeekBar::OnPaint()
 		m_rLock.SetRect(-1, -1, -1, -1);
 		int Progress = 0;
 		const bool bBuffering = m_pMainFrame->GetBufferingProgress(&Progress);
+		const int bufferingProgress = Progress < 0 ? 0 : (Progress > 100 ? 100 : Progress);
 		if (bBuffering) {
 			m_rLock = r;
-			m_rLock.left = r.left + r.Width() / 100 * Progress;
+			m_rLock.left = r.left + r.Width() / 100 * bufferingProgress;
 		}
 
 		if (bEnabled) {
@@ -369,7 +370,7 @@ void CPlayerSeekBar::OnPaint()
 		memdc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
 
 		if (bBuffering) {
-			const LONG bufferedRight = rc.left + rc.Width() * std::clamp(Progress, 0, 100) / 100;
+			const LONG bufferedRight = rc.left + rc.Width() * bufferingProgress / 100;
 			if (bufferedRight > rc.left) {
 				CRect bufferedRect(rc.left, trackRect.top, bufferedRight, trackRect.bottom);
 				CBrush bufferedBrush(ThemeRGB(45, 76, 98));
