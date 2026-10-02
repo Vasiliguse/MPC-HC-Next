@@ -433,6 +433,7 @@ void CPlayerNPlayBar::OnLButtonDown(UINT nFlags, CPoint point)
         SetActiveItem(m_pressedItem);
         SetCapture();
     }
+    Invalidate(FALSE);
     __super::OnLButtonDown(nFlags, point);
 }
 
@@ -445,6 +446,8 @@ void CPlayerNPlayBar::OnLButtonUp(UINT nFlags, CPoint point)
     if (GetCapture() == this) {
         ReleaseCapture();
     }
+
+    Invalidate(FALSE);
 
     if (hit >= 0 && hit == pressed && m_pMainFrame) {
         switch (hit) {
@@ -473,6 +476,7 @@ void CPlayerNPlayBar::OnLButtonUp(UINT nFlags, CPoint point)
 void CPlayerNPlayBar::OnCaptureChanged(CWnd* pWnd)
 {
     m_pressedItem = -1;
+    Invalidate(FALSE);
     __super::OnCaptureChanged(pWnd);
 }
 
