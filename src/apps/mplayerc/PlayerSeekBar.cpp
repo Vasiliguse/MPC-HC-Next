@@ -1,24 +1,3 @@
-/*
- * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
- *
- * This file is part of MPC-BE.
- *
- * MPC-BE is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * MPC-BE is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 #include "stdafx.h"
 #include "MainFrm.h"
 #include "PlayerSeekBar.h"
@@ -288,12 +267,6 @@ void CPlayerSeekBar::OnPaint()
 
 			memdc.SelectObject(&pen);
 			const int x = channelRect.left + (long)(pos * channelRect.Width() / m_stop);
-
-			// instead of drawing hands can be a marker icon
-			// HICON appIcon = (HICON)::LoadImageW(AfxGetResourceHandle(), MAKEINTRESOURCEW(IDR_MARKERS), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-			// ::DrawIconEx(memdc, x, rc2.top + 10, appIcon, 0, 0, 0, nullptr, DI_NORMAL);
-			// ::DestroyIcon(appIcon);
-
 			memdc.MoveTo(x, rect.top + (thick ? m_scaleY14 / 2 : m_scaleY14));
 			memdc.LineTo(x, rect.bottom - m_scaleY2);
 			if (thick) {
@@ -311,19 +284,16 @@ void CPlayerSeekBar::OnPaint()
 		GetClientRect(&r);
 		memdc.CreateCompatibleDC(&dc);
 		bmPaint.CreateCompatibleBitmap(&dc, r.Width(), r.Height());
-		CBitmap *bmOld = memdc.SelectObject(&bmPaint);
+		CBitmap* bmOld = memdc.SelectObject(&bmPaint);
 
 		GRADIENT_RECT gr = {0, 1};
-
 		memdc.FillSolidRect(r, ThemeRGB(7, 16, 28));
-
 		memdc.SetBkMode(TRANSPARENT);
 
 		CRect rc(channelRect);
 		const int nposx = GetThumbRect().right - 2;
 		const int nposy = r.top;
 
-		// buffer
 		m_rLock.SetRect(-1, -1, -1, -1);
 		int Progress;
 		if (m_pMainFrame->GetBufferingProgress(&Progress)) {
@@ -367,13 +337,11 @@ void CPlayerSeekBar::OnPaint()
 			memdc.MoveTo(rc.left, rc.top);
 			memdc.LineTo(nposx, rc.top);
 
-			// draw chapter markers
 			if (s.fChapterMarker) {
 				CAutoLock lock(&m_CBLock);
 				const REFERENCE_TIME stop = m_stop;
 
 				if (stop > 0 && m_pChapterBag && m_pChapterBag->ChapGetCount()) {
-
 					for (DWORD idx = 0; idx < m_pChapterBag->ChapGetCount(); idx++) {
 						REFERENCE_TIME rt;
 						if (FAILED(m_pChapterBag->ChapGet(idx, &rt, nullptr))) {
@@ -396,17 +364,27 @@ void CPlayerSeekBar::OnPaint()
 			}
 		}
 
-		// N Play transport track: draw after the background so it remains crisp.
-		CPen trackPen(PS_SOLID, 2, ThemeRGB(30, 55, 76));
+		// N Play: modern floating transport track with navy body and cyan accent.
+		CRect trackSurface = channelRect;
+		trackSurface.DeflateRect(0, 10, 0, 10);
+		CBrush trackSurfaceBrush(ThemeRGB(11, 22, 34));
+		CPen trackSurfacePen(PS_SOLID, 1, ThemeRGB(28, 49, 66));
+		CBrush* oldSurfaceBrush = memdc.SelectObject(&trackSurfaceBrush);
+		CPen* oldSurfacePen = memdc.SelectObject(&trackSurfacePen);
+		memdc.RoundRect(trackSurface, CPoint(12, 12));
+		memdc.SelectObject(oldSurfacePen);
+		memdc.SelectObject(oldSurfaceBrush);
+
+		CPen trackPen(PS_SOLID, 2, ThemeRGB(24, 52, 68));
 		memdc.SelectObject(&trackPen);
-		memdc.MoveTo(rc.left, trackY);
-		memdc.LineTo(rc.right, trackY);
+		memdc.MoveTo(trackSurface.left, trackY);
+		memdc.LineTo(trackSurface.right, trackY);
 
 		if (bEnabled) {
-			const int playedRight = std::max<int>(static_cast<int>(rc.left), nposx);
+			const int playedRight = std::max<int>(static_cast<int>(trackSurface.left), nposx);
 			CPen playedPen(PS_SOLID, 3, ThemeRGB(0, 196, 255));
 			memdc.SelectObject(&playedPen);
-			memdc.MoveTo(rc.left, trackY);
+			memdc.MoveTo(trackSurface.left, trackY);
 			memdc.LineTo(playedRight, trackY);
 		}
 
@@ -422,7 +400,6 @@ void CPlayerSeekBar::OnPaint()
 					seekbartext = m_strChap;
 				}
 
-				// draw filename || chapter name.
 				CRect rt = rc;
 				rt.left  += 6;
 				rt.top   -= 2;
@@ -430,7 +407,6 @@ void CPlayerSeekBar::OnPaint()
 				memdc.SetTextColor(m_crText);
 				memdc.DrawText(seekbartext, seekbartext.GetLength(), &rt, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
 
-				// Highlighted text
 				memdc.SetTextColor(m_crHighlightedText);
 				if (nposx > rt.right - 15) {
 					memdc.DrawText(seekbartext, seekbartext.GetLength(), &rt, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
@@ -529,7 +505,6 @@ void CPlayerSeekBar::OnPaint()
 			dc.FillRect(&r, &b);
 		}
 
-		// thumb
 		auto& pThumb = bEnabled ? m_pEnabledThumb : m_pDisabledThumb;
 		if (!pThumb) {
 			CreateThumb(bEnabled, dc);
@@ -547,7 +522,6 @@ void CPlayerSeekBar::OnPaint()
 		VERIFY(dc.BitBlt(r.TopLeft().x, r.TopLeft().y, r.Width(), r.Height(), pThumb.get(), 0, 0, SRCCOPY));
 		ExtSelectClipRgn(dc, rgn1, RGN_XOR);
 
-		// Chapters
 		if (s.fChapterMarker) {
 			CAutoLock lock(&m_CBLock);
 
@@ -575,7 +549,6 @@ void CPlayerSeekBar::OnPaint()
 			}
 		}
 
-		// channel
 		{
 			dc.FillSolidRect(&channelRect, bEnabled ? white : bkg);
 			CRect r(channelRect);
@@ -584,7 +557,6 @@ void CPlayerSeekBar::OnPaint()
 			dc.ExcludeClipRect(&r);
 		}
 
-		// background
 		{
 			CRect r;
 			GetClientRect(&r);
@@ -651,7 +623,6 @@ void CPlayerSeekBar::OnRButtonDown(UINT nFlags, CPoint point)
 
 	CDialogBar::OnRButtonDown(nFlags, point);
 }
-
 
 void CPlayerSeekBar::UpdateTooltip(CPoint point)
 {
@@ -753,7 +724,6 @@ BOOL CPlayerSeekBar::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 		::SetCursor(AfxGetApp()->LoadStandardCursor(IDC_ARROW));
 		return TRUE;
 	}
-
 
 	if (m_bEnabled && m_stop > 0 && m_stop != 100) {
 		::SetCursor(AfxGetApp()->LoadStandardCursor(IDC_HAND));
@@ -903,8 +873,6 @@ void CPlayerSeekBar::UpdateToolTipPosition(CPoint point)
 		CRect r;
 		GetClientRect(&r);
 		if (point.x < r.left || point.x > r.right) {
-			// Disable processing of the cursor position to the left or right of the window.
-			// This happens when moving the mouse while holding down the left button.
 			return;
 		}
 
