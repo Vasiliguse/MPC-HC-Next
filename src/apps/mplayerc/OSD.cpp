@@ -1,29 +1,6 @@
-/*
- * (C) 2006-2025 see Authors.txt
- *
- * This file is part of MPC-BE.
- *
- * MPC-BE is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * MPC-BE is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 #include "stdafx.h"
 #include "MainFrm.h"
 #include "FullscreenWnd.h"
-#include "DSUtil/SysVersion.h"
-#include "DSUtil/FileHandle.h"
-#include "WicUtils.h"
 #include "OSD.h"
 
 #define SEEKBAR_HEIGHT       60
@@ -34,12 +11,12 @@
 #define SLIDER_CHAP_WIDTH    4
 
 #define OSD_COLOR_TRANSPARENT RGB(  0,   0,   0)
-#define OSD_COLOR_BACKGROUND  RGB( 10,  20,  32)
-#define OSD_COLOR_BORDER      RGB( 34,  74,  96)
-#define OSD_COLOR_TEXT        RGB(232, 242, 248)
-#define OSD_COLOR_BAR         RGB( 45,  66,  82)
+#define OSD_COLOR_BACKGROUND  RGB(  8,  18,  30)
+#define OSD_COLOR_BORDER      RGB( 33,  62,  82)
+#define OSD_COLOR_TEXT        RGB(231, 241, 249)
+#define OSD_COLOR_BAR         RGB( 24,  44,  61)
 #define OSD_COLOR_BAR2        RGB(  0, 196, 255)
-#define OSD_COLOR_CURSOR      RGB( 80, 210, 255)
+#define OSD_COLOR_CURSOR      RGB( 64, 214, 255)
 #define OSD_COLOR_DEBUGCLR    RGB(128, 136, 144)
 
 COSD::COSD(CMainFrame* pMainFrame)
@@ -48,7 +25,6 @@ COSD::COSD(CMainFrame* pMainFrame)
 	, m_nDEFFLAGS(SWP_NOACTIVATE | SWP_NOREDRAW | SWP_ASYNCWINDOWPOS | SWP_NOZORDER)
 {
 	if (SysVersion::IsWin8orLater()) {
-		// remove SWP_NOZORDER for Win 8 and later - it's use WS_CHILD style
 		m_nDEFFLAGS &= ~SWP_NOZORDER;
 		m_pWndInsertAfter = &wndTop;
 	}
@@ -56,8 +32,8 @@ COSD::COSD(CMainFrame* pMainFrame)
 	m_penBorder.CreatePen(PS_SOLID, 1, OSD_COLOR_BORDER);
 	m_brushCursor.CreateSolidBrush(OSD_COLOR_CURSOR);
 	m_brushBack.CreateSolidBrush(OSD_COLOR_BACKGROUND);
-	m_brushBar.CreateSolidBrush (OSD_COLOR_BAR);
-	m_brushBar2.CreateSolidBrush (OSD_COLOR_BAR2);
+	m_brushBar.CreateSolidBrush(OSD_COLOR_BAR);
+	m_brushBar2.CreateSolidBrush(OSD_COLOR_BAR2);
 	m_brushChapter.CreateSolidBrush(OSD_COLOR_CURSOR);
 	m_debugBrushBack.CreateSolidBrush(OSD_COLOR_DEBUGCLR);
 	m_debugPenBorder.CreatePen(PS_SOLID, 1, OSD_COLOR_BORDER);
@@ -80,14 +56,14 @@ COSD::~COSD()
 
 HRESULT COSD::Create(CWnd* pWnd)
 {
-	DWORD dwStyle	= WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-	DWORD dwStyleEx	= WS_EX_TRANSPARENT | WS_EX_LAYERED;
+	DWORD dwStyle = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+	DWORD dwStyleEx = WS_EX_TRANSPARENT | WS_EX_LAYERED;
 
 	if (SysVersion::IsWin8orLater()) {
-		dwStyle		|= WS_CHILD;
+		dwStyle |= WS_CHILD;
 	} else {
-		dwStyle		|= WS_POPUP;
-		dwStyleEx	|= WS_EX_TOPMOST;
+		dwStyle |= WS_POPUP;
+		dwStyleEx |= WS_EX_TOPMOST;
 	}
 
 	if (!CreateEx(dwStyleEx, AfxRegisterWndClass(0), nullptr, dwStyle, RECT{0,0,0,0}, pWnd, 0, nullptr)) {
@@ -128,9 +104,9 @@ void COSD::OnSize(UINT nType, int cx, int cy)
 {
 	if (m_pWnd && m_pMFVMB) {
 		if (m_bSeekBarVisible || m_bFlyBarVisible) {
-			m_bCursorMoving		= false;
-			m_bSeekBarVisible	= false;
-			m_bFlyBarVisible	= false;
+			m_bCursorMoving = false;
+			m_bSeekBarVisible = false;
+			m_bFlyBarVisible = false;
 		}
 
 		CalcSeekbar();
@@ -140,7 +116,6 @@ void COSD::OnSize(UINT nType, int cx, int cy)
 		UpdateBitmap();
 	}
 	else if (m_pWnd) {
-		//PostMessageW(WM_OSD_DRAW);
 		DrawWnd();
 	}
 }
@@ -158,37 +133,37 @@ void COSD::UpdateBitmap()
 	ZeroMemory(&m_BitmapInfo, sizeof(m_BitmapInfo));
 
 	if (m_MemDC.CreateCompatibleDC(&dc)) {
-		BITMAPINFO	bmi = {0};
-		HBITMAP		hbmpRender;
+		BITMAPINFO bmi = {0};
+		HBITMAP hbmRender;
 
 		ZeroMemory(&bmi.bmiHeader, sizeof(BITMAPINFOHEADER));
-		bmi.bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
-		bmi.bmiHeader.biWidth		= m_rectWnd.Width();
-		bmi.bmiHeader.biHeight		= -m_rectWnd.Height(); // top-down
-		bmi.bmiHeader.biPlanes		= 1;
-		bmi.bmiHeader.biBitCount	= 32;
-		bmi.bmiHeader.biCompression	= BI_RGB;
+		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bmi.bmiHeader.biWidth = m_rectWnd.Width();
+		bmi.bmiHeader.biHeight = -m_rectWnd.Height();
+		bmi.bmiHeader.biPlanes = 1;
+		bmi.bmiHeader.biBitCount = 32;
+		bmi.bmiHeader.biCompression = BI_RGB;
 
-		hbmpRender = CreateDIBSection(m_MemDC, &bmi, DIB_RGB_COLORS, nullptr, nullptr, 0);
-		m_MemDC.SelectObject(hbmpRender);
+		hbmRender = CreateDIBSection(m_MemDC, &bmi, DIB_RGB_COLORS, nullptr, nullptr, 0);
+		m_MemDC.SelectObject(hbmRender);
 
-		if (::GetObjectW(hbmpRender, sizeof(BITMAP), &m_BitmapInfo) != 0) {
+		if (::GetObjectW(hbmRender, sizeof(BITMAP), &m_BitmapInfo) != 0) {
 			if (m_pMFVMB) {
 				ZeroMemory(&m_MFVAlphaBitmap, sizeof(m_MFVAlphaBitmap));
-				m_MFVAlphaBitmap.GetBitmapFromDC  = TRUE;
-				m_MFVAlphaBitmap.bitmap.hdc       = m_MemDC;
-				m_MFVAlphaBitmap.params.dwFlags   = MFVideoAlphaBitmap_SrcColorKey;
+				m_MFVAlphaBitmap.GetBitmapFromDC = TRUE;
+				m_MFVAlphaBitmap.bitmap.hdc = m_MemDC;
+				m_MFVAlphaBitmap.params.dwFlags = MFVideoAlphaBitmap_SrcColorKey;
 				m_MFVAlphaBitmap.params.clrSrcKey = OSD_COLOR_TRANSPARENT;
-				m_MFVAlphaBitmap.params.rcSrc     = m_rectWnd;
-				m_MFVAlphaBitmap.params.nrcDest   = { 0, 0, 1, 1 };
-				m_MFVAlphaBitmap.params.fAlpha    = 1.0;
+				m_MFVAlphaBitmap.params.rcSrc = m_rectWnd;
+				m_MFVAlphaBitmap.params.nrcDest = { 0, 0, 1, 1 };
+				m_MFVAlphaBitmap.params.fAlpha = 1.0;
 			}
 
 			m_MemDC.SetTextColor(OSD_COLOR_TEXT);
 			m_MemDC.SetBkMode(TRANSPARENT);
 		}
 
-		DeleteObject(hbmpRender);
+		DeleteObject(hbmRender);
 	}
 }
 
@@ -208,36 +183,35 @@ void COSD::Reset()
 
 void COSD::Start(CWnd* pWnd, IMFVideoMixerBitmap* pMFVMB)
 {
-	m_pMFVMB	= pMFVMB;
-	m_pMVTO		= nullptr;
-	m_pWnd		= pWnd;
-	m_OSDType	= OSD_TYPE_BITMAP;
+	m_pMFVMB = pMFVMB;
+	m_pMVTO = nullptr;
+	m_pWnd = pWnd;
+	m_OSDType = OSD_TYPE_BITMAP;
 
 	UseCurentMonitorDPI(pWnd->GetSafeHwnd());
 	UpdateButtonImages();
 	CreateFontInternal();
 
 	Reset();
-
 	UpdateBitmap();
 }
 
 void COSD::Start(CWnd* pWnd, IMadVRTextOsd* pMVTO)
 {
-	m_pMFVMB	= nullptr;
-	m_pMVTO		= pMVTO;
-	m_pWnd		= pWnd;
-	m_OSDType	= OSD_TYPE_MADVR;
+	m_pMFVMB = nullptr;
+	m_pMVTO = pMVTO;
+	m_pWnd = pWnd;
+	m_OSDType = OSD_TYPE_MADVR;
 
 	Reset();
 }
 
 void COSD::Start(CWnd* pWnd)
 {
-	m_pMFVMB	= nullptr;
-	m_pMVTO		= nullptr;
-	m_pWnd		= pWnd;
-	m_OSDType	= OSD_TYPE_GDI;
+	m_pMFVMB = nullptr;
+	m_pMVTO = nullptr;
+	m_pWnd = pWnd;
+	m_OSDType = OSD_TYPE_GDI;
 
 	UseCurentMonitorDPI(pWnd->GetSafeHwnd());
 	UpdateButtonImages();
@@ -250,11 +224,11 @@ void COSD::Stop()
 {
 	EndTimer();
 
-	m_bCursorMoving			= false;
-	m_bSeekBarVisible		= false;
-	m_bFlyBarVisible		= false;
-	m_bMouseOverExitButton	= false;
-	m_bMouseOverCloseButton	= false;
+	m_bCursorMoving = false;
+	m_bSeekBarVisible = false;
+	m_bFlyBarVisible = false;
+	m_bMouseOverExitButton = false;
+	m_bMouseOverCloseButton = false;
 
 	ClearMessage();
 
@@ -269,32 +243,30 @@ void COSD::CalcSeekbar()
 {
 	if (m_pWnd && m_pMFVMB) {
 		SliderCursorHeight = ScaleY(SLIDER_CURSOR_HEIGHT);
-		SliderCursorWidth  = ScaleX(SLIDER_CURSOR_WIDTH);
-		SliderChapHeight   = ScaleY(SLIDER_CHAP_HEIGHT);
-		SliderChapWidth    = ScaleY(SLIDER_CHAP_WIDTH);
+		SliderCursorWidth = ScaleX(SLIDER_CURSOR_WIDTH);
+		SliderChapHeight = ScaleY(SLIDER_CHAP_HEIGHT);
+		SliderChapWidth = ScaleY(SLIDER_CHAP_WIDTH);
 
-		int SeekBarHeight   = ScaleY(SEEKBAR_HEIGHT);
+		int SeekBarHeight = ScaleY(SEEKBAR_HEIGHT);
 		int SliderBarHeight = ScaleY(SLIDER_BAR_HEIGHT);
 		int hor8 = ScaleX(8);
 
 		m_pWnd->GetClientRect(&m_rectWnd);
 
-		m_rectSeekBar.left   = m_rectWnd.left    + hor8;
-		m_rectSeekBar.right  = m_rectWnd.right   - hor8;
-		m_rectSeekBar.top    = m_rectWnd.bottom  - SeekBarHeight;
+		m_rectSeekBar.left = m_rectWnd.left + hor8;
+		m_rectSeekBar.right = m_rectWnd.right - hor8;
+		m_rectSeekBar.top = m_rectWnd.bottom - SeekBarHeight;
 		m_rectSeekBar.bottom = m_rectSeekBar.top + SeekBarHeight;
 
-		m_rectSlider.left   = m_rectSeekBar.left  + hor8;
-		m_rectSlider.right  = m_rectSeekBar.right - hor8;
-		m_rectSlider.top    = m_rectSeekBar.top   + (m_rectSeekBar.Height() - SliderBarHeight) / 2;
+		m_rectSlider.left = m_rectSeekBar.left + hor8;
+		m_rectSlider.right = m_rectSeekBar.right - hor8;
+		m_rectSlider.top = m_rectSeekBar.top + (m_rectSeekBar.Height() - SliderBarHeight) / 2;
 		m_rectSlider.bottom = m_rectSlider.top + SliderBarHeight;
 
 		m_rectPosText.SetRect(m_rectSlider.left + m_rectSlider.Width() / 2, m_rectSeekBar.top, m_rectSlider.right, m_rectSlider.top);
 
-
 		if (m_SeekbarTextHeight != m_rectPosText.Height() || !m_SeekbarFont.GetSafeHandle()) {
 			m_SeekbarFont.DeleteObject();
-
 			m_SeekbarTextHeight = m_rectPosText.Height();
 
 			LOGFONTW lf = {};
@@ -312,20 +284,20 @@ void COSD::CalcFlybar()
 	if (m_pWnd) {
 		m_pWnd->GetClientRect(&m_rectWnd);
 
-		m_rectFlyBar.left        = m_rectWnd.left;
-		m_rectFlyBar.right       = m_rectWnd.right;
-		m_rectFlyBar.top         = m_rectWnd.top;
-		m_rectFlyBar.bottom      = m_rectWnd.top           + ScaleY(100);
+		m_rectFlyBar.left = m_rectWnd.left;
+		m_rectFlyBar.right = m_rectWnd.right;
+		m_rectFlyBar.top = m_rectWnd.top;
+		m_rectFlyBar.bottom = m_rectWnd.top + ScaleY(100);
 
-		m_rectExitButton.right   = m_rectWnd.right         - ScaleX(10);
-		m_rectExitButton.top     = m_rectWnd.top           + ScaleY(10);
-		m_rectExitButton.left    = m_rectExitButton.right  - m_nButtonHeight;
-		m_rectExitButton.bottom  = m_rectExitButton.top    + m_nButtonHeight;
+		m_rectExitButton.right = m_rectWnd.right - ScaleX(10);
+		m_rectExitButton.top = m_rectWnd.top + ScaleY(10);
+		m_rectExitButton.left = m_rectExitButton.right - m_nButtonHeight;
+		m_rectExitButton.bottom = m_rectExitButton.top + m_nButtonHeight;
 
-		m_rectCloseButton.right  = m_rectExitButton.left   - ScaleX(4);
-		m_rectCloseButton.top    = m_rectExitButton.top;
-		m_rectCloseButton.left   = m_rectCloseButton.right - m_nButtonHeight;
-		m_rectCloseButton.bottom = m_rectCloseButton.top   + m_nButtonHeight;
+		m_rectCloseButton.right = m_rectExitButton.left - ScaleX(4);
+		m_rectCloseButton.top = m_rectExitButton.top;
+		m_rectCloseButton.left = m_rectCloseButton.right - m_nButtonHeight;
+		m_rectCloseButton.bottom = m_rectCloseButton.top + m_nButtonHeight;
 	}
 }
 
@@ -352,11 +324,10 @@ void COSD::DrawSeekbar()
 	if (m_llSeekStop > 0) {
 		m_rectCursor.left += (long)((m_rectSlider.Width() - SliderCursorWidth) * m_llSeekPos / m_llSeekStop);
 	}
-	m_rectCursor.right  = m_rectCursor.left + SliderCursorWidth;
-	m_rectCursor.top    = m_rectSeekBar.top + (m_rectSeekBar.Height() - SliderCursorHeight) / 2;
+	m_rectCursor.right = m_rectCursor.left + SliderCursorWidth;
+	m_rectCursor.top = m_rectSeekBar.top + (m_rectSeekBar.Height() - SliderCursorHeight) / 2;
 	m_rectCursor.bottom = m_rectCursor.top + SliderCursorHeight;
 
-	// N Play: floating rounded seekbar surface.
 	CRect surface = m_rectSeekBar;
 	CBrush surfaceBrush(OSD_COLOR_BACKGROUND);
 	CPen surfacePen(PS_SOLID, 1, OSD_COLOR_BORDER);
@@ -405,9 +376,9 @@ void COSD::DrawSeekbar()
 					}
 
 					CRect r;
-					r.left   = m_rectSlider.left + (LONG)pos - SliderChapWidth / 2;
-					r.top    = m_rectSeekBar.top + (m_rectSeekBar.Height() - SliderChapHeight) / 2;
-					r.right  = r.left + SliderChapWidth;
+					r.left = m_rectSlider.left + (LONG)pos - SliderChapWidth / 2;
+					r.top = m_rectSeekBar.top + (m_rectSeekBar.Height() - SliderChapHeight) / 2;
+					r.right = r.left + SliderChapWidth;
 					r.bottom = r.top + SliderChapHeight;
 
 					DrawRect(r, &m_brushChapter);
@@ -450,21 +421,15 @@ void COSD::DrawMessage()
 		m_MemDC.DrawText(m_strMessage, &rectText, DT_CALCRECT | DT_NOPREFIX);
 		rectText.InflateRect(20, 10);
 		switch (m_nMessagePos) {
-			case OSD_TOPLEFT :
+			case OSD_TOPLEFT:
 				rectMessages = CRect(10, 10, std::min((rectText.right + 10), (m_rectWnd.right - 10)), (rectText.bottom + 12));
 				break;
-			case OSD_TOPRIGHT :
-			default :
-				rectMessages = CRect(std::max(10L, m_rectWnd.right - 10 - rectText.Width()), 10, m_rectWnd.right-10, rectText.bottom + 10);
+			case OSD_TOPRIGHT:
+			default:
+				rectMessages = CRect(std::max(10L, m_rectWnd.right - 10 - rectText.Width()), 10, m_rectWnd.right - 10, rectText.bottom + 10);
 				break;
 		}
 
-		//m_MemDC.BeginPath();
-		//m_MemDC.RoundRect(rectMessages.left, rectMessages.top, rectMessages.right, rectMessages.bottom, 10, 10);
-		//m_MemDC.EndPath();
-		//m_MemDC.SelectClipPath(RGN_COPY);
-
-		// N Play: compact rounded OSD card with a cyan accent edge.
 		CRgn cardRgn;
 		cardRgn.CreateRoundRectRgn(rectMessages.left, rectMessages.top, rectMessages.right + 1, rectMessages.bottom + 1, 12, 12);
 		m_MemDC.SelectClipRgn(&cardRgn);
@@ -475,8 +440,7 @@ void COSD::DrawMessage()
 		accent.right = accent.left + 3;
 		m_MemDC.FillSolidRect(&accent, OSD_COLOR_BAR2);
 
-		UINT uFormat = DT_LEFT|DT_VCENTER|DT_NOPREFIX;
-
+		UINT uFormat = DT_LEFT | DT_VCENTER | DT_NOPREFIX;
 		if (rectText.right + 10 >= (rectMessages.right)) {
 			uFormat |= DT_END_ELLIPSIS;
 		}
@@ -485,16 +449,16 @@ void COSD::DrawMessage()
 
 		CRect r;
 		if (s.bOSDFontShadow) {
-			r		= rectMessages;
-			r.left	+= 12;
-			r.top	+= 7;
+			r = rectMessages;
+			r.left += 12;
+			r.top += 7;
 			m_MemDC.SetTextColor(RGB(16, 24, 32));
 			m_MemDC.DrawText(m_strMessage, &r, uFormat);
 		}
 
-		r		= rectMessages;
-		r.left	+= 10;
-		r.top	+= 5;
+		r = rectMessages;
+		r.left += 10;
+		r.top += 5;
 		m_MemDC.SetTextColor(s.clrFontABGR);
 		m_MemDC.DrawText(m_strMessage, &r, uFormat);
 	}
@@ -605,16 +569,16 @@ bool COSD::OnMouseMove(UINT nFlags, CPoint point)
 				InvalidateBitmapOSD();
 			} else {
 				if (!m_bMouseOverExitButton && m_rectExitButton.PtInRect(point)) {
-					m_bMouseOverExitButton	= true;
-					m_bMouseOverCloseButton	= false;
+					m_bMouseOverExitButton = true;
+					m_bMouseOverCloseButton = false;
 					InvalidateBitmapOSD();
 				} else if (!m_bMouseOverCloseButton && m_rectCloseButton.PtInRect(point)) {
-					m_bMouseOverExitButton	= false;
-					m_bMouseOverCloseButton	= true;
+					m_bMouseOverExitButton = false;
+					m_bMouseOverCloseButton = true;
 					InvalidateBitmapOSD();
 				} else if ((m_bMouseOverCloseButton && !m_rectCloseButton.PtInRect(point)) || (m_bMouseOverExitButton && !m_rectExitButton.PtInRect(point))) {
-					m_bMouseOverExitButton	= false;
-					m_bMouseOverCloseButton	= false;
+					m_bMouseOverExitButton = false;
+					m_bMouseOverCloseButton = false;
 					InvalidateBitmapOSD();
 				}
 
@@ -650,14 +614,13 @@ void COSD::OnMouseLeave()
 
 	const bool bHideBars = (m_pMFVMB && (m_bSeekBarVisible || m_bFlyBarVisible));
 
-	m_bCursorMoving			= false;
-	m_bSeekBarVisible		= false;
-	m_bFlyBarVisible		= false;
-	m_bMouseOverExitButton	= false;
-	m_bMouseOverCloseButton	= false;
+	m_bCursorMoving = false;
+	m_bSeekBarVisible = false;
+	m_bFlyBarVisible = false;
+	m_bMouseOverExitButton = false;
+	m_bMouseOverCloseButton = false;
 
 	if (bHideBars) {
-		// Add new timer for removing any messages
 		if (m_pWnd) {
 			StartTimer(1000);
 		}
@@ -671,13 +634,13 @@ bool COSD::OnLButtonDown(UINT nFlags, CPoint point)
 
 	if (m_pMFVMB) {
 		if (m_rectCursor.PtInRect(point)) {
-			m_bCursorMoving		= true;
-			bRet				= true;
+			m_bCursorMoving = true;
+			bRet = true;
 		} else if (m_rectExitButton.PtInRect(point) || m_rectCloseButton.PtInRect(point)) {
-			bRet				= true;
+			bRet = true;
 		} else if (m_rectSeekBar.PtInRect(point)) {
-			m_bSeekBarVisible	= true;
-			bRet				= true;
+			m_bSeekBarVisible = true;
+			bRet = true;
 			UpdateSeekBarPos(point);
 		}
 	}
@@ -753,7 +716,7 @@ void COSD::ClearMessage(bool hide)
 	if (m_pMFVMB) {
 		m_pMFVMB->ClearAlphaBitmap();
 		DLog(L"IMFVideoMixerBitmap::ClearAlphaBitmap");
-		m_pMainFrame->RepaintVideo(); //???
+		m_pMainFrame->RepaintVideo();
 	} else if (m_pMVTO) {
 		m_pMVTO->OsdClearMessage();
 	} else if (::IsWindow(m_hWnd) && IsWindowVisible()) {
@@ -764,10 +727,10 @@ void COSD::ClearMessage(bool hide)
 void COSD::DisplayMessage(
 	OSD_MESSAGEPOS nPos,
 	LPCWSTR strMsg,
-	int nDuration/* = 5000*/,
-	const bool bPeriodicallyDisplayed/* = false*/,
-	const int FontSize/* = 0*/,
-	LPCWSTR OSD_Font/* = nullptr*/)
+	int nDuration,
+	const bool bPeriodicallyDisplayed,
+	const int FontSize,
+	LPCWSTR OSD_Font)
 {
 	if (!m_bShowMessage) {
 		return;
@@ -782,7 +745,7 @@ void COSD::DisplayMessage(
 
 		if (nPos != OSD_DEBUG) {
 			m_nMessagePos = nPos;
-			m_strMessage  = strMsg;
+			m_strMessage = strMsg;
 		} else {
 			m_debugMessages.emplace_back(strMsg);
 			if (m_debugMessages.size() > 20) {
@@ -798,10 +761,7 @@ void COSD::DisplayMessage(
 			m_OSD_Font = s.strOSDFont;
 		}
 
-		if (m_OSD_FontCashed != m_OSD_Font
-				|| m_FontSizeCashed != m_FontSize
-				|| m_bFontAACashed != s.bOSDFontAA
-				|| !m_MainFont.GetSafeHandle()) {
+		if (m_OSD_FontCashed != m_OSD_Font || m_FontSizeCashed != m_FontSize || m_bFontAACashed != s.bOSDFontAA || !m_MainFont.GetSafeHandle()) {
 			CreateFontInternal();
 		}
 
@@ -817,7 +777,6 @@ void COSD::DisplayMessage(
 		}
 
 		m_bPeriodicallyDisplayed = bPeriodicallyDisplayed;
-
 		InvalidateBitmapOSD();
 	} else if (m_pMVTO) {
 		m_pMVTO->OsdDisplayMessage(strMsg, nDuration);
@@ -828,7 +787,7 @@ void COSD::DisplayMessage(
 
 		if (nPos != OSD_DEBUG) {
 			m_nMessagePos = nPos;
-			m_strMessage  = strMsg;
+			m_strMessage = strMsg;
 		}
 
 		m_FontSize = FontSize ? std::clamp(FontSize, 8, 40) : s.nOSDSize;
@@ -844,7 +803,6 @@ void COSD::DisplayMessage(
 		}
 
 		SetWindowPos(m_pWndInsertAfter, 0, 0, 0, 0, m_nDEFFLAGS | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-		//PostMessageW(WM_OSD_DRAW);
 		DrawWnd();
 
 		m_bPeriodicallyDisplayed = bPeriodicallyDisplayed;
@@ -877,7 +835,6 @@ void COSD::HideMessage(bool hide)
 			if (!m_strMessage.IsEmpty()) {
 				SetWindowPos(m_pWndInsertAfter, 0, 0, 0, 0, m_nDEFFLAGS | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 			}
-			//PostMessageW(WM_OSD_DRAW);
 			DrawWnd();
 		}
 	}
@@ -887,14 +844,14 @@ BOOL COSD::PreTranslateMessage(MSG* pMsg)
 {
 	if (m_pWnd) {
 		switch (pMsg->message) {
-			case WM_LBUTTONDOWN :
-			case WM_LBUTTONDBLCLK :
-			case WM_MBUTTONDOWN :
-			case WM_MBUTTONUP :
-			case WM_MBUTTONDBLCLK :
-			case WM_RBUTTONDOWN :
-			case WM_RBUTTONUP :
-			case WM_RBUTTONDBLCLK :
+			case WM_LBUTTONDOWN:
+			case WM_LBUTTONDBLCLK:
+			case WM_MBUTTONDOWN:
+			case WM_MBUTTONUP:
+			case WM_MBUTTONDBLCLK:
+			case WM_RBUTTONDOWN:
+			case WM_RBUTTONUP:
+			case WM_RBUTTONDBLCLK:
 				m_pWnd->SetFocus();
 				break;
 		}
@@ -922,8 +879,6 @@ BOOL COSD::OnEraseBkgnd(CDC* pDC)
 void COSD::OnPaint()
 {
 	CPaintDC dc(this);
-
-	//PostMessageW(WM_OSD_DRAW);
 	DrawWnd();
 }
 
@@ -944,12 +899,7 @@ void COSD::DrawWnd()
 
 	const CAppSettings& s = AfxGetAppSettings();
 
-	if (m_MainWndRectCashed == m_MainWndRect
-			&& m_strMessageCashed == m_strMessage
-			&& m_nMessagePosCashed == m_nMessagePos
-			&& m_OSD_FontCashed == m_OSD_Font
-			&& m_FontSizeCashed == m_FontSize
-			&& m_bFontAACashed == s.bOSDFontAA) {
+	if (m_MainWndRectCashed == m_MainWndRect && m_strMessageCashed == m_strMessage && m_nMessagePosCashed == m_nMessagePos && m_OSD_FontCashed == m_OSD_Font && m_FontSizeCashed == m_FontSize && m_bFontAACashed == s.bOSDFontAA) {
 		return;
 	}
 
@@ -957,10 +907,7 @@ void COSD::DrawWnd()
 	m_strMessageCashed = m_strMessage;
 	m_nMessagePosCashed = m_nMessagePos;
 
-	if (m_OSD_FontCashed != m_OSD_Font
-			|| m_FontSizeCashed != m_FontSize
-			|| m_bFontAACashed != s.bOSDFontAA
-			|| !m_MainFont.GetSafeHandle()) {
+	if (m_OSD_FontCashed != m_OSD_Font || m_FontSizeCashed != m_FontSize || m_bFontAACashed != s.bOSDFontAA || !m_MainFont.GetSafeHandle()) {
 		CreateFontInternal();
 	}
 
@@ -996,11 +943,11 @@ void COSD::DrawWnd()
 
 	CRect rectMessages;
 	switch (m_nMessagePos) {
-		case OSD_TOPLEFT :
+		case OSD_TOPLEFT:
 			rectMessages = CRect(0, 0, std::min((rectText.right + 10), (LONG)m_MainWndRect.Width() - 20), std::min((rectText.bottom + 2), (LONG)m_MainWndRect.Height() - 20));
 			break;
-		case OSD_TOPRIGHT :
-		default :
+		case OSD_TOPRIGHT:
+		default:
 			const int imax = std::max(0, m_MainWndRect.Width() - rectText.Width() - 30);
 			rectMessages = CRect(imax, 0, (m_MainWndRect.Width() - 20) + imax, std::min((rectText.bottom + 2), (LONG)m_MainWndRect.Height() - 20));
 			break;
@@ -1012,8 +959,8 @@ void COSD::DrawWnd()
 
 	CRect wr(m_MainWndRect.left + 10 + rectMessages.left, m_MainWndRect.top + 10, rectMessages.Width() - rectMessages.left, rectMessages.Height());
 	if (SysVersion::IsWin8orLater()) {
-		wr.left	-= m_MainWndRect.left;
-		wr.top	-= m_MainWndRect.top;
+		wr.left -= m_MainWndRect.left;
+		wr.top -= m_MainWndRect.top;
 	}
 	SetWindowPos(nullptr, wr.left, wr.top, wr.right, wr.bottom, m_nDEFFLAGS | SWP_NOZORDER);
 
@@ -1028,28 +975,24 @@ void COSD::DrawWnd()
 	mdc.SetBkMode(TRANSPARENT);
 
 	mdc.SelectObject(m_MainFont);
-
 	GradientFill(&mdc, &rcBar);
 
 	const UINT uFormat = DT_LEFT | DT_TOP | DT_END_ELLIPSIS | DT_NOPREFIX;
-
 	CRect r;
 
 	if (s.bOSDFontShadow) {
-		r			= rcBar;
-		r.left		= 12;
-		r.top		= 7;
-		r.bottom	+= rectText.Height();
-
+		r = rcBar;
+		r.left = 12;
+		r.top = 7;
+		r.bottom += rectText.Height();
 		mdc.SetTextColor(RGB(16, 24, 32));
 		mdc.DrawText(m_strMessage, &r, uFormat);
 	}
 
-	r			= rcBar;
-	r.left		= 10;
-	r.top		= 5;
-	r.bottom	+= rectText.Height();
-
+	r = rcBar;
+	r.left = 10;
+	r.top = 5;
+	r.bottom += rectText.Height();
 	mdc.SetTextColor(s.clrFontABGR);
 	mdc.DrawText(m_strMessage, &r, uFormat);
 
@@ -1118,21 +1061,21 @@ void COSD::GradientFill(CDC* pDc, CRect* rc)
 	const CAppSettings& s = AfxGetAppSettings();
 
 	int R, G, B, R1, G1, B1, R_, G_, B_, R1_, G1_, B1_;
-	R   = GetRValue(s.clrGrad1ABGR);
-	G   = GetGValue(s.clrGrad1ABGR);
-	B   = GetBValue(s.clrGrad1ABGR);
-	R1  = GetRValue(s.clrGrad2ABGR);
-	G1  = GetGValue(s.clrGrad2ABGR);
-	B1  = GetBValue(s.clrGrad2ABGR);
-	R_  = std::min(R + 32, 255);
+	R = GetRValue(s.clrGrad1ABGR);
+	G = GetGValue(s.clrGrad1ABGR);
+	B = GetBValue(s.clrGrad1ABGR);
+	R1 = GetRValue(s.clrGrad2ABGR);
+	G1 = GetGValue(s.clrGrad2ABGR);
+	B1 = GetBValue(s.clrGrad2ABGR);
+	R_ = std::min(R + 32, 255);
 	R1_ = std::min(R1 + 32, 255);
-	G_  = std::min(G + 32, 255);
+	G_ = std::min(G + 32, 255);
 	G1_ = std::min(G1 + 32, 255);
-	B_  = std::min(B + 32, 255);
+	B_ = std::min(B + 32, 255);
 	B1_ = std::min(B1 + 32, 255);
 
-	int nOSDTransparent	= s.nOSDTransparent;
-	int nOSDBorder		= s.nOSDBorder;
+	int nOSDTransparent = s.nOSDTransparent;
+	int nOSDBorder = s.nOSDBorder;
 
 	GRADIENT_RECT gr = {0, 1};
 	TRIVERTEX tv[2] = {
