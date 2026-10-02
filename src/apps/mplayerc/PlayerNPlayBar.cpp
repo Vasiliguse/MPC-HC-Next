@@ -183,39 +183,38 @@ void CPlayerNPlayBar::OnPaint()
 
     dc.FillSolidRect(rc, bg);
 
-    // Brand card.
     CClientDC scaleDc(this);
     const int dpiY = scaleDc.GetDeviceCaps(LOGPIXELSY);
     const auto scale = [dpiY](int value) { return MulDiv(value, dpiY, 96); };
 
     CRect brand(scale(12), scale(12), rc.Width() - scale(12), scale(72));
     CBrush brandBrush(panel);
-    dc.FillRect(brand, &brandBrush);
-    dc.SelectObject(&brandBrush);
-    dc.RoundRect(brand, CPoint(scale(12), scale(12)));
-    dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+    CBrush* stockBrush = (CBrush*)GetStockObject(NULL_BRUSH);
+    CBrush* oldBrandBrush = dc.SelectObject(&brandBrush);
     CPen brandPen(PS_SOLID, 1, border);
-    CPen* oldPen = dc.SelectObject(&brandPen);
-    CBrush* oldBrush = dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+    CPen* oldBrandPen = dc.SelectObject(&brandPen);
     dc.RoundRect(brand, CPoint(scale(12), scale(12)));
-    dc.SelectObject(oldBrush);
-    dc.SelectObject(oldPen);
+    dc.SelectObject(stockBrush);
+    dc.SelectObject(oldBrandPen);
+    dc.SelectObject(oldBrandBrush);
 
     const int logoSize = scale(34);
     CRect logo(brand.left + scale(12), brand.CenterPoint().y - logoSize / 2,
                brand.left + scale(12) + logoSize, brand.CenterPoint().y + logoSize / 2);
     CBrush logoBrush(accent);
-    dc.SelectObject(&logoBrush);
+    CBrush* oldLogoBrush = dc.SelectObject(&logoBrush);
     dc.RoundRect(logo, CPoint(scale(9), scale(9)));
-    dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+    dc.SelectObject(stockBrush);
     CBrush logoCut(bg);
+    CBrush* oldLogoCutBrush = dc.SelectObject(&logoCut);
     CPoint tri[3] = {
         { logo.left + scale(13), logo.top + scale(9) },
         { logo.left + scale(13), logo.bottom - scale(9) },
         { logo.right - scale(9), logo.CenterPoint().y }
     };
-    dc.SelectObject(&logoCut);
     dc.Polygon(tri, 3);
+    dc.SelectObject(oldLogoCutBrush);
+    dc.SelectObject(oldLogoBrush);
 
     CFont* oldFont = dc.SelectObject(&m_font);
     dc.SetBkMode(TRANSPARENT);
@@ -230,7 +229,6 @@ void CPlayerNPlayBar::OnPaint()
     dc.SelectObject(oldSmall);
     dc.SelectObject(oldFont);
 
-    // Navigation.
     for (size_t i = 0; i < m_items.size(); ++i) {
         const bool active = static_cast<int>(i) == m_activeItem;
         const bool hot = static_cast<int>(i) == m_hotItem;
@@ -238,19 +236,21 @@ void CPlayerNPlayBar::OnPaint()
 
         if (active || hot) {
             CBrush itemBrush(active ? panelActive : panelHot);
-            dc.SelectObject(&itemBrush);
+            CBrush* oldItemBrush = dc.SelectObject(&itemBrush);
             dc.RoundRect(item, CPoint(scale(9), scale(9)));
-            dc.SelectObject(oldBrush);
+            dc.SelectObject(stockBrush);
+            dc.SelectObject(oldItemBrush);
 
             CPen itemPen(PS_SOLID, 1, active ? RGB(35, 91, 116) : border);
-            CPen* savedPen = dc.SelectObject(&itemPen);
-            dc.SelectObject((CBrush*)GetStockObject(NULL_BRUSH));
+            CPen* oldItemPen = dc.SelectObject(&itemPen);
             dc.RoundRect(item, CPoint(scale(9), scale(9)));
-            dc.SelectObject(savedPen);
+            dc.SelectObject(oldItemPen);
 
             CBrush accentBrush(accent);
             CRect stripe(item.left, item.top + scale(9), item.left + scale(3), item.bottom - scale(9));
+            CBrush* oldAccentBrush = dc.SelectObject(&accentBrush);
             dc.FillRect(stripe, &accentBrush);
+            dc.SelectObject(oldAccentBrush);
         }
 
         DrawIcon(dc, CRect(item.left + scale(13), item.top + scale(8),
@@ -264,26 +264,29 @@ void CPlayerNPlayBar::OnPaint()
         dc.SelectObject(old);
     }
 
-    // Playlist section. Hide it when the dock is too short so it never overlaps navigation.
     if (rc.Height() >= scale(468)) {
         const int sectionY = rc.Height() - scale(132);
-        CFont* old = dc.SelectObject(&m_smallFont);
+        CFont* oldSectionFont = dc.SelectObject(&m_smallFont);
         dc.SetTextColor(muted);
         CRect section(scale(16), sectionY, rc.Width() - scale(16), sectionY + scale(22));
         dc.DrawTextW(L"PLAYLISTS", section, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
         CPen sectionPen(PS_SOLID, 1, border);
-        dc.SelectObject(&sectionPen);
+        CPen* oldSectionPen = dc.SelectObject(&sectionPen);
         dc.MoveTo(scale(16), sectionY + scale(24));
         dc.LineTo(rc.Width() - scale(16), sectionY + scale(24));
+        dc.SelectObject(oldSectionPen);
 
         CRect listItem(scale(12), sectionY + scale(34), rc.Width() - scale(12), sectionY + scale(74));
         CBrush listBrush(dark ? RGB(11, 22, 35) : RGB(255, 255, 255));
-        dc.SelectObject(&listBrush);
+        CBrush* oldListBrush = dc.SelectObject(&listBrush);
         dc.RoundRect(listItem, CPoint(scale(8), scale(8)));
-        dc.SelectObject(oldBrush);
-        dc.SelectObject(&sectionPen);
+        dc.SelectObject(oldListBrush);
+
+        CPen listPen(PS_SOLID, 1, border);
+        CPen* oldListPen = dc.SelectObject(&listPen);
         dc.RoundRect(listItem, CPoint(scale(8), scale(8)));
+        dc.SelectObject(oldListPen);
 
         dc.SetTextColor(text);
         CRect listLabel(listItem.left + scale(12), listItem.top, listItem.right - scale(12), listItem.bottom);
@@ -294,7 +297,7 @@ void CPlayerNPlayBar::OnPaint()
         CRect addItem(scale(12), sectionY + scale(82), rc.Width() - scale(12), sectionY + scale(122));
         dc.DrawTextW(L"+  New Playlist", addItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         dc.SelectObject(oldMain);
-        dc.SelectObject(old);
+        dc.SelectObject(oldSectionFont);
     }
 }
 
