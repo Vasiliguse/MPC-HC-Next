@@ -58,7 +58,7 @@ void CPlayerNPlayBar::ScaleForDpi()
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    m_szMinVert = CSize(m_pMainFrame->ScaleX(220), m_pMainFrame->ScaleY(360));
+    m_szMinVert = CSize(m_pMainFrame->ScaleX(220), m_pMainFrame->ScaleY(384));
     m_szVert = CSize(m_pMainFrame->ScaleX(248), m_pMainFrame->ScaleY(620));
     m_szMinFloat = m_szMinVert;
     m_szFloat = m_szVert;
