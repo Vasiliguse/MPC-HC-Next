@@ -141,6 +141,7 @@ class CMainFrame : public CFrameWnd, public CDropTarget, public CDPI
 	friend class CPPageInterface;
 	friend class CMPlayerCApp;
 	friend class CPlayerPlaylistBar;
+	friend class CPlayerNPlayBar;
 	friend class CPPageSync;
 	friend class CPPageVideo;
 	friend class CMediaControls;
