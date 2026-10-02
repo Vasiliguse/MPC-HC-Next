@@ -855,11 +855,6 @@ void CPlayerSeekBar::SetColor()
 		m_penRepeatAB.DeleteObject();
 		m_penRepeatAB.CreatePen(PS_SOLID, 0, ThemeRGB(242, 13, 13));
 
-		ThemeRGB(10, 35, 52, R, G, B);
-		tvBufferingProgress[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-		ThemeRGB(24, 68, 88, R, G, B);
-		tvBufferingProgress[1] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
-
 		ThemeRGB(6, 15, 27, R, G, B);
 		tvBackgroundEnabledLeft[0] = { 0, 0, COLOR16(R * 256), COLOR16(G * 256), COLOR16(B * 256), 255 * 256 };
 		ThemeRGB(20, 48, 67, R, G, B);
