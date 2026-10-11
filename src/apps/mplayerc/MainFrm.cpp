@@ -1267,7 +1267,7 @@ void CMainFrame::ShowTrayIcon(bool fShow)
 			tnid.hIcon = (HICON)LoadImageW(AfxGetInstanceHandle(), MAKEINTRESOURCEW(IDR_MAINFRAME), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 			tnid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 			tnid.uCallbackMessage = WM_NOTIFYICON;
-			StringCchCopyW(tnid.szTip, std::size(tnid.szTip), L"MPC-BE");
+			StringCchCopyW(tnid.szTip, std::size(tnid.szTip), L"N Play");
 			Shell_NotifyIconW(NIM_ADD, &tnid);
 
 			m_bTrayIcon = true;
@@ -18406,7 +18406,7 @@ afx_msg void CMainFrame::OnLanguage(UINT nID)
 
 	if (nID == CMPlayerCApp::GetLanguageIndex(ID_LANGUAGE_HEBREW)) { // Show a warning when switching to Hebrew (must not be translated)
 		MessageBoxW(L"The Hebrew translation will be correctly displayed (with a right-to-left layout) after restarting the application.\n",
-					L"MPC-BE", MB_ICONINFORMATION | MB_OK);
+					L"N Play", MB_ICONINFORMATION | MB_OK);
 	}
 
 	CMPlayerCApp::SetLanguage(nID);

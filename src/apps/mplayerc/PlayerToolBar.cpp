@@ -575,6 +575,8 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 					tvBackground[0].x = r.left; tvBackground[0].y = r.top;
 					tvBackground[1].x = r.right; tvBackground[1].y = r.bottom;
 					dc.FillSolidRect(r, ThemeRGB(6, 12, 22));
+				}
+				{
 				CRect surface = r;
 				surface.DeflateRect(8, 4);
 				CBrush surfaceBrush(ThemeRGB(13, 29, 45));

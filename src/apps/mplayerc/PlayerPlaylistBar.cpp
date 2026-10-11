@@ -1156,6 +1156,11 @@ BOOL CPlayerPlaylistBar::PreTranslateMessage(MSG* pMsg)
 	return CSizingControlBarG::PreTranslateMessage(pMsg);
 }
 
+COLORREF CPlayerPlaylistBar::ThemeRGB(const int iR, const int iG, const int iB)
+{
+	return ::ThemeRGB(iR, iG, iB);
+}
+
 COLORREF CPlayerPlaylistBar::ColorThemeRGB(const int iR, const int iG, const int iB) const
 {
 	return ThemeRGB(iR, iG,iB);
@@ -3042,34 +3047,34 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 	CDC* pDC = CDC::FromHandle(lpDrawItemStruct->hDC);
 	int oldDC = pDC->SaveDC();
 
+	// N Play media card: rounded surface, subtle border, cyan accent for the active row.
+	// Applied to both dark and light themes so the playlist never falls back to legacy Win32 selection colors.
+	pDC->FillSolidRect(rcItem, s.bUseDarkTheme ? ThemeRGB(8, 17, 29) : m_crBackground);
+	if (s.bUseDarkTheme) { pDC->SetBkColor(ThemeRGB(8, 17, 29)); } else { pDC->SetBkColor(m_crBackground); }
+
+	CRect card(rcItem);
+	card.DeflateRect(4, 2);
 	if (!!m_list.GetItemState(nItem, LVIS_SELECTED)) {
-		if (s.bUseDarkTheme) {
-			CRect card(rcItem);
-			card.DeflateRect(4, 2);
-			CBrush brush(ThemeRGB(18, 31, 47));
-			CPen pen(PS_SOLID, 1, ThemeRGB(45, 91, 120));
-			CBrush* oldBrush = pDC->SelectObject(&brush);
-			CPen* oldPen = pDC->SelectObject(&pen);
-			pDC->RoundRect(card, CPoint(8, 8));
-			pDC->SelectObject(oldPen);
-			pDC->SelectObject(oldBrush);
-			CBrush accent(ThemeRGB(62, 220, 255));
-			CRect accentRect(card.left, card.top + 6, card.left + 3, card.bottom - 6);
-			pDC->FillRect(accentRect, &accent);
-		}
-		else {
-			FillRect(pDC->m_hDC, rcItem, CBrush(0x00F1DACC));
-			pDC->SetBkColor(0x00F1DACC);
-			FrameRect(pDC->m_hDC, rcItem, CBrush(0xC56A31));
-		}
+		const COLORREF selSurface = s.bUseDarkTheme ? ThemeRGB(18, 31, 47) : RGB(229, 241, 247);
+		const COLORREF selBorder  = s.bUseDarkTheme ? ThemeRGB(45, 91, 120) : RGB(150, 197, 220);
+		CBrush brush(selSurface);
+		CPen pen(PS_SOLID, 1, selBorder);
+		CBrush* oldBrush = pDC->SelectObject(&brush);
+		CPen* oldPen = pDC->SelectObject(&pen);
+		pDC->RoundRect(card, CPoint(8, 8));
+		pDC->SelectObject(oldPen);
+		pDC->SelectObject(oldBrush);
+		CBrush accent(ThemeRGB(62, 220, 255));
+		CRect accentRect(card.left, card.top + 6, card.left + 3, card.bottom - 6);
+		pDC->FillRect(accentRect, &accent);
 	} else {
-		if (s.bUseDarkTheme) {
-			pDC->FillSolidRect(rcItem, ThemeRGB(8, 17, 29));
-		}
-		else {
-			FillRect(pDC->m_hDC, rcItem, CBrush(m_crBackground));
-			pDC->SetBkColor(m_crBackground);
-		}
+		const COLORREF normalBorder = s.bUseDarkTheme ? ThemeRGB(24, 42, 58) : RGB(224, 231, 238);
+		CBrush* oldNormalBrush = (CBrush*)pDC->SelectObject(GetStockObject(NULL_BRUSH));
+		CPen normalPen(PS_SOLID, 1, normalBorder);
+		CPen* oldNormalPen = pDC->SelectObject(&normalPen);
+		pDC->RoundRect(card, CPoint(8, 8));
+		pDC->SelectObject(oldNormalPen);
+		pDC->SelectObject(oldNormalBrush);
 	}
 
 	if (s.bUseDarkTheme && m_bDrawDragImage) {
@@ -3077,11 +3082,12 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 		pDC->SetBkColor(m_crDragImage);
 	}
 
-	COLORREF textcolor = bSelected ? 0xFF : 0;
+	// N Play typography: near-white on navy for the active row in dark theme,
+	// deep navy on light cyan surface in the light N Play theme.
+	COLORREF textcolor = bSelected
+		? (s.bUseDarkTheme ? ThemeRGB(242, 252, 255) : RGB(23, 37, 51))
+		: (s.bUseDarkTheme ? ThemeRGB(177, 193, 208) : RGB(52, 66, 80));
 
-	if (s.bUseDarkTheme) {
-			textcolor = bSelected ? ThemeRGB(242, 252, 255) : (!!m_list.GetItemState(nItem, LVIS_SELECTED) ? ThemeRGB(115, 232, 255) : ThemeRGB(177, 193, 208));
-		}
 
 	if (pli.m_bInvalid) {
 		textcolor |= 0xA0A0A0;
@@ -3089,17 +3095,44 @@ void CPlayerPlaylistBar::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruc
 
 	pDC->SetTextColor(textcolor);
 
-	CString time = m_list.GetItemText(nItem, COL_TIME);
-	if (time.GetLength()) {
-		CSize timesize = pDC->GetTextExtent(time);
-		if ((3 + timesize.cx + 3) < rcItem.Width() / 2) {
-			CRect rc(rcItem);
-			rc.left = rc.right - (3 + timesize.cx + 3);
-			pDC->DrawTextW(time, &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        // N Play metadata pill: duration is rendered as a rounded chip inside the card,
+        // using only real playlist data (no fabricated codec/HDR information).
+        CString time = m_list.GetItemText(nItem, COL_TIME);
+        if (time.GetLength()) {
+                CSize timesize = pDC->GetTextExtent(time);
+                if ((3 + timesize.cx + 3) < rcItem.Width() / 2) {
+                        const int pillH = std::min(20, rcItem.Height() - 14);
+                        const int pillW = timesize.cx + 14;
+                        CRect pill(card.right - pillW - 8, card.CenterPoint().y - pillH / 2,
+                                   card.right - 8, card.CenterPoint().y + pillH / 2);
+                        if (pill.left > rcText.left + 40) {
+                                const COLORREF pillBg     = s.bUseDarkTheme ? ThemeRGB(15, 32, 48) : RGB(236, 243, 249);
+                                const COLORREF pillBorder = s.bUseDarkTheme ? ThemeRGB(37, 74, 96)  : RGB(206, 218, 229);
+                                const COLORREF pillText   = s.bUseDarkTheme ? ThemeRGB(150, 214, 238) : RGB(36, 113, 151);
+                                CBrush pillBrush(pillBg);
+                                CPen pillPen(PS_SOLID, 1, pillBorder);
+                                CBrush* oldPillBrush = pDC->SelectObject(&pillBrush);
+                                CPen* oldPillPen = pDC->SelectObject(&pillPen);
+                                pDC->RoundRect(pill, CPoint(pillH, pillH));
+                                pDC->SelectObject(oldPillPen);
+                                pDC->SelectObject(oldPillBrush);
 
-			rcText.right -= (timesize.cx + 6);
-		}
-	}
+                                int oldBk = pDC->SetBkMode(TRANSPARENT);
+                                COLORREF oldTextColor = pDC->SetTextColor(pillText);
+                                pDC->DrawTextW(time, &pill, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                                pDC->SetTextColor(oldTextColor);
+                                pDC->SetBkMode(oldBk);
+
+                                rcText.right = pill.left - 8;
+                        } else {
+                                CRect rc(rcItem);
+                                rc.left = rc.right - (3 + timesize.cx + 3);
+                                pDC->DrawTextW(time, &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+                                rcText.right -= (timesize.cx + 6);
+                        }
+                }
+        }
 
 	CString fmt, file;
 	fmt.Format(L"%%0%dd. %%s", (int)log10(0.1 + curPlayList.GetCount()) + 1);
@@ -3869,7 +3902,7 @@ void CPlayerPlaylistBar::OnContextMenu(CWnd* /*pWnd*/, CPoint p)
 			if (curTab.type == PL_BASIC) {
 				CSaveTextFileDialog fd(
 					CP_UTF8, nullptr, nullptr,
-					L"MPC-BE playlist (*.mpcpl)|*.mpcpl|Playlist (*.pls)|*.pls|Winamp playlist (*.m3u)|*.m3u|Windows Media playlist (*.asx)|*.asx||",
+					L"N Play playlist (*.mpcpl)|*.mpcpl|Playlist (*.pls)|*.pls|Winamp playlist (*.m3u)|*.m3u|Windows Media playlist (*.asx)|*.asx||",
 					this);
 
 				fd.m_ofn.lpstrInitialDir = s.strLastSavedPlaylistDir;
