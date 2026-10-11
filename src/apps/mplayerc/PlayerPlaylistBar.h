@@ -120,6 +120,9 @@ class CPlayerPlaylistBar : public CPlayerBar
 private:
 	enum {COL_NAME, COL_TIME};
 
+	// Static bridge for the CoolSB theme callback (matches ptr_themeRGB).
+	static COLORREF ThemeRGB(const int iR, const int iG, const int iB);
+
 	CMainFrame* m_pMainFrame = nullptr;
 
 	CImageList m_fakeImageList;

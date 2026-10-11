@@ -1533,7 +1533,7 @@ void CMPlayerCApp::SetLanguage(int nLanguage, bool bSave/* = true*/)
 			} else {
 				// This message should stay in English!
 				MessageBoxW(nullptr, L"Your language pack will not work with this version. Please download a compatible one from the MPC-BE homepage.",
-					L"MPC-BE", MB_OK);
+					L"N Play", MB_OK);
 			}
 		}
 	} else if (bSave && nLanguage == GetLanguageIndex(ID_LANGUAGE_ENGLISH)) {
